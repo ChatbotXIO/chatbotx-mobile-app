@@ -1,0 +1,6 @@
+node_modules
+dist
+.expo
+src/generated
+src/api/generated
+pnpm-lock.yaml

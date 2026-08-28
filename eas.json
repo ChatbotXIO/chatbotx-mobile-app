@@ -1,0 +1,36 @@
+{
+  "cli": {
+    "version": ">= 13.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "env": {
+        "API_BASE_URL": "http://localhost:3123",
+        "WS_URL": "http://localhost:1999"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "API_BASE_URL": "https://preview.example.com",
+        "WS_URL": "https://preview-realtime.example.com"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "API_BASE_URL": "https://api.example.com",
+        "WS_URL": "https://realtime.example.com"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
