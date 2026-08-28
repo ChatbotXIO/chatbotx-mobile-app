@@ -1,5 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 
+import { brand } from '@/config/brand';
+
 /**
  * Auth token storage, backed by expo-secure-store (Keychain on iOS, Keystore-backed
  * EncryptedSharedPreferences on Android).
@@ -9,7 +11,7 @@ import * as SecureStore from 'expo-secure-store';
  * `getAuthToken` currently always resolves to whatever was last persisted (or null), with no
  * refresh logic.
  */
-const AUTH_TOKEN_KEY = 'chatbotx.authToken';
+const AUTH_TOKEN_KEY = `${brand.brandId}.authToken`;
 
 export async function getAuthToken(): Promise<string | null> {
   return SecureStore.getItemAsync(AUTH_TOKEN_KEY);

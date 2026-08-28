@@ -8,7 +8,14 @@
  * meaning (channel identity, unread state, bot state, semantic status) rather than decoration.
  */
 
-import { withAlpha } from './color-utils';
+import { brand } from '@/config/brand';
+
+import { darken, withAlpha } from './color-utils';
+
+/** Pressed/emphasis shade of the brand color, derived rather than hand-picked so each brand only
+ * needs to supply one color in brand.json. Darkened ~20% — matches the original ChatbotX
+ * `#3c6df0` → `#2851c9` relationship closely enough to keep existing screens' contrast intact. */
+const brandStrong = darken(brand.brandColor, 0.2);
 
 // ---------------------------------------------------------------------------
 // Colors
@@ -28,12 +35,12 @@ const lightBase = {
   // (measured ~4.51:1).
   textTertiary: '#767063',
   textInverse: '#ffffff',
-  brand: '#3c6df0',
-  brandStrong: '#2851c9',
+  brand: brand.brandColor,
+  brandStrong,
   onBrand: '#ffffff',
   bubbleIn: '#ffffff',
   bubbleInText: '#1c1b17',
-  bubbleOut: '#3c6df0',
+  bubbleOut: brand.brandColor,
   bubbleOutText: '#ffffff',
   bubbleBot: '#f1ecff',
   bubbleBotText: '#2f1f66',

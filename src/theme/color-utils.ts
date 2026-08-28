@@ -35,3 +35,23 @@ export const alphaTokens = {
   scrim: 0.4,
   scrimDark: 0.6,
 } as const;
+
+/** Darkens a 6-digit `#rrggbb` hex color toward black by `amount` (0–1). Used to derive a
+ * `brandStrong` (pressed/emphasis) shade from a single brand color instead of hand-picking a
+ * second hex per brand — see src/theme/tokens.ts. */
+export function darken(hex: string, amount: number): string {
+  const match = HEX_PATTERN.exec(hex);
+  if (!match) {
+    throw new Error(`darken: expected a 6-digit hex color like "#3c6df0", got "${hex}"`);
+  }
+
+  const intValue = parseInt(match[1], 16);
+  const clampedAmount = Math.min(1, Math.max(0, amount));
+  const scale = (channel: number): number => Math.round(channel * (1 - clampedAmount));
+
+  const r = scale((intValue >> 16) & 255);
+  const g = scale((intValue >> 8) & 255);
+  const b = scale(intValue & 255);
+
+  return `#${[r, g, b].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+}

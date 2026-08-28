@@ -1,0 +1,22 @@
+{
+  "//": "Copy this folder to brands/<your-brand-id>/ to create a new brand. Fill in every field below, replace the assets in ./assets with your own (same filenames/sizes as brands/chatbotx/assets), then run `eas init` with BRAND=<your-brand-id> to fill in eas.projectId — see docs/white-label.md.",
+  "id": "example",
+  "displayName": "Example App",
+  "slug": "example-app",
+  "scheme": "exampleapp",
+  "ios": {
+    "bundleIdentifier": "com.example.app"
+  },
+  "android": {
+    "package": "com.example.app",
+    "adaptiveIconBackgroundColor": "#ffffff"
+  },
+  "colors": {
+    "brand": "#3c6df0",
+    "splashBackground": "#ffffff"
+  },
+  "eas": {
+    "projectId": "",
+    "owner": ""
+  }
+}

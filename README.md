@@ -35,7 +35,8 @@ pnpm start
 ```
 
 Then follow the Expo CLI prompts to open the app in a development build, Android emulator, iOS
-simulator, or Expo Go.
+simulator, or Expo Go. `.env`'s `BRAND=chatbotx` and `APP_ENV=development` defaults are enough to
+run the app with zero EAS setup — see [Deploying](#deploying) once you need a real build.
 
 ## Development Commands
 
@@ -48,7 +49,18 @@ pnpm test             # jest
 pnpm format           # prettier --write .
 pnpm format:check     # prettier --check .
 pnpm generate:api     # regenerate the typed API client from a running backend instance
+pnpm brand:new <id>   # scaffold a new brand from brands/_template
 ```
+
+## Deploying
+
+TEST builds are EAS internal distribution; production builds go through EAS Build/Submit to the
+App Store and Play Store. See [docs/deploy.md](docs/deploy.md) for the full flow.
+
+## White-label
+
+This app can be built for a different brand (app name, icons, colors, bundle id, EAS project) from
+the same codebase — see [docs/white-label.md](docs/white-label.md).
 
 ## Docs
 
@@ -57,3 +69,5 @@ pnpm generate:api     # regenerate the typed API client from a running backend i
 - [Realtime event types](docs/realtime-events.md)
 - [Android push notifications](docs/push-notifications.md)
 - [EAS Update](docs/eas-updates.md)
+- [Deploying (TEST and production)](docs/deploy.md)
+- [White-label](docs/white-label.md)

@@ -2,6 +2,7 @@
   "name": "chatbotx-mobile-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "license": "MIT",
   "packageManager": "pnpm@11.15.1",
   "dependencies": {
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
@@ -70,7 +71,15 @@
     "format:check": "prettier --check .",
     "generate:api": "tsx scripts/generate-api-client.ts",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "brand:new": "tsx scripts/create-brand.ts",
+    "prebuild:check": "expo prebuild --clean --no-install",
+    "build:dev": "eas build --profile development",
+    "build:test": "eas build --profile preview",
+    "build:prod": "eas build --profile production",
+    "update:test": "eas update --channel preview --environment preview",
+    "update:prod": "eas update --channel production --environment production",
+    "submit:prod": "eas submit --profile production"
   },
   "private": true
 }

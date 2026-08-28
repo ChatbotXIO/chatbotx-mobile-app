@@ -2,9 +2,10 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
-// src/config/env.ts reads Expo config at MODULE LOAD and throws when `extra` is absent, so any
-// test importing a module that transitively pulls in `env` (e.g. api/client.ts) fails to load
-// without this. app.config.ts is not evaluated under Jest, so supply the `extra` block here.
+// src/config/env.ts and src/config/brand.ts read Expo config at MODULE LOAD and throw when
+// `extra` is absent, so any test importing a module that transitively pulls in either (e.g.
+// api/client.ts, theme/tokens.ts) fails to load without this. app.config.ts is not evaluated
+// under Jest, so supply the `extra` block here.
 jest.mock('expo-constants', () => ({
   __esModule: true,
   default: {
@@ -12,6 +13,12 @@ jest.mock('expo-constants', () => ({
       extra: {
         apiBaseUrl: 'https://test.invalid',
         wsUrl: 'wss://test.invalid',
+        brandId: 'chatbotx',
+        displayName: 'ChatbotX',
+        brandScheme: 'chatbotxmobileapp',
+        brandColor: '#3c6df0',
+        appEnv: 'development',
+        updateChannel: 'development',
       },
     },
   },

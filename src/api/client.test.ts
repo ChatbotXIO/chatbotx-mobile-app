@@ -10,7 +10,16 @@ jest.mock('expo-constants', () => ({
   __esModule: true,
   default: {
     expoConfig: {
-      extra: { apiBaseUrl: 'http://localhost:3123', wsUrl: 'ws://localhost:3123' },
+      extra: {
+        apiBaseUrl: 'http://localhost:3123',
+        wsUrl: 'ws://localhost:3123',
+        brandId: 'chatbotx',
+        displayName: 'ChatbotX',
+        brandScheme: 'chatbotxmobileapp',
+        brandColor: '#3c6df0',
+        appEnv: 'development',
+        updateChannel: 'development',
+      },
     },
   },
 }));

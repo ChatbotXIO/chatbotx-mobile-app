@@ -34,7 +34,13 @@ yarn-error.*
 
 # local env files
 .env
-.env*.local
+.env.*
+!.env.example
+
+# brand overlays (white-label customer brands live outside this repo — see docs/white-label.md)
+brands/*
+!brands/chatbotx/
+!brands/_template/
 
 # typescript
 *.tsbuildinfo
