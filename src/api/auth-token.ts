@@ -5,9 +5,9 @@ import * as SecureStore from 'expo-secure-store';
  * EncryptedSharedPreferences on Android).
  *
  * This module only handles *storage* of a bearer token. The actual auth flow (sign-in, token
- * exchange, refresh) is a later phase, once the backend's bearer-auth endpoints are live — see
- * AGENTS.md in the aha.chat repo for the corresponding backend work. `getAuthToken` currently
- * always resolves to whatever was last persisted (or null), with no refresh logic.
+ * exchange, refresh) is a later phase, once the backend's bearer-auth endpoints are live.
+ * `getAuthToken` currently always resolves to whatever was last persisted (or null), with no
+ * refresh logic.
  */
 const AUTH_TOKEN_KEY = 'chatbotx.authToken';
 

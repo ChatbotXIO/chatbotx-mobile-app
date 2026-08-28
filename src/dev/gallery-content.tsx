@@ -30,8 +30,8 @@ import { useSettingsStore } from '@/stores/use-settings-store';
 import { useTheme } from '@/theme/use-theme';
 
 /**
- * Visual smoke-test surface for every Phase 2 UI primitive, in various states, with a light/dark
- * toggle. Not a polished screen — the "storybook-lite" the plan asks for. Split into its own
+ * Visual smoke-test surface for every UI primitive, in various states, with a light/dark
+ * toggle. Not a polished screen — a "storybook-lite". Split into its own
  * module (rather than living inline in the `(dev)/gallery` route file) so its 24 primitive imports
  * are only pulled into the bundle via the lazy `require()` in that route's `__DEV__` branch,
  * instead of shipping in every production build's static import graph.

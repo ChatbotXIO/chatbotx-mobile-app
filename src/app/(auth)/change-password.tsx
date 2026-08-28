@@ -17,8 +17,8 @@ import { useTheme } from '@/theme/use-theme';
 /**
  * Forced password-change screen — reached when the session user has `mustChangePassword: true`
  * (reseller-provisioned temporary password). Every other oRPC/session-authenticated call is
- * blocked server-side until this completes (see aha.chat middlewares/auth.ts), so this screen
- * has no way out except a successful change.
+ * blocked server-side until this completes, so this screen has no way out except a successful
+ * change.
  */
 export default function ChangePasswordScreen() {
   const { t } = useTranslation();

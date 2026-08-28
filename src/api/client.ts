@@ -21,7 +21,7 @@ const authMiddleware: Middleware = {
 };
 
 /**
- * Typed fetch client for the aha.chat REST API, generated from its OpenAPI spec.
+ * Typed fetch client for the ChatbotX REST API, generated from its OpenAPI spec.
  * Run `pnpm generate:api` to (re)generate src/api/generated/schema.ts against a running backend.
  *
  * All oRPC routes in the generated spec are served under `/api` (auth and the hand-rolled

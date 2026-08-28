@@ -12,10 +12,10 @@ import type { operations } from '@/api/generated/schema';
  * the generated schema. `api/pagination.ts`'s CursorPage helpers don't apply here; this hook
  * drives `useInfiniteQuery` with a page-number `pageParam` instead.
  *
- * KNOWN LIMITATION (Phase 8): unlike conversations-list, this endpoint has no first-class
+ * KNOWN LIMITATION: unlike conversations-list, this endpoint has no first-class
  * `assignedId` field — the only way to filter contacts by assignment is the generic `contactFilter`
  * condition-builder DSL, which this app deliberately doesn't expose (see filter-sheet.tsx's own
- * note on the conversations side). That means `onlyAssignedContacts` (Phase 6's usePermissions)
+ * note on the conversations side). That means `onlyAssignedContacts` (from `usePermissions`)
  * can be enforced on the conversations tab but NOT on this contacts directory — a restricted
  * member can browse the full contact list here even though their conversation view is scoped to
  * their own assignments. Closing this gap would require building the `contactFilter` DSL query,

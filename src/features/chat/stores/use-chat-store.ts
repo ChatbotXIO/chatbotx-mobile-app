@@ -7,7 +7,7 @@ export type ComposerMode = { type: 'edit'; message: Message } | { type: 'reply';
 interface ChatStoreState {
   /** conversationId -> is the other side typing (set by realtime; use-realtime-handlers.ts pairs
    * every `setTyping(id, true, seconds)` with a typing-timers.ts expiry so this never sticks
-   * forever if an explicit `typing: false` follow-up is dropped — see plan Phase 6). */
+   * forever if an explicit `typing: false` follow-up is dropped). */
   typingByConversation: Record<string, boolean>;
   /** conversationId -> in-progress composer draft text, so switching away and back preserves it. */
   draftsByConversation: Record<string, string>;

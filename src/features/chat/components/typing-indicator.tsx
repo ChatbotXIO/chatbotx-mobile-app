@@ -63,8 +63,8 @@ interface TypingIndicatorProps {
   conversationId: string;
 }
 
-/** Reads `typingByConversation` from the chat store — set by the realtime `typing` event handler
- * (Phase 6). Renders nothing when not typing; a `t('chat.typing')`-labeled row with 3 staggered
+/** Reads `typingByConversation` from the chat store — set by the realtime `typing` event handler.
+ * Renders nothing when not typing; a `t('chat.typing')`-labeled row with 3 staggered
  * bouncing dots otherwise. */
 export function TypingIndicator({ conversationId }: TypingIndicatorProps) {
   const { t } = useTranslation();

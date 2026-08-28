@@ -6,10 +6,10 @@ import { queryKeys } from '@/api/query-keys';
 
 /**
  * `GET /workspaces/{workspaceId}/inbox-teams` (`inboxTeamsAPI.listInboxTeamsAuthenticatedAPI`) —
- * an enterprise-tier feature (mounted from `@/enterprise/features/inbox-teams` in aha.chat's
- * router). Not every workspace/plan has this — the members screen treats any error here as "no
- * teams" (hides the section) rather than showing a broken error state, since a 403/404 from an
- * unlicensed workspace is an expected outcome, not a real failure to surface to the user.
+ * an enterprise-tier feature; not every workspace/plan has it — the members screen treats any
+ * error here as "no teams" (hides the section) rather than showing a broken error state, since a
+ * 403/404 from an unlicensed workspace is an expected outcome, not a real failure to surface to
+ * the user.
  */
 export function useTeamsList(workspaceId: string) {
   return useQuery({

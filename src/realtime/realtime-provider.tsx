@@ -15,16 +15,14 @@ import { resetConnectionStore, useConnectionStore } from './use-connection-store
 import { clearPendingConversationInvalidates, useRealtimeHandlers } from './use-realtime-handlers';
 
 /**
- * Real implementation, replacing the Phase 0-4 passthrough stub. Connects to the `workspaces`
- * PartyKit party, room = workspaceId (mirrors ../aha.chat apps/builder/src/features/chat/chat-realtime.tsx
- * and apps/realtime/src/parties/workspaces.ts).
+ * Connects to the `workspaces` PartyKit party, room = workspaceId (mirrors the web app's
+ * realtime connection).
  *
  * `?domain=` is REQUIRED on every mobile connection: the realtime server verifies the one-time
  * token by resolving a tenant origin from either the WebSocket request's `Origin` header (browsers
  * send this automatically) or a `?domain=<https url>` query param — React Native's WebSocket
  * implementation sends no `Origin` header at all, so without `domain` the server has nothing to
- * verify the token against and rejects the connection (verified by reading
- * ../aha.chat apps/realtime/src/lib/auth.ts `resolveVerificationOrigin`). The value must be the
+ * verify the token against and rejects the connection. The value must be the
  * SAME origin that serves `/api/auth/one-time-token/verify` — i.e. `env.apiBaseUrl` — not the
  * realtime server's own host.
  */

@@ -30,8 +30,8 @@ interface MessageBubbleProps {
 
 /** senderType 'contact' is inbound (left); 'bot' gets its own violet-tinted variant; 'system' is a
  * centered activity chip, not a side bubble; everything else ('user'/'api') is a regular outbound
- * agent bubble. There's no dedicated `isOutbound` field on the schema, so this mirrors the legacy
- * app's bubble-side logic. */
+ * agent bubble. There's no dedicated `isOutbound` field on the schema, so this is derived from
+ * senderType instead. */
 function senderVariant(message: Message): SenderVariant {
   if (message.senderType === 'contact') return 'contact';
   if (message.senderType === 'bot') return 'bot';

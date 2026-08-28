@@ -50,7 +50,7 @@ export function applyConversationUpdated(
 }
 
 /** `contactBlocked`/`contactUnblocked` patch the embedded `contact.blockedAt` field on every
- * conversation row for that contact — a contact can back multiple conversations (see Phase 3's
+ * conversation row for that contact — a contact can back multiple conversations (see the
  * assign-by-contact applier for the same one-contact-many-conversations pattern). */
 export function applyContactBlockState(
   current: InfiniteConversationsData,
@@ -76,8 +76,8 @@ export function applyContactBlockState(
   };
 }
 
-/** Patches a standalone `queryKeys.ws.contacts.detail` cache entry's `blockedAt` field — added in
- * Phase 6 alongside the contacts feature. `applyContactBlockState` above only reaches the
+/** Patches a standalone `queryKeys.ws.contacts.detail` cache entry's `blockedAt` field — added
+ * alongside the contacts feature. `applyContactBlockState` above only reaches the
  * conversations-list cache's embedded contact object; this covers the separate contact-detail
  * query the contact panel reads (use-contact-detail.ts), which has its own `blockedAt` field at
  * the top level (not nested under `contact`). Callers scan for a query keyed

@@ -1,6 +1,6 @@
 #!/usr/bin/env -S pnpm exec tsx
 /**
- * Regenerates the typed API client from the aha.chat builder app's OpenAPI spec.
+ * Regenerates the typed API client from the ChatbotX backend's OpenAPI spec.
  *
  * Usage:
  *   pnpm generate:api
@@ -13,7 +13,7 @@
  * produce src/api/generated/schema.ts (a `paths` type consumed by src/api/client.ts via
  * openapi-fetch).
  *
- * This script is NOT wired into the build — the aha.chat backend is not guaranteed to be running
+ * This script is NOT wired into the build — the ChatbotX backend is not guaranteed to be running
  * locally, and this repo must be buildable without it. On any failure (spec unreachable, bad
  * response, generation error) it prints a clear message and exits non-zero without touching the
  * previously generated file.
@@ -86,9 +86,8 @@ async function main(): Promise<void> {
 [generate:api] Could not reach the OpenAPI spec at ${specUrl}.
 [generate:api] Reason: ${reason}
 [generate:api]
-[generate:api] This is expected if the aha.chat builder app isn't running locally, or if its
-[generate:api] Phase 1 backend work (bearer auth + new REST endpoints) hasn't landed yet.
-[generate:api] Start it from the aha.chat repo (pnpm --filter builder dev) and try again, or set
+[generate:api] This is expected if the ChatbotX backend isn't running locally.
+[generate:api] Start the backend locally and try again, or set
 [generate:api] API_BASE_URL to point at a reachable environment.
 [generate:api]
 [generate:api] Leaving the previously generated client untouched (${

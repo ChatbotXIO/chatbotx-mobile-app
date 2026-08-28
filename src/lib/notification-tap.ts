@@ -5,8 +5,8 @@ import { useAuthStore } from '@/stores/use-auth-store';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
 
 /**
- * Data payload the backend attaches to a push notification (see plan Workstream 4.2 — the worker
- * sends `{ workspaceId, conversationId, messageId }` alongside title/body). All optional because
+ * Data payload the backend attaches to a push notification (the worker sends
+ * `{ workspaceId, conversationId, messageId }` alongside title/body). All optional because
  * this same handler also has to tolerate a malformed/older payload without throwing.
  */
 interface NotificationTapData {

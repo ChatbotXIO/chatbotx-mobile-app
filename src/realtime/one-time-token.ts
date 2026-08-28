@@ -1,9 +1,9 @@
 import { env } from '@/config/env';
 
 /**
- * `GET /api/auth/one-time-token/generate` — better-auth's `oneTimeToken()` plugin (enabled
- * server-side, confirmed in ../aha.chat packages/auth/src/server.ts). Hand-rolled fetch, same
- * pattern as api/auth-endpoints.ts, since this isn't part of the oRPC-generated apiClient.
+ * `GET /api/auth/one-time-token/generate` — better-auth's `oneTimeToken()` plugin (enabled on the
+ * backend). Hand-rolled fetch, same pattern as api/auth-endpoints.ts, since this isn't part of
+ * the oRPC-generated apiClient.
  */
 export class OneTimeTokenError extends Error {
   constructor(message: string) {

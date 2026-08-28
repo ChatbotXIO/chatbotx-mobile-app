@@ -92,10 +92,9 @@ export function applyMessageDeleted(
 }
 
 /**
- * Patches the edited text only. The web app's equivalent handler (`updateMessageText` in
- * ../aha.chat apps/builder/src/features/chat/store/chat-store.ts) also reconstructs a full
- * attachment object from `newAttachmentPath`/`newAttachmentMimeType`/etc when an attachment was
- * added/replaced/removed during the edit — deliberately NOT mirrored here, since Phase 4's own
+ * Patches the edited text only. The web app's equivalent handler (`updateMessageText`) also
+ * reconstructs a full attachment object from `newAttachmentPath`/`newAttachmentMimeType`/etc when an attachment was
+ * added/replaced/removed during the edit — deliberately NOT mirrored here, since this app's own
  * edit-message UI is itself a stub (no attachment-edit affordance exists yet to trigger this
  * server-side), so building the full attachment-reconstruction logic now would have nothing to
  * exercise it. Revisit once message edit UI grows an attachment-replace flow.
@@ -148,9 +147,8 @@ export function applyMessageFailed(
   };
 }
 
-/** Mirrors the web app's `assignMessageCommentId` handler exactly (../aha.chat
- * apps/builder/src/features/chat/store/chat-store.ts) — the comment id lands on `sourceId`, not
- * `parentId` (parentId means something different: thread/reply linkage). */
+/** Mirrors the web app's `assignMessageCommentId` handler exactly — the comment id lands on
+ * `sourceId`, not `parentId` (parentId means something different: thread/reply linkage). */
 export function applyMessageIdAssigned(
   current: InfiniteMessagesData,
   event: RealtimeEventMessageIdAssigned,

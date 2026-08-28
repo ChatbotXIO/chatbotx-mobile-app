@@ -1,13 +1,9 @@
 /**
- * MIRRORED TYPES — kept in manual sync with `aha.chat/packages/partysocket-config/src/schemas.ts`.
+ * MIRRORED TYPES — mirrors the backend's realtime event schema (no shared package; this repo is
+ * standalone, so there is no live cross-repo import).
  *
- * This app lives in a separate git repo from aha.chat (not a pnpm workspace member), so there is
- * no live cross-repo import. Do NOT import aha.chat's `lib.ts` (server-side realtime wiring) —
- * only these type-only definitions, mirrored by hand.
- *
- * When the source file changes, re-copy its `RealtimeEventType` and `RealtimeEvent*` shapes here.
- * Last synced against aha.chat's current `packages/partysocket-config/src/schemas.ts` (Phase 5,
- * 2026-08-21) — added conversationCreated/conversationUpdated, per the plan's pre-flight note.
+ * When the backend's event schema changes, re-copy `RealtimeEventType` / `RealtimeEvent*` here.
+ * Last synced 2026-08-21 (added conversationCreated/conversationUpdated).
  */
 
 export const RealtimeEventType = {

@@ -19,7 +19,7 @@ interface SheetProps extends PropsWithChildren {
 }
 
 /** Wraps @gorhom/bottom-sheet with our theme colors and a tap-to-dismiss backdrop. Used for
- * filter/saved-replies/assignment sheets — see plan's "not routes" note on these. */
+ * filter/saved-replies/assignment sheets, which are modal overlays rather than routes. */
 export const Sheet = forwardRef<BottomSheet, SheetProps>(function Sheet(
   { children, snapPoints = ['50%', '90%'], onDismiss },
   ref,

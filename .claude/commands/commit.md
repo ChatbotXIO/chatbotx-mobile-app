@@ -16,12 +16,13 @@ Create a git commit for the current changes following the ChatbotX conventions i
    - Determine commit `type`: `feat`, `fix`, `refactor`, `docs`, `style`, `test`, `chore`, `ci`, `perf`, `build`, `revert`
    - Determine `scope` from touched package/app/feature when obvious (e.g. `builder`, `worker`, `whatsapp`, `database`)
    - Draft subject: `<type>(<scope>): <subject>` — ≤ 100 chars, lowercase after `:`, no trailing period
-   - Add body only when the *why* is non-obvious
+   - Add body only when the _why_ is non-obvious
 
 3. Stage **specific files only** — never `git add -A` or `git add .`.
    - Skip `.env*` and any file containing secrets. Warn if user explicitly requests them.
 
 4. Commit using a HEREDOC so formatting is preserved:
+
    ```bash
    git commit -m "$(cat <<'EOF'
    <type>(<scope>): <subject>

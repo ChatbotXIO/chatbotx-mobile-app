@@ -1,7 +1,7 @@
 import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
 
 /**
- * Bot-active derivation, matching the backend's own rule (see plan Context: `isBotActive =
+ * Bot-active derivation, matching the backend's own rule (`isBotActive =
  * botEnabled || botResumeAt < now`): the bot is considered "active" either because it's
  * explicitly enabled, or because a previous 24h disable-pause (`botResumeAt`) has already
  * elapsed — the backend auto-resumes the bot at that point even though `botEnabled` itself only

@@ -70,7 +70,7 @@ export function clearPendingConversationInvalidates(): void {
  * and letting each applier no-op on a non-matching cache is safe and is left unchanged.
  *
  * Conversation events patch every cached conversations-list query (any filter combination) for
- * this workspace, same as Phase 3's action-mutation cache patches.
+ * this workspace, same as the conversation-action mutations' cache patches.
  */
 export function useRealtimeHandlers(queryClient: QueryClient, workspaceId: string) {
   return useCallback(

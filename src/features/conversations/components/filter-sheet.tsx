@@ -66,7 +66,7 @@ interface FilterSheetProps {
  * `listConversationsByPOSTAuthenticatedAPI` accepts (see use-conversation-filters.ts). The
  * advanced `contactFilter` condition-builder from that schema is not exposed here — it's a
  * large audience-builder DSL that belongs to a dedicated "advanced search" surface, not this
- * quick filter sheet (mirrors the legacy app's AdvancedSearchModal vs QuickFilter split). */
+ * quick filter sheet. */
 export function FilterSheet({ sheetRef }: FilterSheetProps) {
   const { t } = useTranslation();
   const { spacing } = useTheme();

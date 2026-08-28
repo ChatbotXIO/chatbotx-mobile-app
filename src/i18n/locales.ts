@@ -60,8 +60,8 @@ function matchesLocaleTag(normalizedValue: string, localeTag: string) {
 }
 
 /**
- * Verbatim port of the web app's resolveLocale (aha.chat apps/builder/src/i18n/config.ts) so
- * device-language resolution matches the web product exactly (pt/zh normalization, RTL locales).
+ * Verbatim port of the web app's resolveLocale so device-language resolution matches the web
+ * product exactly (pt/zh normalization, RTL locales).
  */
 export function resolveLocale(value: string | undefined): SupportedLanguage {
   if (!value) {

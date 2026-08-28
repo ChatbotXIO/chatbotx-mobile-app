@@ -68,7 +68,7 @@ const rowStyles = StyleSheet.create({
 });
 
 /** Loading-state row shaped like a conversation list row: avatar circle + two lines of text +
- * a small trailing meta block. Used by the inbox skeleton list (Phase 3). */
+ * a small trailing meta block. Used by the inbox skeleton list. */
 function ConversationRow() {
   return (
     <View style={rowStyles.row}>
@@ -106,7 +106,7 @@ function MessageRow({ align = 'start' }: { align?: 'start' | 'end' }) {
 }
 
 /** Preset loading-row shapes for the three list contexts that need skeleton placeholders:
- * conversations, contacts, and chat messages. Generic enough for Phase 3/4/5 list screens to
+ * conversations, contacts, and chat messages. Generic enough for any list screen to
  * `.map()` a handful of these while data loads. */
 export const SkeletonRow = {
   Conversation: ConversationRow,

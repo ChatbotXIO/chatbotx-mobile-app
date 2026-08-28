@@ -15,7 +15,7 @@ import { useWorkspaceMembersList } from '@/features/permissions/use-permissions'
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
 import { useTheme } from '@/theme/use-theme';
 
-/** Read-only members + teams screen (Phase 8). Teams is enterprise-tier and gracefully hides
+/** Read-only members + teams screen. Teams is enterprise-tier and gracefully hides
  * itself on any fetch error (see use-teams.ts) rather than surfacing a broken state for
  * workspaces without the feature. */
 export default function MembersScreen() {

@@ -1,11 +1,10 @@
 /**
- * Normalizes the oRPC error wire shape (`{ code, status, message, defined }` — verified live
- * against the aha.chat builder dev server) into a discriminated union the rest of the app can
- * switch on. `openapi-fetch` doesn't throw on HTTP errors — it resolves `{ data, error }` — so
+ * Normalizes the oRPC error wire shape (`{ code, status, message, defined }` — verified against
+ * the running backend) into a discriminated union the rest of the app can switch on. `openapi-fetch` doesn't throw on HTTP errors — it resolves `{ data, error }` — so
  * every mutation/query hook's `queryFn`/`mutationFn` must check `error` and
  * `throw new ApiError(error)` for react-query's QueryCache/MutationCache `onError` (wired in
  * lib/query-client.ts) to see it. Business-rule errors (ChatbotXException) surface their own
- * `code`/`status`, e.g. `workspaceBlocked` at 402 — see aha.chat apps/builder/src/orpc.ts.
+ * `code`/`status`, e.g. `workspaceBlocked` at 402.
  */
 export interface ApiErrorBody {
   code?: string;
@@ -16,8 +15,8 @@ export interface ApiErrorBody {
    * Machine-readable payload some business-rule errors may attach. `data.reason` is a forward-
    * compatible hook for the 402 `workspaceBlocked` error: the backend does not send it today (as
    * of this writing `classifyWorkspaceBlockedReason` below is the only source of truth, matched
-   * by English substring against `message` — see plan's "backend ask" #2), but once it does, this
-   * field is read first and the substring match becomes pure fallback. No schema for `data` exists
+   * by English substring against `message`), but once it does, this field is read first and the
+   * substring match becomes pure fallback. No schema for `data` exists
    * yet in `src/api/generated/schema.ts`, so this stays loosely typed until the backend ships it.
    */
   data?: { reason?: string };

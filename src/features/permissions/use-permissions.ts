@@ -8,10 +8,10 @@ import { useAuthStore } from '@/stores/use-auth-store';
 /**
  * `GET /workspaces/{workspaceId}/members` (`workspaceMembersAPI.listWorkspaceMembersAuthenticatedAPI`
  * in src/api/generated/schema.ts) embeds a `permissions` object on every member row with EXACTLY
- * these field names — no mapping needed against the plan's shorthand:
+ * these field names:
  * `{ superAdmin, analytics, flows, contacts, onlyAssignedContacts, emailAndPhone, broadcast, ecommerce }`.
  * This hook finds the current signed-in user's own member row (matched by `userId` against the
- * auth store) and exposes its permission bits. Shares the same members-list query the Phase 3
+ * auth store) and exposes its permission bits. Shares the same members-list query the
  * assignment-sheet already fetches (`queryKeys.ws.members.list`), so no extra request in practice.
  */
 export interface WorkspacePermissions {

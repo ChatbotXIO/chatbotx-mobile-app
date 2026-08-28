@@ -8,8 +8,8 @@ import { ContactPanel } from '@/features/contacts/contact-panel';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
 import { useTheme } from '@/theme/use-theme';
 
-/** Replaces the Phase 4 minimal placeholder. Keyed by conversationId, so resolves contactId via
- * the conversation-detail fetch before handing off to the shared ContactPanel. */
+/** Keyed by conversationId, so resolves contactId via the conversation-detail fetch before
+ * handing off to the shared ContactPanel. */
 export default function ConversationContactScreen() {
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
   const workspaceId = useWorkspaceStore((state) => state.currentWorkspaceId);

@@ -33,7 +33,7 @@ const NEW_SEMANTIC_COLOR_KEYS = [
   'scrim',
 ] as const;
 
-// Phase 7 removed `unreadDot`, `bubbleOutbound(Text)`, `bubbleInbound(Text)`; a later cleanup
+// Removed tokens: `unreadDot`, `bubbleOutbound(Text)`, `bubbleInbound(Text)`; a later cleanup
 // removed the remaining flat-key aliases (`background`, `surface`, `surfaceElevated`, `border`,
 // `text`, `primary`, `primaryForeground`) once every call site migrated to the semantic keys
 // above — see tokens.ts's doc comment.
@@ -78,7 +78,7 @@ describe('colorTokens', () => {
     'no longer exposes any deprecated flat-key alias for %s',
     (scheme) => {
       const tokens = colorTokens[scheme] as Record<string, unknown>;
-      // Phase 7 removals:
+      // Removed tokens:
       expect(tokens.unreadDot).toBeUndefined();
       expect(tokens.bubbleOutbound).toBeUndefined();
       expect(tokens.bubbleOutboundText).toBeUndefined();

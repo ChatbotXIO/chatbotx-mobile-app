@@ -11,8 +11,8 @@ export interface Workspace {
   brandColor: string;
 }
 
-/** Lists workspaces the current user is a member of (`GET /users/me/workspaces`, Phase 0 backend
- * addition). Global key — not workspace-scoped, since it lists across workspaces. */
+/** Lists workspaces the current user is a member of (`GET /users/me/workspaces`).
+ * Global key — not workspace-scoped, since it lists across workspaces. */
 export function useWorkspaces() {
   return useQuery({
     queryKey: queryKeys.workspaces(),

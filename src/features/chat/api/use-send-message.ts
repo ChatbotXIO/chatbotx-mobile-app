@@ -293,7 +293,7 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
       // The sender's own optimistic bubble is reconciled here by simply refetching — the newly
       // created message (with its real server id) will replace the optimistic entry once the list
       // refetches, since clientId is embedded on the real message too and message-bubble.tsx keys
-      // by clientId when present. Realtime (Phase 6) handles the same reconciliation for OTHER
+      // by clientId when present. Realtime handlers handle the same reconciliation for OTHER
       // clients viewing this conversation; this path only needs to work for the sender themself.
       // Flow sends (no optimistic entry) rely on this same invalidation/refetch (or realtime) to
       // surface the flow's resulting messages.

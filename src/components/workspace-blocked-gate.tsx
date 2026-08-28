@@ -15,9 +15,9 @@ interface WorkspaceBlockedGateProps {
 
 /**
  * Full-screen state for a 402 `workspaceBlocked` error on a workspace-scoped screen query (e.g.
- * the conversations list itself failing, not just a composer send — Phase 4 already handles the
- * send-time case locally with quota-banner.tsx). Distinguishes MAC-limit vs trial-expired copy per
- * the plan, with a "switch workspace" escape hatch mirroring the settings screen's own switch flow.
+ * the conversations list itself failing, not just a composer send — quota-banner.tsx already
+ * handles the send-time case locally). Distinguishes MAC-limit vs trial-expired copy, with a
+ * "switch workspace" escape hatch mirroring the settings screen's own switch flow.
  */
 export function WorkspaceBlockedGate({ reason, message }: WorkspaceBlockedGateProps) {
   const { t } = useTranslation();

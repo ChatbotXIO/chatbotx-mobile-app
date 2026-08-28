@@ -28,8 +28,8 @@ export function useWorkspaceTags(workspaceId: string | null) {
 
 /**
  * `contactsAPIs.addContactTagAuthenticatedAPI` — `POST /workspaces/{workspaceId}/contacts/tags`,
- * body `{ ids: string[], tags: string[] }`: batch by CONTACT id (mirrors Phase 3's assign-by-contact
- * pattern), `tags` is an array of tag ids.
+ * body `{ ids: string[], tags: string[] }`: batch by CONTACT id (mirrors the assign-by-contact
+ * pattern used elsewhere), `tags` is an array of tag ids.
  *
  * Optimistic: takes the full tag object (not just an id) so `onMutate` can push it straight into
  * the cached contact-detail's `tags` array and the UI shows the new chip immediately, instead of

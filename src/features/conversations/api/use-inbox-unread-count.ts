@@ -16,7 +16,7 @@ import type {
  * into view / fetched this session) — it is NOT a true server-side unread total. A conversation
  * that's unread but was never fetched into any cached list page (e.g. page 3 the user hasn't
  * scrolled to yet) is invisible to this count. There is no unread-count endpoint on the backend
- * yet (see plan's "Backend asks" #3) — this is the best available approximation until one exists.
+ * yet — this is the best available approximation until one exists.
  * `Badge`'s own count-mode caps display at "99+", so no separate capping is needed here.
  */
 function countUnreadFromCache(

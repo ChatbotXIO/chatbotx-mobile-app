@@ -64,7 +64,7 @@ export type PushTokenResult =
  * Requests notification permission (if not already granted) and returns an Expo push token.
  * `unsupported` covers both simulators/emulators (`Device.isDevice` is false — remote push
  * doesn't work there) and web. Requires `Constants.expoConfig.extra.eas.projectId`, which only
- * exists after `eas init` has run — see plan Workstream 5.2.
+ * exists after `eas init` has run.
  */
 export async function getPushTokenAsync(): Promise<PushTokenResult> {
   if (!Device.isDevice) {

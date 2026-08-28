@@ -2,8 +2,8 @@
  * Cursor-pagination helpers shared by every `useInfiniteQuery` hook. The generated schema's
  * cursor-paginated list responses share the `{ data: T[], nextCursor: string | null, prevCursor:
  * string | null }` shape — verified directly against every cursor-paginated operation in
- * src/api/generated/schema.ts (conversations/list and 5 others), NOT `{ items, nextCursor }` as
- * originally assumed during Phase 0 pre-flight; corrected once Phase 3 hit the real shape.
+ * src/api/generated/schema.ts (conversations/list and 5 others); the real wire shape differs
+ * from the initial assumption of `{ items, nextCursor }`.
  */
 export interface CursorPage<T> {
   data: T[];

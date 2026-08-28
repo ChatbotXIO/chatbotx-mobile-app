@@ -3,7 +3,7 @@ import { env } from '@/config/env';
 import { setAuthToken } from './auth-token';
 
 /**
- * Hand-rolled fetch calls against aha.chat's better-auth REST routes (`/api/auth/[...all]`).
+ * Hand-rolled fetch calls against the backend's better-auth REST routes (`/api/auth/[...all]`).
  * These are NOT part of the oRPC router the generated schema.ts covers, so they can't go through
  * the typed apiClient — better-auth ships its own REST surface with its own error shape
  * (`{ message, code }`, no `status`/`defined`, unlike oRPC's `{ code, status, message, defined }`).
@@ -127,15 +127,12 @@ export type SocialProvider = 'google' | 'facebook';
 export const SOCIAL_CALLBACK_URL = 'chatbotxmobileapp://auth-callback';
 
 /**
- * Starts a social sign-in flow. `POST /api/auth/sign-in/social` request/response shape confirmed
- * directly from better-auth's own source (aha.chat's `node_modules/better-auth/dist/api/routes/
- * sign-in.mjs` — path `/sign-in/social`; `.d.mts` in the same dir — request `{ provider,
- * callbackURL }`, response `{ redirect: boolean; url: string }`), NOT guessed from convention.
+ * Starts a social sign-in flow. Shape per better-auth's `/sign-in/social` route: request
+ * `{ provider, callbackURL }`, response `{ redirect: boolean; url: string }`.
  *
- * The returned `url` sends the user through the provider, then aha.chat's fixed OAuth "broker"
- * host (see SOCIAL_PROVIDERS/redirectURI in aha.chat's `packages/auth/src/server.ts`), which
- * relays back to `callbackURL`. `chatbotxmobileapp://` is allowlisted in that file's
- * `trustedOrigins` `staticOrigins` array alongside the broker/builder web origins.
+ * The returned `url` sends the user through the provider, then the backend's fixed OAuth
+ * "broker" host relays back to `callbackURL`. `chatbotxmobileapp://` must be in the backend's
+ * better-auth `trustedOrigins`.
  */
 export async function startSocialSignIn(provider: SocialProvider): Promise<string> {
   const response = await fetch(`${AUTH_BASE_URL}/sign-in/social`, {

@@ -103,7 +103,7 @@ const darkChannel = {
 } as const;
 
 /** Deterministic pastel fills for avatar-fallback tinting (initials on a color picked by hashing
- * the contact id/name — see avatar.tsx in Phase 2) — same 6 hues in both schemes, just retuned
+ * the contact id/name — see avatar.tsx) — same 6 hues in both schemes, just retuned
  * for contrast against each canvas. */
 const lightAvatarPalette = [
   '#ffd6d1', // coral

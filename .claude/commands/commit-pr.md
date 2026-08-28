@@ -25,6 +25,7 @@ Run `/commit` flow then push and open PR. Follows `.agents/rules/git.md`.
    - Body sections: `## Summary` (1–3 bullets, why), `## Changes` (key files/modules), `## Test plan` (markdown checklist).
 
 5. **Create PR** against `main` (the project's canonical PR base):
+
    ```bash
    gh pr create --base main --title "<title>" --body "$(cat <<'EOF'
    ## Summary

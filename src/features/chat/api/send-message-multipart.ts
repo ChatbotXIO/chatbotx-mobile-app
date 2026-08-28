@@ -5,8 +5,7 @@ import { env } from '@/config/env';
 /**
  * Chat message attachments go through the SAME message-create endpoint as text
  * (`POST /workspaces/{workspaceId}/conversations/{conversationId}/messages`), but the generated
- * TS types are wrong for this case: the backend's real Zod schema
- * (aha.chat apps/builder/src/features/messages/schema/mutation.ts) types `files` as
+ * TS types are wrong for this case: the backend's real Zod schema types `files` as
  * `z.array(z.instanceof(File)).min(1)`, which openapi-typescript cannot express — it collapsed to
  * `files?: unknown[]` under `application/json`. The real wire format for a request WITH files is
  * `multipart/form-data` (the backend's `createMessage` handler calls `uploadMultipleFiles` on

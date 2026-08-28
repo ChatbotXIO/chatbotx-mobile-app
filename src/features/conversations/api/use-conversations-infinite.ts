@@ -30,7 +30,7 @@ export type ConversationListItem = ListConversationsResponse['data'][number];
 const PER_PAGE = 30;
 
 /**
- * `onlyAssignedContacts` (Phase 6's usePermissions) forces `assignedId` to the current user's own
+ * `onlyAssignedContacts` (from `usePermissions`) forces `assignedId` to the current user's own
  * id, overriding any manual "assigned to" filter — a restricted member must not be able to browse
  * other agents' conversations by picking a different filter value. Unrestricted members keep
  * whatever the filter store holds (including "unassigned"/other-user values).
