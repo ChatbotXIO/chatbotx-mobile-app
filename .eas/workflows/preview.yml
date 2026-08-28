@@ -1,0 +1,22 @@
+name: Preview build (internal, TEST distribution)
+
+# TEST distribution is EAS internal distribution, not a store — see docs/deploy.md. Triggers on
+# `main` only; the repo's default branch should be `main` (see checklist in the deploy plan).
+on:
+  push:
+    branches: ['main']
+
+jobs:
+  build_android_preview:
+    name: Build Android (preview)
+    type: build
+    params:
+      platform: android
+      profile: preview
+
+  build_ios_preview:
+    name: Build iOS (preview)
+    type: build
+    params:
+      platform: ios
+      profile: preview

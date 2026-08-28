@@ -6,6 +6,7 @@ import { Platform } from 'react-native';
 
 import { apiClient } from '@/api/client';
 import { ApiError } from '@/api/errors';
+import { brand } from '@/config/brand';
 import { getPushTokenAsync } from '@/lib/notifications';
 
 /**
@@ -15,7 +16,7 @@ import { getPushTokenAsync } from '@/lib/notifications';
  * re-registration after a token rotation) always targets the token the backend actually has on
  * file, not whatever `getExpoPushTokenAsync` returns *now* if it has since changed.
  */
-const LAST_REGISTERED_TOKEN_KEY = 'chatbotx.lastRegisteredPushToken';
+const LAST_REGISTERED_TOKEN_KEY = `${brand.brandId}.lastRegisteredPushToken`;
 
 function resolvePlatform(): 'ios' | 'android' | null {
   if (Platform.OS === 'ios') return 'ios';

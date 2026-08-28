@@ -1,3 +1,4 @@
+import { brand } from '@/config/brand';
 import { env } from '@/config/env';
 
 import { setAuthToken } from './auth-token';
@@ -122,17 +123,17 @@ export async function signOut(token: string): Promise<void> {
 
 export type SocialProvider = 'google' | 'facebook';
 
-/** The app's custom URL scheme (app.config.ts `scheme: 'chatbotxmobileapp'`) that the OAuth
- * broker relays back to once the provider flow completes. */
-export const SOCIAL_CALLBACK_URL = 'chatbotxmobileapp://auth-callback';
+/** The app's custom URL scheme (`brands/<BRAND>/brand.json` `scheme`, read via
+ * src/config/brand.ts) that the OAuth broker relays back to once the provider flow completes. */
+export const SOCIAL_CALLBACK_URL = `${brand.brandScheme}://auth-callback`;
 
 /**
  * Starts a social sign-in flow. Shape per better-auth's `/sign-in/social` route: request
  * `{ provider, callbackURL }`, response `{ redirect: boolean; url: string }`.
  *
  * The returned `url` sends the user through the provider, then the backend's fixed OAuth
- * "broker" host relays back to `callbackURL`. `chatbotxmobileapp://` must be in the backend's
- * better-auth `trustedOrigins`.
+ * "broker" host relays back to `callbackURL`. The brand's scheme (e.g. `chatbotxmobileapp://`)
+ * must be in the backend's better-auth `trustedOrigins` for every brand that can sign in.
  */
 export async function startSocialSignIn(provider: SocialProvider): Promise<string> {
   const response = await fetch(`${AUTH_BASE_URL}/sign-in/social`, {

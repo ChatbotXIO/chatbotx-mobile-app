@@ -35,3 +35,9 @@ jobs:
 
       - name: Expo config/dependency doctor
         run: npx expo-doctor
+
+      - name: Verify brand mechanism (chatbotx)
+        run: BRAND=chatbotx pnpm prebuild:check
+
+      - name: Verify brand mechanism (_template)
+        run: BRAND=_template pnpm prebuild:check
