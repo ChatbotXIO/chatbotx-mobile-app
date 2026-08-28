@@ -20,7 +20,7 @@ leftovers — all addressed below.
 
 - **`src/features/chat/api/use-send-message.ts:161,199` (A1)** — `mutationFn` and `onMutate` each
   called `generateClientId()` independently, so the optimistic bubble and the outgoing request body
-  carried *different* clientIds — a duplicate bubble until refetch, an orphaned upload-progress
+  carried _different_ clientIds — a duplicate bubble until refetch, an orphaned upload-progress
   entry, and the retry-scroll signal never firing. **Fix:** normalize `clientId` once in a
   `mutate`/`mutateAsync` wrapper before React Query hands params to `onMutate`/`mutationFn`. Added a
   regression test asserting request-body clientId === cached optimistic row's clientId.
@@ -38,7 +38,7 @@ leftovers — all addressed below.
   screen forever; `useAuthBootstrap` had no try/catch around `getSession`, so a network failure
   during session validation looked identical to an invalid token (no distinction between "can't
   verify" and "verified invalid"). **Fix:** added `.catch`, `fontsLoaded || fontError` gate, and a
-  try/catch that treats a validation *failure* as signed-out-for-this-launch without clearing
+  try/catch that treats a validation _failure_ as signed-out-for-this-launch without clearing
   SecureStore (so the next successful bootstrap can still sign back in with the same token). Also
   added `SplashScreen.setOptions({ fade: true, duration: 300 })` and a root `ErrorBoundary` export
   (expo-router convention) so an uncaught render error doesn't white-screen the app.
@@ -86,7 +86,7 @@ leftovers — all addressed below.
 - **`src/features/contacts/pii-mask.ts` (A9)** — `maskPhone` sized its asterisk run off the raw
   string length (including formatting characters like `-`/`(`/`)`/spaces) instead of the actual
   digit count, so a formatted number like `(555) 123-4567` masked with 4 extra asterisks it didn't
-  need; `maskEmail` split on the *first* `@`, which breaks for a (rare but legal) quoted local-part
+  need; `maskEmail` split on the _first_ `@`, which breaks for a (rare but legal) quoted local-part
   containing `@`, and didn't guard an empty local-part. **Fix:** `maskPhone` sizes off `digits`;
   `maskEmail` splits on `lastIndexOf('@')` and guards `atIndex <= 0`. Updated
   `pii-mask.test.ts` with the corrected expectations plus new empty-local-part and
@@ -114,7 +114,7 @@ leftovers — all addressed below.
   warning noted in the baseline. **Fix:** exported `clearPendingConversationInvalidates()`, called
   alongside `clearAllTypingTimers()` in `realtime-provider.tsx`'s unmount effect. Verified: a full
   suite run right after this fix showed **no** exit warning. (See "Known issues" below — a
-  *different*, apparently pre-existing leak resurfaced later, isolated to
+  _different_, apparently pre-existing leak resurfaced later, isolated to
   `use-send-message.test.tsx`; not chased further, see notes.)
 
 - **`src/realtime/use-realtime-handlers.ts:88-94` (A13)** — `messageCreated` for the conversation
@@ -125,21 +125,21 @@ leftovers — all addressed below.
   not-active case.
 
 - **`src/realtime/apply-conversation-events.ts:141-144` (A14)** — hoisted the matched conversation
-  row to the front of *whichever page it was found on*, not just page 0 — for a row on a later
+  row to the front of _whichever page it was found on_, not just page 0 — for a row on a later
   page, this duplicated it across the client's merged view and corrupted cursor pagination. **Fix:**
   only hoist when `pageIndex === 0`; a later-page match is patched in place. Added a multi-page
   regression test.
 
 - **`src/realtime/realtime-provider.tsx:83-91` (A15)** — `resetConnectionStore()` ran in a
   post-mount `useEffect`, but `usePartySocket` starts connecting immediately on render — a fast
-  `onOpen` could fire and flip the store to `'open'` *before* the effect's reset ran, clobbering it
+  `onOpen` could fire and flip the store to `'open'` _before_ the effect's reset ran, clobbering it
   back to `'connecting'` and leaving the connection banner stuck. **Fix:** reset moved to run
   exactly once per mounted instance via `useState`'s lazy initializer (not a ref read/write during
   render — the project's `reactCompiler: true` setting disallows that pattern; confirmed by ESLint
   during this review, see "Caught during review" below).
 
 - **`src/realtime/parse-event.ts:65` (A16)** — `messageFailed`'s validator rejected `error ===
-  undefined` (only `null` or a string passed), so an event that *omitted* the field entirely (valid
+undefined` (only `null` or a string passed), so an event that _omitted_ the field entirely (valid
   per the type, which already allowed optional) failed validation and the whole event was dropped
   silently. **Fix:** `isOptionalNullableString`; also widened `RealtimeEventMessageFailed.error` to
   `string | null | undefined` in `events.ts` to match.
@@ -151,7 +151,7 @@ leftovers — all addressed below.
 
 - **`app.config.ts` + `src/i18n/reconcile-rtl.ts` (A18)** — expo-updates was installed but not
   wired up (no `runtimeVersion`/`updates`/plugin entry); the RTL bootstrap called `forceRTL`
-  *before* checking `__DEV__`, doing an unnecessary native call it then discarded; and the silent
+  _before_ checking `__DEV__`, doing an unnecessary native call it then discarded; and the silent
   bootstrap reload path could pop a blocking `Alert` if `!Updates.isEnabled`, from a code path with
   nothing rendered yet to explain the alert's context to the user. **Fix:** added
   `runtimeVersion: { policy: 'appVersion' }`, `updates.url`, and the `'expo-updates'` plugin;
@@ -199,7 +199,7 @@ leftovers — all addressed below.
 - Consolidated `flattenMessagePages`/`flattenConversationPages` (each a one-line wrapper around
   `flattenPages`) — deleted both, call sites now use `flattenPages` directly.
 - Removed stale plan-artifact comments ("Phase N", references to a plan/report) opportunistically
-  in every file this review otherwise touched; a repo-wide sweep of files *not* otherwise touched
+  in every file this review otherwise touched; a repo-wide sweep of files _not_ otherwise touched
   was out of scope for this pass — grep `Phase [0-9]\|see report\|see plan` in `src/` for the
   remainder if a follow-up wants to finish that sweep.
 - `isWorkspaceListQuery`-style consolidation (query-keys.ts helper unifying the
@@ -248,7 +248,7 @@ leftovers — all addressed below.
 - `justSentMessageId` in the same file was derived from `sendMessage.isSuccess` — which stays
   `true` for the mutation's entire lifetime until the next `mutate()` call, so it pointed at a
   stale clientId indefinitely between sends. **More severe than the plan's phrasing suggested**:
-  this `useSendMessage(...)` instance is used *only* for the retry path in this screen — the
+  this `useSendMessage(...)` instance is used _only_ for the retry path in this screen — the
   composer instantiates its **own separate** `useSendMessage(...)` for normal sends, so
   `sendMessage.data` here never reflected a composer send at all; the force-scroll-to-own-message
   behavior was effectively broken for every non-retry send. **Fix:** added
@@ -330,25 +330,25 @@ leftovers — all addressed below.
 
 ## Verification
 
-| Check | Result |
-|---|---|
-| `pnpm typecheck` | ✅ clean |
-| `pnpm lint` | ✅ 0 errors (8 pre-existing warnings in `jest.setup.ts`/`scripts/i18n-sync.ts`/`.expo/types`, none in touched files) — **1 real error caught and fixed during this review**: `realtime-provider.tsx`'s ref-read-during-render (see A15) violated `reactCompiler: true`'s stricter ref-access rule; fixed via `useState`'s lazy initializer instead of a ref |
-| `pnpm format:check` | ✅ clean |
-| `pnpm test` | ✅ 41 suites / 293 tests passing (up from 39/279 at baseline — new tests for A1's clientId-parity, A5's delete-rollback/attributes-invalidate, A9's pii-mask cases, A14's page-0-only hoist, pending-deep-link's path matching) |
-| `npx expo-doctor` | 2 pre-existing, unrelated failures: 14 packages with patch-version drift from the exact SDK-pinned versions, and a duplicate `expo-file-system` resolution — neither touched by this pass, not silently bumped (native-build-affecting, out of scope for a review-fix pass) |
-| `npx expo config --type public` | shows `updates`/`runtimeVersion`, no `web` block |
-| `git status` | only unstaged modifications, no staged changes, no unexpected untracked files beyond the 4 new files this pass added |
+| Check                           | Result                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm typecheck`                | ✅ clean                                                                                                                                                                                                                                                                                                                                                    |
+| `pnpm lint`                     | ✅ 0 errors (8 pre-existing warnings in `jest.setup.ts`/`scripts/i18n-sync.ts`/`.expo/types`, none in touched files) — **1 real error caught and fixed during this review**: `realtime-provider.tsx`'s ref-read-during-render (see A15) violated `reactCompiler: true`'s stricter ref-access rule; fixed via `useState`'s lazy initializer instead of a ref |
+| `pnpm format:check`             | ✅ clean                                                                                                                                                                                                                                                                                                                                                    |
+| `pnpm test`                     | ✅ 41 suites / 293 tests passing (up from 39/279 at baseline — new tests for A1's clientId-parity, A5's delete-rollback/attributes-invalidate, A9's pii-mask cases, A14's page-0-only hoist, pending-deep-link's path matching)                                                                                                                             |
+| `npx expo-doctor`               | 2 pre-existing, unrelated failures: 14 packages with patch-version drift from the exact SDK-pinned versions, and a duplicate `expo-file-system` resolution — neither touched by this pass, not silently bumped (native-build-affecting, out of scope for a review-fix pass)                                                                                 |
+| `npx expo config --type public` | shows `updates`/`runtimeVersion`, no `web` block                                                                                                                                                                                                                                                                                                            |
+| `git status`                    | only unstaged modifications, no staged changes, no unexpected untracked files beyond the 4 new files this pass added                                                                                                                                                                                                                                        |
 
 **Known issue not resolved:** the Jest "worker failed to exit gracefully" warning is back after a
 clean run right after A12's fix showed it gone. Isolated it to `use-send-message.test.tsx`
-specifically (running that file alone, including its *pre-existing, untouched* tests, reproduces it
+specifically (running that file alone, including its _pre-existing, untouched_ tests, reproduces it
 with `--forceExit` needed) — this points at something inherent to that test file's setup (likely a
 native-module mock or `jest-expo` environment characteristic) rather than a regression from this
 pass's changes, but I could not get a definitive stack trace: `--detectOpenHandles` took several
 minutes to return in this sandbox (worker-pool disabled, real Node handle timeouts), well past what
 was practical to wait out repeatedly. All 293 tests pass correctly regardless — this only affects
-the test *process's* exit, not test correctness. Flagging for a follow-up with a faster local
+the test _process's_ exit, not test correctness. Flagging for a follow-up with a faster local
 environment to run `--detectOpenHandles` to completion.
 
 ---
