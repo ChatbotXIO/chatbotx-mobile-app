@@ -108,7 +108,11 @@ export function ListItem({
       accessibilityRole="button"
       accessibilityState={{ ...accessibilityState, disabled }}
       disabled={disabled}
-      haptic={disabled ? false : destructive ? 'medium' : 'light'}
+      // Plain navigation rows (the overwhelming majority of ListItem uses — settings, contacts,
+      // members) get no haptic: a tap that just pushes a screen doesn't need feedback beyond the
+      // screen transition itself. Destructive rows keep the 'medium' haptic as extra confirmation
+      // weight for an action that can't be casually undone.
+      haptic={disabled ? false : destructive ? 'medium' : false}
       onPress={onPress}
       onPressIn={() => {
         // reanimated `SharedValue.value` is a mutable UI-thread ref, not React state — see

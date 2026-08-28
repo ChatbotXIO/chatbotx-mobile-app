@@ -6,10 +6,7 @@ import type { PropsWithChildren } from 'react';
 import { apiClient } from '@/api/client';
 import { queryKeys } from '@/api/query-keys';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
-import {
-  createOptimisticMessage,
-  useSendMessage,
-} from '@/features/chat/api/use-send-message';
+import { createOptimisticMessage, useSendMessage } from '@/features/chat/api/use-send-message';
 
 jest.mock('@/api/client', () => ({
   apiClient: {
@@ -193,10 +190,14 @@ describe('useSendMessage', () => {
       });
     });
 
-    const data = queryClient.getQueryData<{
-      pages: { data: { parentId: string | null }[] }[];
-    }>(queryKey);
-    expect(data?.pages[0]?.data[0]?.parentId).toBe('parent-1');
+    // `onMutate` awaits `cancelQueries` before patching, so the optimistic entry lands a
+    // microtask after `mutate()` returns rather than perfectly synchronously — wait for it.
+    await waitFor(() => {
+      const data = queryClient.getQueryData<{
+        pages: { data: { parentId: string | null }[] }[];
+      }>(queryKey);
+      expect(data?.pages[0]?.data[0]?.parentId).toBe('parent-1');
+    });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockedPost).toHaveBeenCalledWith(
@@ -259,5 +260,40 @@ describe('useSendMessage', () => {
     expect(data?.pages[0]?.data).toHaveLength(1);
     expect(data?.pages[0]?.data[0]?.__optimisticStatus).toBe('failed');
     expect(useChatStore.getState().draftsByConversation['conv-1']).toBeUndefined();
+  });
+
+  it('sends the same clientId in the request body as the cached optimistic row', async () => {
+    // Regression: `mutationFn` and `onMutate` used to each call `generateClientId()`
+    // independently, so the optimistic bubble and the outgoing request carried different ids —
+    // producing a duplicate bubble until refetch and an orphaned upload-progress entry.
+    mockedPost.mockResolvedValue({ data: { id: 'server-1' }, error: undefined });
+    const queryClient = createTestQueryClient();
+    const queryKey = queryKeys.ws.messages.list('ws-1', 'conv-1');
+    queryClient.setQueryData(queryKey, messagesData());
+
+    const { result } = await renderHook(() => useSendMessage('ws-1', 'conv-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate({ workspaceId: 'ws-1', conversationId: 'conv-1', text: 'hello' });
+    });
+
+    // `onMutate` awaits `cancelQueries` before patching, so the optimistic entry lands a
+    // microtask after `mutate()` returns rather than perfectly synchronously — wait for it.
+    let cachedClientId: string | undefined;
+    await waitFor(() => {
+      const data = queryClient.getQueryData<{ pages: { data: { clientId?: string }[] }[] }>(
+        queryKey,
+      );
+      cachedClientId = data?.pages[0]?.data[0]?.clientId;
+      expect(cachedClientId).toEqual(expect.any(String));
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockedPost).toHaveBeenCalledWith(
+      '/workspaces/{workspaceId}/conversations/{conversationId}/messages',
+      expect.objectContaining({ body: expect.objectContaining({ clientId: cachedClientId }) }),
+    );
   });
 });

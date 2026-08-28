@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -61,6 +61,8 @@ export function ConnectionBanner({ state }: ConnectionBannerProps) {
     transform: [{ translateY: translateY.value }],
   }));
 
+  // Hoisted behind useMemo — this banner mounts on both the Inbox and chat screens and rebuilding
+  // all four states' config every render (to read one) was needless per-render churn.
   const config: Record<
     ConnectionState,
     {
@@ -69,32 +71,35 @@ export function ConnectionBanner({ state }: ConnectionBannerProps) {
       textColor: string;
       label: string;
     }
-  > = {
-    online: {
-      icon: 'checkmark-circle-outline',
-      background: colors.successSoft,
-      textColor: colors.success,
-      label: t('realtime.online', { defaultValue: 'Back online' }),
-    },
-    connecting: {
-      icon: 'sync-outline',
-      background: colors.infoSoft,
-      textColor: colors.info,
-      label: t('realtime.connecting', { defaultValue: 'Connecting…' }),
-    },
-    reconnecting: {
-      icon: 'sync-outline',
-      background: colors.warningSoft,
-      textColor: colors.warning,
-      label: t('realtime.reconnecting', { defaultValue: 'Reconnecting…' }),
-    },
-    offline: {
-      icon: 'cloud-offline-outline',
-      background: colors.dangerSoft,
-      textColor: colors.danger,
-      label: t('realtime.offline', { defaultValue: "You're offline" }),
-    },
-  };
+  > = useMemo(
+    () => ({
+      online: {
+        icon: 'checkmark-circle-outline',
+        background: colors.successSoft,
+        textColor: colors.success,
+        label: t('realtime.online', { defaultValue: 'Back online' }),
+      },
+      connecting: {
+        icon: 'sync-outline',
+        background: colors.infoSoft,
+        textColor: colors.info,
+        label: t('realtime.connecting', { defaultValue: 'Connecting…' }),
+      },
+      reconnecting: {
+        icon: 'sync-outline',
+        background: colors.warningSoft,
+        textColor: colors.warning,
+        label: t('realtime.reconnecting', { defaultValue: 'Reconnecting…' }),
+      },
+      offline: {
+        icon: 'cloud-offline-outline',
+        background: colors.dangerSoft,
+        textColor: colors.danger,
+        label: t('realtime.offline', { defaultValue: "You're offline" }),
+      },
+    }),
+    [colors, t],
+  );
   const { icon, background, textColor, label } = config[state];
 
   if (!shouldShow) return null;

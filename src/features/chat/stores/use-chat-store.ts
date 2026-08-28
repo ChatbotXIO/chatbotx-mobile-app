@@ -23,6 +23,14 @@ interface ChatStoreState {
    * `src/lib/notifications.ts`'s notification handler (outside React) to suppress the in-app
    * banner for a push notification about the conversation the user is already looking at. */
   activeConversationId: string | null;
+  /** conversationId -> the clientId of the most recently successfully-sent message, set once by
+   * `useSendMessage`'s `onSuccess` (use-send-message.ts). Lives here — not as component state in
+   * the chat screen — because the screen's own `useSendMessage(...)` instance (used only for the
+   * retry path) is a SEPARATE mutation from the one `Composer` instantiates for normal sends; a
+   * `sendMessage.data` read in the screen would never see the composer's own sends. The chat
+   * screen reads this to force-scroll to a message the user just sent, even if they'd scrolled
+   * away — see MessageList's `justSentMessageId` prop. */
+  justSentClientIdByConversation: Record<string, string | undefined>;
   /** `seconds` is the realtime `typing` event's TTL (falls back to a default in the caller when
    * 0/undefined) — kept optional so non-realtime callers (tests, other future call sites) aren't
    * forced to pass it. Not used by this store itself; use-realtime-handlers.ts reads it back out
@@ -33,6 +41,7 @@ interface ChatStoreState {
   setUploadProgress: (clientId: string, ratio: number) => void;
   clearUploadProgress: (clientId: string) => void;
   setActiveConversationId: (conversationId: string | null) => void;
+  setJustSentClientId: (conversationId: string, clientId: string) => void;
 }
 
 export const useChatStore = create<ChatStoreState>((set) => ({
@@ -41,6 +50,7 @@ export const useChatStore = create<ChatStoreState>((set) => ({
   composerModeByConversation: {},
   uploadProgressByClientId: {},
   activeConversationId: null,
+  justSentClientIdByConversation: {},
   setTyping: (conversationId, typing) =>
     set((state) => ({
       typingByConversation: { ...state.typingByConversation, [conversationId]: typing },
@@ -63,4 +73,11 @@ export const useChatStore = create<ChatStoreState>((set) => ({
       const { [clientId]: _removed, ...rest } = state.uploadProgressByClientId;
       return { uploadProgressByClientId: rest };
     }),
+  setJustSentClientId: (conversationId, clientId) =>
+    set((state) => ({
+      justSentClientIdByConversation: {
+        ...state.justSentClientIdByConversation,
+        [conversationId]: clientId,
+      },
+    })),
 }));

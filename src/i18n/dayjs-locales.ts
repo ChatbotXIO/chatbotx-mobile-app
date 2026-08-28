@@ -1,23 +1,3 @@
-import 'dayjs/locale/ar';
-import 'dayjs/locale/da';
-import 'dayjs/locale/de';
-import 'dayjs/locale/en';
-import 'dayjs/locale/es';
-import 'dayjs/locale/fi';
-import 'dayjs/locale/fr';
-import 'dayjs/locale/he';
-import 'dayjs/locale/id';
-import 'dayjs/locale/it';
-import 'dayjs/locale/ja';
-import 'dayjs/locale/nl';
-import 'dayjs/locale/pt-br';
-import 'dayjs/locale/pt';
-import 'dayjs/locale/ro';
-import 'dayjs/locale/sv';
-import 'dayjs/locale/tr';
-import 'dayjs/locale/vi';
-import 'dayjs/locale/zh-cn';
-import 'dayjs/locale/zh-tw';
 import dayjs from 'dayjs';
 
 import type { SupportedLanguage } from '@/i18n/locales';
@@ -49,6 +29,50 @@ const dayjsLocaleNames: Record<SupportedLanguage, string> = {
   'zh-TW': 'zh-tw',
 };
 
+// Metro (unlike webpack) needs a STATIC, literal string argument to `require()` to resolve and
+// bundle a module — a template-literal path like `require(\`dayjs/locale/${name}\`)` can't be
+// analyzed at bundle time, so each locale needs its own literal `require()` call here rather than
+// a single dynamically-built one. Still lazy: nothing runs until `setDayjsLocale` actually picks
+// this branch, so a session only pays for the locale(s) it uses instead of importing all 20 at
+// module load.
+/* eslint-disable @typescript-eslint/no-require-imports -- intentionally lazy per-locale requires, see above */
+const dayjsLocaleLoaders: Record<string, () => void> = {
+  ar: () => require('dayjs/locale/ar'),
+  da: () => require('dayjs/locale/da'),
+  de: () => require('dayjs/locale/de'),
+  en: () => require('dayjs/locale/en'),
+  es: () => require('dayjs/locale/es'),
+  fi: () => require('dayjs/locale/fi'),
+  fr: () => require('dayjs/locale/fr'),
+  he: () => require('dayjs/locale/he'),
+  id: () => require('dayjs/locale/id'),
+  it: () => require('dayjs/locale/it'),
+  ja: () => require('dayjs/locale/ja'),
+  nl: () => require('dayjs/locale/nl'),
+  'pt-br': () => require('dayjs/locale/pt-br'),
+  pt: () => require('dayjs/locale/pt'),
+  ro: () => require('dayjs/locale/ro'),
+  sv: () => require('dayjs/locale/sv'),
+  tr: () => require('dayjs/locale/tr'),
+  vi: () => require('dayjs/locale/vi'),
+  'zh-cn': () => require('dayjs/locale/zh-cn'),
+  'zh-tw': () => require('dayjs/locale/zh-tw'),
+};
+/* eslint-enable @typescript-eslint/no-require-imports */
+
+// Tracks which locale modules have already been loaded — dayjs locale side-effect modules are
+// idempotent to re-require, but there's no reason to re-run the loader for a locale already
+// loaded this session.
+const loadedLocales = new Set<string>();
+
+function ensureDayjsLocaleLoaded(dayjsLocaleName: string): void {
+  if (loadedLocales.has(dayjsLocaleName)) return;
+  loadedLocales.add(dayjsLocaleName);
+  dayjsLocaleLoaders[dayjsLocaleName]?.();
+}
+
 export function setDayjsLocale(language: SupportedLanguage): void {
-  dayjs.locale(dayjsLocaleNames[language]);
+  const dayjsLocaleName = dayjsLocaleNames[language];
+  ensureDayjsLocaleLoaded(dayjsLocaleName);
+  dayjs.locale(dayjsLocaleName);
 }

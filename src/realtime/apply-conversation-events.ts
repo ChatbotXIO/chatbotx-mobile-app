@@ -105,8 +105,16 @@ export interface ApplyConversationMessageCreatedResult {
  * and this one ALSO patches the matching conversation-list ROW so the inbox preview stays live
  * without a refetch — updates `lastActivityAt`, splices the message onto the row's `messages[]`
  * preview array (capped to the last few entries, matching `conversation-row.tsx`'s
- * `lastMessagePreview` which only ever reads the LAST entry), and moves that row to the top of
- * whichever page it was found on (conventional "most recent conversation first" ordering).
+ * `lastMessagePreview` which only ever reads the LAST entry). When the matched row is on the
+ * FIRST page, it's also moved to the front of that page (conventional "most recent conversation
+ * first" ordering) — a row found on a later page is patched in place instead, since the list is
+ * cursor-paginated and splicing a row from page N to the front of page 0 would duplicate it
+ * across pages and desync every subsequent page's cursor.
+ *
+ * `activeConversationId` — when it matches the incoming message's conversation — also bumps
+ * `agentLastReadAt` on the patched row, so the inbox unread badge doesn't drift stale while the
+ * user is actively looking at that conversation's chat screen (the realtime event is the only
+ * signal here; the user isn't calling the read-receipt mutation just by having the screen open).
  *
  * Deliberately does NOT attempt to fabricate a brand-new row when the conversation isn't cached
  * anywhere — the event payload is a single message, not a full conversation row, so there's no
@@ -118,6 +126,7 @@ const MAX_PREVIEW_MESSAGES = 20;
 export function applyConversationMessageCreated(
   current: InfiniteConversationsData,
   event: RealtimeEventCreateMessage,
+  activeConversationId: string | null = null,
 ): ApplyConversationMessageCreatedResult {
   if (!current) return { data: current, found: false };
 
@@ -126,7 +135,7 @@ export function applyConversationMessageCreated(
 
   let found = false;
 
-  const pages = current.pages.map((page) => {
+  const pages = current.pages.map((page, pageIndex) => {
     const matchIndex = page.data.findIndex((item) => item.id === incoming.conversationId);
     if (matchIndex < 0) return page;
 
@@ -136,9 +145,21 @@ export function applyConversationMessageCreated(
       ...matched,
       lastActivityAt: incoming.createdAt,
       messages: [...matched.messages, incoming].slice(-MAX_PREVIEW_MESSAGES),
+      ...(incoming.conversationId === activeConversationId
+        ? { agentLastReadAt: incoming.createdAt }
+        : {}),
     };
 
-    // Move the patched row to the front of this page — mirrors "most recently active
+    if (pageIndex !== 0) {
+      // Not the first page — patch in place. Hoisting here would move the row across a page
+      // boundary, duplicating it in the client's merged view and corrupting cursor pagination.
+      return {
+        ...page,
+        data: page.data.map((item, index) => (index === matchIndex ? patchedRow : item)),
+      };
+    }
+
+    // First page only: move the patched row to the front — mirrors "most recently active
     // conversation first" ordering without waiting on a refetch.
     const rest = page.data.filter((_, index) => index !== matchIndex);
     return { ...page, data: [patchedRow, ...rest] };

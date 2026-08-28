@@ -28,3 +28,19 @@ export const useWorkspaceStore = create<WorkspaceStoreState>()(
     },
   ),
 );
+
+/** Resolves once the persisted workspace-store snapshot has been read from AsyncStorage (or
+ * immediately, if hydration already finished before this was called). Without gating on this,
+ * cold start reads `currentWorkspaceId === null` before hydration completes and bounces an
+ * already-signed-in, already-workspace-selected user to the workspace picker. */
+export function waitForWorkspaceHydration(): Promise<void> {
+  if (useWorkspaceStore.persist.hasHydrated()) {
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => {
+    const unsubscribe = useWorkspaceStore.persist.onFinishHydration(() => {
+      unsubscribe();
+      resolve();
+    });
+  });
+}

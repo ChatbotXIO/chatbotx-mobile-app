@@ -29,7 +29,7 @@ export function LanguageSheet({ sheetRef, currentLanguage }: LanguageSheetProps)
             trailing={
               language === currentLanguage ? (
                 <View>
-                  <Icon name="checkmark" size={20} color={colors.primary} />
+                  <Icon name="checkmark" size={20} color={colors.brand} />
                 </View>
               ) : undefined
             }

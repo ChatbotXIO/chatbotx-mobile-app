@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useTheme } from '@/theme/use-theme';
@@ -17,11 +18,17 @@ interface ErrorBannerProps {
 export function ErrorBanner({ message, actionLabel, onAction, tone = 'danger' }: ErrorBannerProps) {
   const { colors, spacing, radius } = useTheme();
 
-  const toneTokens = {
-    danger: { tint: colors.danger, soft: colors.dangerSoft },
-    warning: { tint: colors.warning, soft: colors.warningSoft },
-    info: { tint: colors.info, soft: colors.infoSoft },
-  }[tone];
+  // Hoisted behind useMemo — rebuilding all three tones every render (to read one) was needless
+  // per-render churn on a component that can sit mounted for a whole screen's lifetime.
+  const toneMap = useMemo(
+    () => ({
+      danger: { tint: colors.danger, soft: colors.dangerSoft },
+      warning: { tint: colors.warning, soft: colors.warningSoft },
+      info: { tint: colors.info, soft: colors.infoSoft },
+    }),
+    [colors],
+  );
+  const toneTokens = toneMap[tone];
 
   return (
     <View
@@ -46,7 +53,12 @@ export function ErrorBanner({ message, actionLabel, onAction, tone = 'danger' }:
         {message}
       </Text>
       {actionLabel && onAction ? (
-        <Pressable onPress={onAction} accessibilityRole="button">
+        <Pressable
+          onPress={onAction}
+          accessibilityRole="button"
+          accessibilityLabel={actionLabel}
+          hitSlop={8}
+        >
           <Text variant="caption" style={{ color: toneTokens.tint, fontWeight: '700' }}>
             {actionLabel}
           </Text>

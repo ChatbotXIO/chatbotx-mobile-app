@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect } from 'react';
@@ -70,20 +70,25 @@ export function useUnregisterDeviceToken() {
  * install.
  */
 export function usePushTokenRotation(workspaceId: string, enabled: boolean): void {
-  const queryClient = useQueryClient();
-
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) return undefined;
+
+    let cancelled = false;
 
     const subscription = Notifications.addPushTokenListener(async ({ data: newToken }) => {
       const previousToken = await SecureStore.getItemAsync(LAST_REGISTERED_TOKEN_KEY);
+      if (cancelled) return;
+
       if (previousToken && previousToken !== newToken) {
         await unregisterToken(previousToken).catch(() => {});
+        if (cancelled) return;
       }
       await registerToken(workspaceId, newToken);
-      queryClient.invalidateQueries({ queryKey: ['device-token'] });
     });
 
-    return () => subscription.remove();
-  }, [enabled, workspaceId, queryClient]);
+    return () => {
+      cancelled = true;
+      subscription.remove();
+    };
+  }, [enabled, workspaceId]);
 }

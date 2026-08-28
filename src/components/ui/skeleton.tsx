@@ -10,6 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { useReducedMotion } from '@/theme/motion';
 import { useTheme } from '@/theme/use-theme';
 
 interface SkeletonProps {
@@ -24,23 +25,28 @@ const PULSE_DURATION_MS = 800;
 /** Pulsing placeholder block for loading states. Compositor-friendly (opacity only). */
 export function Skeleton({ width = '100%', height = 16, borderRadius = 6, style }: SkeletonProps) {
   const { colors } = useTheme();
+  const reducedMotion = useReducedMotion();
   const opacity = useSharedValue(0.5);
 
   useEffect(() => {
+    if (reducedMotion) {
+      opacity.value = 0.7;
+      return undefined;
+    }
     opacity.value = withRepeat(
       withTiming(1, { duration: PULSE_DURATION_MS, easing: Easing.inOut(Easing.ease) }),
       -1,
       true,
     );
     return () => cancelAnimation(opacity);
-  }, [opacity]);
+  }, [opacity, reducedMotion]);
 
   const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   return (
     <Animated.View
       style={[
-        { width, height, borderRadius, backgroundColor: colors.surface },
+        { width, height, borderRadius, backgroundColor: colors.surface2 },
         animatedStyle,
         style,
       ]}

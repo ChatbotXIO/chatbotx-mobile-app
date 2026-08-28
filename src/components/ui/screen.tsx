@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { type Edge, SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/theme/use-theme';
@@ -20,21 +20,18 @@ export function Screen({ children, style, edges, padded = false }: ScreenProps) 
       edges={edges}
       style={[
         styles.container,
-        { backgroundColor: colors.background },
+        { backgroundColor: colors.bg },
         padded && { padding: spacing.md },
         style,
       ]}
     >
-      <View style={styles.content}>{children}</View>
+      {children}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  content: {
     flex: 1,
   },
 });

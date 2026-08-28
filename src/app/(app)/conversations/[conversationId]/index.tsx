@@ -1,12 +1,13 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type BottomSheet from '@gorhom/bottom-sheet';
 import type { LayoutChangeEvent } from 'react-native';
 import { KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { flattenPages } from '@/api/pagination';
 import { ConnectionBanner } from '@/components/ui/connection-banner';
 import { ErrorBanner } from '@/components/ui/error-banner';
 import { Screen } from '@/components/ui/screen';
@@ -20,11 +21,7 @@ import { ChatHeader } from '@/features/chat/components/chat-header';
 import { Composer } from '@/features/chat/components/composer';
 import { MessageActionsMenu } from '@/features/chat/components/message-actions-menu';
 import { MessageList, type MessageListHandle } from '@/features/chat/components/message-list';
-import {
-  flattenMessagePages,
-  useMessagesInfinite,
-  type Message,
-} from '@/features/chat/api/use-messages-infinite';
+import { useMessagesInfinite, type Message } from '@/features/chat/api/use-messages-infinite';
 import { useDeleteMessage, useSetMessageAttributes } from '@/features/chat/api/use-message-actions';
 import { removeOptimisticMessage, useSendMessage } from '@/features/chat/api/use-send-message';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
@@ -49,16 +46,23 @@ export default function ChatScreen() {
   const messageListRef = useRef<MessageListHandle>(null);
 
   const messagesQuery = useMessagesInfinite(workspaceId, conversationId ?? null);
-  const messages = flattenMessagePages(messagesQuery.data?.pages);
-  const chronologicalMessages = [...messages].reverse();
+  const messages = useMemo(() => flattenPages(messagesQuery.data?.pages), [messagesQuery.data]);
+  // `messages` is newest-first (see use-messages-infinite.ts); MessageList wants chronological
+  // order. Memoized on `messages` itself (not recomputed inline) so downstream `messagesById`/
+  // `rows` memos that depend on this array's identity don't invalidate on every render.
+  const chronologicalMessages = useMemo(() => [...messages].reverse(), [messages]);
 
   const markRead = useMarkConversationRead(workspaceId ?? '');
   const sendMessage = useSendMessage(workspaceId ?? '', conversationId ?? '');
-  // The mutation's own resolved value carries the clientId it generated internally (see
-  // use-send-message.ts's mutationFn return) — reading it here (rather than threading a second
-  // piece of state) is enough for MessageList to know "the last message that just landed was MY
-  // own send" and force-scroll to it even if the user had scrolled away.
-  const justSentMessageId = sendMessage.isSuccess ? (sendMessage.data?.clientId ?? null) : null;
+  // Read from the shared chat store (set by `useSendMessage`'s `onSuccess`) rather than this
+  // screen's own `sendMessage.data` — that mutation instance is used ONLY for the retry path
+  // here; the composer instantiates its own separate `useSendMessage(...)` for normal sends, so
+  // `sendMessage.data` never reflected a composer send at all. The store is the one place both
+  // instances can report to.
+  const justSentMessageId =
+    useChatStore((state) =>
+      conversationId ? state.justSentClientIdByConversation[conversationId] : undefined,
+    ) ?? null;
   const deleteMessage = useDeleteMessage(workspaceId ?? '', conversationId ?? '');
   const setAttributes = useSetMessageAttributes(workspaceId ?? '', conversationId ?? '');
   const setComposerMode = useChatStore((state) => state.setComposerMode);
@@ -108,10 +112,33 @@ export default function ChatScreen() {
 
   function handleRetry(message: Message) {
     if (!message.clientId) return;
+
+    // Rebuild the ORIGINAL send params from the failed optimistic row — previously this only
+    // re-sent `text`, silently dropping any attachments or reply context, so retrying a failed
+    // attachment/reply send produced a plain text message instead of the thing the user actually
+    // tried to send.
+    const attachments =
+      message.attachments.length > 0
+        ? message.attachments.map((attachment) => ({
+            uri: attachment.originPath,
+            mimeType: attachment.mimeType,
+            fileName: attachment.name ?? attachment.originPath.split('/').pop() ?? 'attachment',
+          }))
+        : undefined;
+
+    // `parentId` only carries the parent's id, not its `createdAt` (which `replyTo` needs) —
+    // recover it from the already-loaded messages list rather than a fresh cache lookup.
+    const parent = message.parentId
+      ? messages.find((candidate) => candidate.id === message.parentId)
+      : undefined;
+    const replyTo = parent ? { messageId: parent.id, createdAt: parent.createdAt } : undefined;
+
     sendMessage.mutate({
       workspaceId: workspaceId ?? '',
       conversationId: conversationId ?? '',
       text: message.text ?? undefined,
+      attachments,
+      replyTo,
       clientId: message.clientId,
     });
   }

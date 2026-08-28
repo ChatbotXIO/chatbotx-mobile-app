@@ -41,8 +41,8 @@ export const Sheet = forwardRef<BottomSheet, SheetProps>(function Sheet(
       enablePanDownToClose
       onClose={onDismiss}
       backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: colors.surfaceElevated, borderRadius: radius.xl }}
-      handleIndicatorStyle={{ backgroundColor: colors.border }}
+      backgroundStyle={{ backgroundColor: colors.surface1, borderRadius: radius.xl }}
+      handleIndicatorStyle={{ backgroundColor: colors.borderSubtle }}
     >
       <BottomSheetView style={{ flex: 1 }}>{children}</BottomSheetView>
     </BottomSheet>
@@ -81,8 +81,8 @@ export const SheetModal = forwardRef<BottomSheetModal, SheetModalProps>(function
       enablePanDownToClose
       onDismiss={onDismiss}
       backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: colors.surfaceElevated, borderRadius: radius.xl }}
-      handleIndicatorStyle={{ backgroundColor: colors.border }}
+      backgroundStyle={{ backgroundColor: colors.surface1, borderRadius: radius.xl }}
+      handleIndicatorStyle={{ backgroundColor: colors.borderSubtle }}
     >
       <BottomSheetView style={{ flex: 1 }}>{children}</BottomSheetView>
     </BottomSheetModal>

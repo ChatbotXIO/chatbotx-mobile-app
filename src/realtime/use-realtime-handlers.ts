@@ -44,6 +44,16 @@ function debounceInvalidateConversationsList(queryClient: QueryClient, workspace
   pendingConversationInvalidate.set(workspaceId, timer);
 }
 
+/** Clears every pending debounced conversations-list invalidation across all workspaces —
+ * these are module-scope timers (not tied to any component's lifecycle), so without an explicit
+ * teardown they outlive the realtime connection that scheduled them, leaking a timer per
+ * not-yet-cached conversation and holding the Jest process open after tests finish. Call this
+ * alongside `clearAllTypingTimers()` wherever the realtime connection itself is torn down. */
+export function clearPendingConversationInvalidates(): void {
+  pendingConversationInvalidate.forEach((timer) => clearTimeout(timer));
+  pendingConversationInvalidate.clear();
+}
+
 /**
  * Dispatches a parsed realtime event to the right cache applier.
  *
@@ -76,6 +86,7 @@ export function useRealtimeHandlers(queryClient: QueryClient, workspaceId: strin
           );
 
           let foundInAnyPage = false;
+          const activeConversationId = useChatStore.getState().activeConversationId;
           queryClient
             .getQueryCache()
             .findAll({
@@ -87,7 +98,7 @@ export function useRealtimeHandlers(queryClient: QueryClient, workspaceId: strin
             })
             .forEach((query) => {
               queryClient.setQueryData<InfiniteConversationsData>(query.queryKey, (old) => {
-                const result = applyConversationMessageCreated(old, event);
+                const result = applyConversationMessageCreated(old, event, activeConversationId);
                 if (result.found) foundInAnyPage = true;
                 return result.data;
               });

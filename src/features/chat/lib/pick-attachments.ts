@@ -3,7 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 /** Cap on how many assets a single multi-select library pick can return — an arbitrary but
  * generous ceiling to keep one send from trying to upload an unbounded number of files. */
-export const MAX_MULTI_SELECT = 10;
+const MAX_MULTI_SELECT = 10;
 
 export interface PickedAsset {
   uri: string;

@@ -32,7 +32,7 @@ export function ChannelBadge({ channel, size = 16 }: ChannelBadgeProps) {
 
   return (
     <View style={[styles.container, { backgroundColor: color, width: size + 6, height: size + 6 }]}>
-      <Icon name={icon} size={size - 4} color={colors.primaryForeground} />
+      <Icon name={icon} size={size - 4} color={colors.onBrand} />
     </View>
   );
 }

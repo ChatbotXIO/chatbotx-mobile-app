@@ -1,20 +1,22 @@
-import { Link, router } from 'expo-router';
+import { Link, router, type Href } from 'expo-router';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TextInput } from 'react-native';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { signInWithEmail } from '@/api/auth-endpoints';
 import { Button } from '@/components/ui/button';
+import { Divider } from '@/components/ui/divider';
 import { ErrorBanner } from '@/components/ui/error-banner';
 import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
-import { Card } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import { TextField } from '@/components/ui/text-field';
 import { SocialButtons } from '@/features/auth/social-buttons';
 import { consumePendingDeepLink } from '@/lib/pending-deep-link';
 import { useAuthStore } from '@/stores/use-auth-store';
+import { useReducedMotion } from '@/theme/motion';
 import { useTheme } from '@/theme/use-theme';
 
 const LOGO_SIZE = 72;
@@ -22,6 +24,7 @@ const LOGO_SIZE = 72;
 export default function SignInScreen() {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
+  const reducedMotion = useReducedMotion();
   const setSignedIn = useAuthStore((state) => state.setSignedIn);
 
   const [email, setEmail] = useState('');
@@ -43,7 +46,10 @@ export default function SignInScreen() {
       // default post-auth redirect — see lib/pending-deep-link.ts. A mustChangePassword user is
       // still routed to '/' regardless (its own guard traps them in change-password first).
       const pendingDeepLink = user.mustChangePassword ? null : consumePendingDeepLink();
-      router.replace((pendingDeepLink ?? '/') as never);
+      // A captured deep link is an arbitrary runtime string, not a route this app's typed-routes
+      // manifest can know statically — `Href` (rather than `as never`) is expo-router's own type
+      // for exactly this "any valid path string" case.
+      router.replace((pendingDeepLink ?? '/') as Href);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errors.unknown'));
     } finally {
@@ -64,7 +70,10 @@ export default function SignInScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={[styles.form, { gap: spacing.md }]}>
-            <View style={[styles.logoWrap, { marginBottom: spacing.sm }]}>
+            <Animated.View
+              entering={reducedMotion ? undefined : FadeInUp.duration(400)}
+              style={[styles.logoWrap, { marginBottom: spacing.sm }]}
+            >
               <View
                 style={[
                   styles.logoCircle,
@@ -73,7 +82,7 @@ export default function SignInScreen() {
               >
                 <Icon name="chatbubbles" size={32} color={colors.brand} />
               </View>
-            </View>
+            </Animated.View>
 
             <Text variant="display" style={styles.centered}>
               {t('auth.signIn')}
@@ -130,11 +139,17 @@ export default function SignInScreen() {
               </Text>
             </Link>
 
-            <Card style={[styles.divider, { padding: spacing.sm }]}>
-              <Text variant="caption" color="secondary" style={styles.centered}>
+            <View style={[styles.dividerRow, { gap: spacing.sm }]}>
+              <View style={styles.dividerLine}>
+                <Divider />
+              </View>
+              <Text variant="caption" color="secondary">
                 {t('auth.orContinueWith')}
               </Text>
-            </Card>
+              <View style={styles.dividerLine}>
+                <Divider />
+              </View>
+            </View>
             <SocialButtons />
           </View>
         </ScrollView>
@@ -166,8 +181,12 @@ const styles = StyleSheet.create({
   link: {
     alignSelf: 'center',
   },
-  divider: {
+  dividerRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+  },
+  dividerLine: {
+    flex: 1,
   },
   centered: {
     textAlign: 'center',

@@ -4,10 +4,9 @@ Expo + TypeScript mobile client for [ChatbotX](https://github.com/) — the open
 chatbot platform whose backend lives in the sibling repo, `../aha.chat`. This app replaces the
 legacy `chatbotx-mobile` React Native project (untyped JS, old Laravel backend).
 
-Auth, workspace picker, and five tabs — Conversations, Contacts, Flows, Statistics, and Settings —
-are implemented, along with chat with attachments, PartyKit realtime, push notifications, 20-locale
-i18n (including RTL for `ar`/`he`), and a typed REST client generated from the backend's OpenAPI
-spec.
+Auth, workspace picker, and three tabs — Conversations, Contacts, and Settings — are implemented,
+along with chat with attachments, PartyKit realtime, push notifications, 20-locale i18n (including
+RTL for `ar`/`he`), and a typed REST client generated from the backend's OpenAPI spec.
 
 > This app talks to the `aha.chat` backend's `bearer()` better-auth plugin and the REST endpoints
 > under `/api/workspaces/{workspaceId}/...`, plus the corresponding realtime events. Run
@@ -33,19 +32,21 @@ pnpm start
 ```
 
 Then follow the Expo CLI prompts to open the app in a development build, Android emulator, iOS
-simulator, Expo Go, or the web.
+simulator, or Expo Go.
 
 Other useful commands:
 
 ```bash
-pnpm ios              # expo start --ios
-pnpm android           # expo start --android
-pnpm web                # expo start --web
+pnpm ios              # expo run:ios
+pnpm android           # expo run:android
 pnpm lint                # expo lint (eslint-config-expo)
 pnpm typecheck             # tsc --noEmit
 pnpm format                 # prettier --write .
 pnpm format:check            # prettier --check .
 ```
+
+There is no web target — this app ships iOS/Android only (see `app.config.ts`; `react-dom` /
+`react-native-web` are not dependencies).
 
 ## Configuration
 
@@ -59,6 +60,24 @@ cp .env.example .env
 ```
 
 Defaults to `http://localhost:3123` — the aha.chat builder app's standard local dev URL.
+
+### Android push notifications (`google-services.json`)
+
+Android FCM V1 push delivery requires a Firebase project with this app's package name
+(`com.chatconnectx.mobile`) registered, and its `google-services.json` downloaded to the repo
+root — the file is gitignored (per-developer/CI secret, never committed). `app.config.ts` only
+references it conditionally (`existsSync` check), so a clean checkout without the file still
+builds; Android push registration simply won't work until it's provisioned. For EAS builds,
+upload it as a [file-type secret](https://docs.expo.dev/eas/environment-variables/#file-environment-variables)
+via `eas env:create` (or the EAS dashboard) referencing the path `./google-services.json`, rather
+than committing it.
+
+### EAS Update
+
+This app ships with `expo-updates` configured (`app.config.ts`'s `updates`/`runtimeVersion`), so
+production/preview builds can receive OTA JS-bundle updates via `eas update` without an app-store
+resubmission. `runtimeVersion` uses the `appVersion` policy — a build only receives updates
+published against the same `version` in `app.config.ts`.
 
 ## Regenerating the API client
 
@@ -95,15 +114,20 @@ src/
   api/            typed REST client (openapi-fetch), auth token storage, big-number-safe JSON parsing
     generated/    output of `pnpm generate:api` — do not hand-edit
   app/            expo-router screens (file-based routing)
+  components/ui/  design-system primitives (Button, Text, ListItem, Sheet, Skeleton, etc.)
   config/         runtime env config (API_BASE_URL via expo-constants)
-  hooks/          shared hooks (e.g. useColorScheme)
+  dev/            dev-build-only screens' content (e.g. the UI gallery), lazily required so their
+                  imports don't ship in production bundles
+  features/       feature modules (chat, contacts, conversations, workspaces, settings, ...) —
+                  each owns its own api/ (TanStack Query hooks), components/, and stores/
   i18n/           i18next setup, RTL reconciliation, and locale files (20 locales)
-  lib/            shared library wiring (TanStack Query client, push notifications)
+  lib/            shared library wiring (TanStack Query client, push notifications, deep links)
   realtime/       realtime event types mirrored from aha.chat (type-only, manual sync)
-  stores/         Zustand client-state stores
-  theme/          design tokens
+  stores/         app-wide Zustand client-state stores (auth, workspace, settings)
+  theme/          design tokens, the useTheme() hook, and motion/reduced-motion helpers
 scripts/
   generate-api-client.ts   regenerates src/api/generated/schema.ts from the backend's OpenAPI spec
+  i18n-sync.ts             backfills missing translation keys across all 20 locales from en.json
 ```
 
 ## Related repo

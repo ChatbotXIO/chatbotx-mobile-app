@@ -67,6 +67,7 @@ export function useWorkspaceMembersList(workspaceId: string) {
       if (error) throw new ApiError(error);
       return data.data;
     },
+    enabled: workspaceId.length > 0,
   });
 }
 

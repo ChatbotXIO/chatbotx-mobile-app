@@ -1,5 +1,4 @@
 import { useColorScheme } from 'react-native';
-import { useMemo } from 'react';
 
 import { useSettingsStore } from '@/stores/use-settings-store';
 
@@ -7,8 +6,6 @@ import {
   colorTokens,
   elevationTokens,
   motionDurations,
-  motionEasings,
-  motionSprings,
   pressScale,
   radiusTokens,
   spacingTokens,
@@ -42,8 +39,6 @@ function buildTheme(scheme: ResolvedScheme) {
     typography: typographyTokens,
     motion: {
       durations: motionDurations,
-      easings: motionEasings,
-      springs: motionSprings,
       pressScale,
     },
   };
@@ -66,18 +61,4 @@ export function useTheme(): Theme {
   const scheme = useResolvedScheme();
 
   return THEMES[scheme];
-}
-
-/**
- * Memoizes a derived-styles object per (scheme, factory identity). Correct as long as callers
- * either define `factory` at module scope (preferred — it's a pure function of `theme` with no
- * closure captures) or wrap it in `useCallback` with its own stable dependencies; an inline
- * arrow function recreated every render defeats the memoization (a fresh factory reference each
- * render means `useMemo`'s dependency array never matches, so it just recomputes every time —
- * functionally correct, just not memoized).
- */
-export function useThemedStyles<T>(factory: (theme: Theme) => T): T {
-  const theme = useTheme();
-
-  return useMemo(() => factory(theme), [theme, factory]);
 }

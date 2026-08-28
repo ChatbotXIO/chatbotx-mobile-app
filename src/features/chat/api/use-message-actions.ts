@@ -71,7 +71,8 @@ export function useEditMessage(workspaceId: string, conversationId: string) {
       );
       if (error) throw new ApiError(error);
     },
-    onMutate: (params) => {
+    onMutate: async (params) => {
+      await queryClient.cancelQueries({ queryKey });
       const previous = findCachedMessage(queryClient, queryKey, params.messageId);
       patchMessageInCache(queryClient, queryKey, params.messageId, { text: params.newText });
       return { previous };
@@ -79,6 +80,9 @@ export function useEditMessage(workspaceId: string, conversationId: string) {
     onError: (_error, params, context) => {
       if (!context?.previous) return;
       patchMessageInCache(queryClient, queryKey, params.messageId, { text: context.previous.text });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 }
@@ -98,17 +102,33 @@ export function useDeleteMessage(workspaceId: string, conversationId: string) {
       );
       if (error) throw new ApiError(error);
     },
-    onMutate: (params) =>
+    onMutate: async (params) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = findCachedMessage(queryClient, queryKey, params.messageId);
       patchMessageInCache(queryClient, queryKey, params.messageId, {
         deletedAt: new Date().toISOString(),
-      }),
+      });
+      return { previous };
+    },
+    onError: (_error, params, context) => {
+      if (!context?.previous) return;
+      patchMessageInCache(queryClient, queryKey, params.messageId, {
+        deletedAt: context.previous.deletedAt,
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
+    },
   });
 }
 
 /** No optimistic cache patch here (unlike edit/delete above) — `attributes` is a loose JSON-value
  * union in the generated schema with no reliable current-liked/hidden shape to read or merge into,
- * so this just fires the mutation and lets the next list refetch reflect the change. */
+ * so this just fires the mutation and lets `onSettled` invalidation reflect the change. */
 export function useSetMessageAttributes(workspaceId: string, conversationId: string) {
+  const queryClient = useQueryClient();
+  const queryKey = queryKeys.ws.messages.list(workspaceId, conversationId);
+
   return useMutation({
     mutationFn: async (params: {
       messageId: string;
@@ -124,6 +144,9 @@ export function useSetMessageAttributes(workspaceId: string, conversationId: str
         },
       );
       if (error) throw new ApiError(error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 }

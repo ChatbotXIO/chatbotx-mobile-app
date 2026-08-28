@@ -191,7 +191,7 @@ function StatusChip({
       style={[
         styles.statusChip,
         {
-          backgroundColor: active ? colors.primary : colors.surface,
+          backgroundColor: active ? colors.brand : colors.surface2,
           borderRadius: radius.full,
           paddingHorizontal: spacing.ms,
         },

@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { usePartySocket } from 'partysocket/react';
 import type { PropsWithChildren } from 'react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { getAuthToken } from '@/api/auth-token';
 import { env } from '@/config/env';
@@ -12,7 +12,7 @@ import { generateOneTimeToken } from './one-time-token';
 import { parseRealtimeEvent } from './parse-event';
 import { clearAllTypingTimers } from './typing-timers';
 import { resetConnectionStore, useConnectionStore } from './use-connection-store';
-import { useRealtimeHandlers } from './use-realtime-handlers';
+import { clearPendingConversationInvalidates, useRealtimeHandlers } from './use-realtime-handlers';
 
 /**
  * Real implementation, replacing the Phase 0-4 passthrough stub. Connects to the `workspaces`
@@ -36,6 +36,19 @@ function ConnectedRealtimeProvider({
   const handleEvent = useRealtimeHandlers(queryClient, workspaceId);
   const setStatus = useConnectionStore((state) => state.setStatus);
   const markOpened = useConnectionStore((state) => state.markOpened);
+
+  // Resets the connection store synchronously during this component's FIRST render — not in a
+  // post-mount effect. `usePartySocket` below starts connecting immediately on mount, so an
+  // effect-based reset can run AFTER `onOpen` has already fired and flipped the store to 'open',
+  // clobbering it back to 'connecting' and leaving the banner stuck. `useState`'s lazy initializer
+  // is the React-compiler-safe way to run this exactly once per mounted instance — reading/writing
+  // a ref's `.current` during render (the more obvious "one-shot" pattern) is disallowed under
+  // `reactCompiler: true` (see app.config.ts), since the compiler may re-execute render bodies.
+  // The parent's `key={workspaceId}` already guarantees a fresh instance per workspace.
+  useState(() => {
+    resetConnectionStore();
+    return null;
+  });
 
   const socket = usePartySocket({
     host: env.wsUrl,
@@ -77,17 +90,15 @@ function ConnectedRealtimeProvider({
     },
   });
 
-  // Reset to 'connecting' whenever this component (re)mounts (fresh workspace, per the `key` on
-  // RealtimeProvider below) — usePartySocket starts connecting immediately, so this reflects that
-  // without waiting on the first onOpen/onClose callback.
+  // Runs once per mount — workspaceId is this component's whole identity via the parent's
+  // `key={workspaceId}`, so a dependency array is unnecessary; teardown clears both the typing
+  // timers and the debounced conversations-list invalidation timers this instance's realtime
+  // handlers may have scheduled, so neither leaks past the connection they belong to.
   useEffect(() => {
-    resetConnectionStore();
     return () => {
       clearAllTypingTimers();
+      clearPendingConversationInvalidates();
     };
-    // Runs once per mount — workspaceId is this component's whole identity via the parent's
-    // `key={workspaceId}`, so a dependency array is unnecessary; teardown clears timers for the
-    // room this instance owned.
   }, []);
 
   const handleBackground = useCallback(() => {

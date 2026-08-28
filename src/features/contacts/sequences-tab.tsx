@@ -50,7 +50,7 @@ export function SequencesTab({ contact, workspaceId }: SequencesTabProps) {
               title={enrollment.sequence.name}
               subtitle={t('contacts.sequenceStep', { step: enrollment.currentStep })}
               trailing={
-                <Badge color={enrollment.completedAt ? colors.success : colors.surface}>
+                <Badge color={enrollment.completedAt ? colors.success : colors.surface2}>
                   {enrollment.completedAt
                     ? t('contacts.completed')
                     : (enrollment.status ?? t('contacts.active'))}

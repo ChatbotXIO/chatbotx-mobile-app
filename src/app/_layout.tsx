@@ -7,6 +7,7 @@ import {
   PlusJakartaSans_700Bold,
   useFonts,
 } from '@expo-google-fonts/plus-jakarta-sans';
+import type { ErrorBoundaryProps } from 'expo-router';
 import { Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -14,9 +15,11 @@ import * as SystemUI from 'expo-system-ui';
 import { useEffect, useState } from 'react';
 import { I18nManager } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useTranslation } from 'react-i18next';
 
 import { getSession } from '@/api/auth-endpoints';
 import { clearAuthToken, getAuthToken } from '@/api/auth-token';
+import { EmptyState } from '@/components/ui/empty-state';
 import { ToastProvider } from '@/components/ui/toast';
 import { initI18n } from '@/i18n';
 import { applyLanguage } from '@/i18n/apply-language';
@@ -29,10 +32,15 @@ import { ensureAndroidNotificationChannel } from '@/lib/notifications';
 import { initNotificationTapHandling } from '@/lib/notification-tap';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { useSettingsStore, waitForSettingsHydration } from '@/stores/use-settings-store';
+import { waitForWorkspaceHydration } from '@/stores/use-workspace-store';
 import { getNavigationTheme } from '@/theme/navigation-theme';
 import { useResolvedScheme, useTheme } from '@/theme/use-theme';
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {
+  // Only fails if the splash screen was already hidden or never registered — either way there's
+  // nothing to recover, and the bootstrap gate below still hides it once ready.
+});
+SplashScreen.setOptions({ duration: 300, fade: true });
 
 // i18next resources are static/local (bundled JSON, no network) and init() is synchronous, so
 // this runs once at module load — before the first render — rather than as a render-triggered
@@ -78,8 +86,10 @@ function useLanguageBootstrap(): boolean {
 /**
  * Bootstrap gate: resolves the auth store's 'pending' status to 'signed-in'/'signed-out' by
  * checking for a stored token and validating it against `getSession`, then hides the splash
- * screen. Runs once at root-layout mount — every route's own guard reads `status` off the store
- * rather than re-checking the session itself.
+ * screen. Also waits for the persisted workspace-store snapshot to hydrate, so a cold start never
+ * reads `currentWorkspaceId === null` before the real (persisted) value has loaded and bounces an
+ * already-workspace-selected user to the picker. Runs once at root-layout mount — every route's
+ * own guard reads `status` off the store rather than re-checking the session itself.
  */
 function useAuthBootstrap(): boolean {
   const [ready, setReady] = useState(false);
@@ -90,20 +100,29 @@ function useAuthBootstrap(): boolean {
     let cancelled = false;
 
     async function bootstrap() {
+      await waitForWorkspaceHydration();
+
       const token = await getAuthToken();
       if (!token) {
         if (!cancelled) setSignedOut();
         return;
       }
 
-      const user = await getSession(token);
-      if (cancelled) return;
+      try {
+        const user = await getSession(token);
+        if (cancelled) return;
 
-      if (user) {
-        setSignedIn(user);
-      } else {
-        await clearAuthToken();
-        setSignedOut();
+        if (user) {
+          setSignedIn(user);
+        } else {
+          await clearAuthToken();
+          setSignedOut();
+        }
+      } catch {
+        // A network/server failure validating the session is not proof the token is invalid —
+        // treat it as signed-out for this launch without clearing SecureStore, so the next
+        // successful bootstrap can still sign the user back in with the same token.
+        if (!cancelled) setSignedOut();
       }
     }
 
@@ -132,16 +151,18 @@ export default function RootLayout() {
   const { colors } = useTheme();
   const authReady = useAuthBootstrap();
   const languageReady = useLanguageBootstrap();
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
   });
 
   useEffect(() => {
-    if (authReady && languageReady && fontsLoaded) {
+    // A font failing to load (e.g. offline on first launch before assets are cached) must not
+    // hold the splash screen forever — proceed with the system fallback font instead.
+    if (authReady && languageReady && (fontsLoaded || fontError)) {
       SplashScreen.hideAsync();
     }
-  }, [authReady, languageReady, fontsLoaded]);
+  }, [authReady, languageReady, fontsLoaded, fontError]);
 
   // Registers the Android notification channel (idempotent — safe to call again even though
   // getPushTokenAsync also calls this lazily) and wires notification-tap → navigation, once auth
@@ -184,5 +205,20 @@ export default function RootLayout() {
         </BottomSheetModalProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
+  );
+}
+
+/** expo-router renders this in place of the whole navigation tree when a route throws during
+ * render — without it, an uncaught error white-screens the app with no way back in. */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const { t } = useTranslation();
+
+  return (
+    <EmptyState
+      icon="warning-outline"
+      title={t('common.error')}
+      description={error.message || t('errors.unknown')}
+      action={{ label: t('common.retry'), onPress: retry }}
+    />
   );
 }

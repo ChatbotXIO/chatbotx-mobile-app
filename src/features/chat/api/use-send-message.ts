@@ -24,7 +24,7 @@ interface SendMessageParams {
   replyTo?: { messageId: string; createdAt: string };
 }
 
-const MAX_FILE_SIZE_BYTES = 5 * 1000 * 1000;
+export const MAX_FILE_SIZE_BYTES = 5 * 1000 * 1000;
 
 export class AttachmentTooLargeError extends Error {
   constructor(fileName: string) {
@@ -156,10 +156,11 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
   const setUploadProgress = useChatStore((state) => state.setUploadProgress);
   const clearUploadProgress = useChatStore((state) => state.clearUploadProgress);
   const setDraft = useChatStore((state) => state.setDraft);
+  const setJustSentClientId = useChatStore((state) => state.setJustSentClientId);
 
-  return useMutation({
-    mutationFn: async (params: SendMessageParams) => {
-      const clientId = params.clientId ?? generateClientId();
+  const mutation = useMutation({
+    mutationFn: async (params: SendMessageParams & { clientId: string }) => {
+      const { clientId } = params;
       const attachments = params.attachments ?? [];
 
       if (attachments.length > 0) {
@@ -197,7 +198,8 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
     },
 
     onMutate: async (params) => {
-      const clientId = params.clientId ?? generateClientId();
+      const { clientId } = params;
+      await queryClient.cancelQueries({ queryKey });
 
       // Flow sends produce N server-side messages (the flow's own steps), fanned out over
       // realtime — there is no single "the message that was sent" to preview optimistically, and
@@ -246,11 +248,8 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
       if (!context) return;
       clearUploadProgress(context.clientId);
 
-      if (context.skippedOptimistic) {
-        // Nothing was inserted for a flow send — still worth restoring the draft below on a
-        // blocked/unauthorized rejection so the user doesn't lose whatever they'd typed alongside
-        // the flow pick, but there's no cache entry to touch.
-      }
+      // context.skippedOptimistic (flow sends): nothing was inserted, so there's no cache entry
+      // to touch — but a blocked/unauthorized rejection below still restores the draft.
 
       const body = error instanceof ApiError ? error.body : null;
       const isTerminal =
@@ -299,8 +298,29 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
       // Flow sends (no optimistic entry) rely on this same invalidation/refetch (or realtime) to
       // surface the flow's resulting messages.
       queryClient.invalidateQueries({ queryKey });
+
+      // Recorded in the shared chat store (not local mutation state) so the chat screen's
+      // force-scroll-to-own-send logic sees it regardless of which `useSendMessage(...)` instance
+      // performed the send — the screen's own instance (retry only) and the composer's instance
+      // are separate mutations. Skipped for flow sends: there's no single bubble to scroll to.
+      if (context && !context.skippedOptimistic) {
+        setJustSentClientId(conversationId, context.clientId);
+      }
     },
   });
-}
 
-export { MAX_FILE_SIZE_BYTES };
+  // Normalizes `clientId` once, before React Query hands params to `onMutate` and `mutationFn`
+  // independently — otherwise each side generates its own id and the optimistic bubble never
+  // matches the sent request (duplicate bubble, orphaned upload-progress entry, retry-scroll never
+  // fires). Callers that pass their own `clientId` (retry) are left untouched.
+  return {
+    ...mutation,
+    mutate: (params: SendMessageParams, options?: Parameters<typeof mutation.mutate>[1]) =>
+      mutation.mutate({ ...params, clientId: params.clientId ?? generateClientId() }, options),
+    mutateAsync: (
+      params: SendMessageParams,
+      options?: Parameters<typeof mutation.mutateAsync>[1],
+    ) =>
+      mutation.mutateAsync({ ...params, clientId: params.clientId ?? generateClientId() }, options),
+  };
+}

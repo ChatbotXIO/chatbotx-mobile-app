@@ -9,7 +9,7 @@ import { ErrorBanner } from '@/components/ui/error-banner';
 import { ListFooterSpinner } from '@/components/ui/list-footer-spinner';
 import { Screen } from '@/components/ui/screen';
 import { SearchBar } from '@/components/ui/search-bar';
-import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonRow } from '@/components/ui/skeleton';
 import { WorkspaceBlockedGate } from '@/components/workspace-blocked-gate';
 import { normalizeApiError } from '@/api/errors';
 import { describeApiError } from '@/lib/describe-api-error';
@@ -57,9 +57,9 @@ export default function ContactsScreen() {
       ) : null}
 
       {query.isLoading ? (
-        <View style={{ paddingHorizontal: spacing.md, gap: spacing.sm }}>
+        <View>
           {Array.from({ length: 8 }).map((_, index) => (
-            <Skeleton key={index} height={56} />
+            <SkeletonRow.Contact key={index} />
           ))}
         </View>
       ) : contacts.length === 0 ? (

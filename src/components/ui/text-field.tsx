@@ -60,10 +60,10 @@ export const TextField = forwardRef<RNTextInputType, TextFieldProps>(function Te
           style={[
             styles.input,
             {
-              backgroundColor: colors.surface,
-              borderColor: error ? colors.danger : isFocused ? colors.primary : colors.border,
+              backgroundColor: colors.surface2,
+              borderColor: error ? colors.danger : isFocused ? colors.brand : colors.borderSubtle,
               borderRadius: radius.md,
-              color: colors.text,
+              color: colors.textPrimary,
               fontSize: typography.body.fontSize,
               paddingHorizontal: spacing.base,
               paddingEnd: trailingIcon ? spacing.xl + spacing.sm : spacing.base,

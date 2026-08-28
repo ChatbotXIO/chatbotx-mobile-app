@@ -25,7 +25,7 @@ export function WorkspacePill({ name, logo, onPress }: WorkspacePillProps) {
       style={({ pressed }) => [
         styles.pill,
         {
-          backgroundColor: colors.surface,
+          backgroundColor: colors.surface2,
           borderRadius: radius.full,
           paddingVertical: spacing.xs,
           paddingHorizontal: spacing.ms,

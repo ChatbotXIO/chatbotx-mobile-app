@@ -46,8 +46,19 @@ function cacheWith(conversations: ConversationListItem[]): InfiniteConversations
   } as InfiniteConversationsData;
 }
 
+function cacheWithPages(pages: ConversationListItem[][]): InfiniteConversationsData {
+  return {
+    pages: pages.map((data) => ({ data, nextCursor: null, prevCursor: null })),
+    pageParams: pages.map(() => undefined),
+  } as InfiniteConversationsData;
+}
+
 function firstPage(result: InfiniteConversationsData): ConversationListItem[] {
   return result!.pages[0]!.data;
+}
+
+function pageAt(result: InfiniteConversationsData, index: number): ConversationListItem[] {
+  return result!.pages[index]!.data;
 }
 
 function createdEvent(data: unknown) {
@@ -213,5 +224,70 @@ describe('applyConversationMessageCreated', () => {
     expect(row.messages).toHaveLength(20);
     expect(row.messages[row.messages.length - 1]!.id).toBe('new-msg');
     expect(row.messages[0]!.id).toBe('msg-1');
+  });
+
+  it('patches a matching row on a LATER page in place instead of hoisting it to page 0', () => {
+    // Regression: hoisting across a page boundary duplicated the row in the client's merged view
+    // and desynced every subsequent page's cursor — a row found on page 1+ must stay on its own
+    // page, patched in place.
+    const cache = cacheWithPages([
+      [fakeConversation({ id: 'conv-1' }), fakeConversation({ id: 'conv-2' })],
+      [fakeConversation({ id: 'conv-3' }), fakeConversation({ id: 'conv-4' })],
+    ]);
+
+    const result = applyConversationMessageCreated(
+      cache,
+      createdEvent({
+        id: 'new-msg',
+        conversationId: 'conv-4',
+        createdAt: '2026-01-02T00:00:00.000Z',
+        attachments: [],
+      }),
+    );
+
+    expect(result.found).toBe(true);
+    // Page 0 is untouched — the row was not hoisted onto it.
+    expect(pageAt(result.data, 0).map((c) => c.id)).toEqual(['conv-1', 'conv-2']);
+    // Page 1 keeps its own row order — only patched in place, not moved to the front.
+    expect(pageAt(result.data, 1).map((c) => c.id)).toEqual(['conv-3', 'conv-4']);
+    expect(pageAt(result.data, 1)[1]!.lastActivityAt).toBe('2026-01-02T00:00:00.000Z');
+  });
+
+  it('bumps agentLastReadAt when the message belongs to the currently-active conversation', () => {
+    const cache = cacheWith([
+      fakeConversation({ id: 'conv-1', agentLastReadAt: '2025-01-01T00:00:00.000Z' }),
+    ]);
+
+    const result = applyConversationMessageCreated(
+      cache,
+      createdEvent({
+        id: 'new-msg',
+        conversationId: 'conv-1',
+        createdAt: '2026-01-02T00:00:00.000Z',
+        attachments: [],
+      }),
+      'conv-1',
+    );
+
+    expect(firstPage(result.data)[0]!.agentLastReadAt).toBe('2026-01-02T00:00:00.000Z');
+  });
+
+  it('leaves agentLastReadAt untouched when the message is for a different conversation than the active one', () => {
+    const cache = cacheWith([
+      fakeConversation({ id: 'conv-1', agentLastReadAt: '2025-01-01T00:00:00.000Z' }),
+    ]);
+
+    const result = applyConversationMessageCreated(
+      cache,
+      createdEvent({
+        id: 'new-msg',
+        conversationId: 'conv-1',
+        createdAt: '2026-01-02T00:00:00.000Z',
+        attachments: [],
+      }),
+      'conv-2',
+    );
+
+    expect(firstPage(result.data)[0]!.agentLastReadAt).toBe('2025-01-01T00:00:00.000Z');
   });
 });

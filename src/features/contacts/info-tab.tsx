@@ -124,7 +124,7 @@ export function InfoTab({ contact, workspaceId }: InfoTabProps) {
       ))}
       <ListItem
         title={t('contacts.addCustomField')}
-        trailing={<Icon name="add-circle-outline" size={20} color={colors.primary} />}
+        trailing={<Icon name="add-circle-outline" size={20} color={colors.brand} />}
         onPress={() => catalogSheetRef.current?.expand()}
       />
 

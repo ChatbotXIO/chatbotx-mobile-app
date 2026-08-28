@@ -40,12 +40,10 @@ export function TagChips({ chips }: TagChipsProps) {
         <Badge
           key={chip}
           color={
-            chip === 'blocked' ? colors.danger : chip === 'unread' ? colors.primary : colors.surface
+            chip === 'blocked' ? colors.danger : chip === 'unread' ? colors.brand : colors.surface2
           }
           textColor={
-            chip === 'blocked' || chip === 'unread'
-              ? colors.primaryForeground
-              : colors.textSecondary
+            chip === 'blocked' || chip === 'unread' ? colors.onBrand : colors.textSecondary
           }
         >
           {t(CHIP_LABEL_KEYS[chip])}

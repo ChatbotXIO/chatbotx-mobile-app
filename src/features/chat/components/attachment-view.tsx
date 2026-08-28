@@ -78,7 +78,7 @@ function ImageAttachment({
     <Pressable
       onPress={() =>
         attachment.url &&
-        router.push(`/image-viewer?url=${encodeURIComponent(attachment.url)}` as never)
+        router.push({ pathname: '/image-viewer', params: { url: attachment.url } })
       }
       style={styles.imageWrap}
     >

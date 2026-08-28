@@ -72,7 +72,7 @@ export function SegmentedTabs<T extends string>({
       onLayout={handleLayout}
       style={[
         styles.container,
-        { backgroundColor: colors.surface, borderRadius: radius.md, padding: 2 },
+        { backgroundColor: colors.surface2, borderRadius: radius.md, padding: 2 },
       ]}
     >
       {containerWidth > 0 ? (
@@ -81,7 +81,7 @@ export function SegmentedTabs<T extends string>({
             styles.indicator,
             indicatorStyle,
             {
-              backgroundColor: colors.surfaceElevated,
+              backgroundColor: colors.surface1,
               borderRadius: radius.sm + 2,
               top: 2,
               bottom: 2,
@@ -102,7 +102,7 @@ export function SegmentedTabs<T extends string>({
                 onChange(option.value);
               }
             }}
-            style={[styles.segment, { paddingVertical: spacing.xs + 2 }]}
+            style={[styles.segment, { paddingVertical: spacing.xs + 2, minHeight: 44 }]}
           >
             <Text variant="caption" color={isActive ? 'primary' : 'secondary'} style={styles.label}>
               {option.label}
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   },
   indicator: {
     position: 'absolute',
-    left: 0,
+    start: 0,
   },
   segment: {
     flex: 1,

@@ -22,9 +22,6 @@ export async function reconcileRTLOnLaunch(language: SupportedLanguage): Promise
     return;
   }
 
-  I18nManager.allowRTL(true);
-  I18nManager.forceRTL(targetIsRTL);
-
   if (__DEV__) {
     console.warn(
       '[i18n] RTL direction mismatch detected in dev — forceRTL may not persist in Expo Go. ' +
@@ -33,5 +30,8 @@ export async function reconcileRTLOnLaunch(language: SupportedLanguage): Promise
     return;
   }
 
-  await reloadApp();
+  I18nManager.allowRTL(true);
+  I18nManager.forceRTL(targetIsRTL);
+
+  await reloadApp({ silent: true });
 }

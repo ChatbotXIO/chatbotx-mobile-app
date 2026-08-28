@@ -75,6 +75,21 @@ function rollback(
   });
 }
 
+/** Cancels every in-flight conversations-list query for this workspace (any filter combination)
+ * before an optimistic patch runs, so a refetch that resolves mid-mutation can't clobber the
+ * patch with stale server data. */
+function cancelConversationQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  workspaceId: string,
+): Promise<void> {
+  return queryClient.cancelQueries({
+    predicate: (query) =>
+      isWorkspaceQuery(query.queryKey, workspaceId) &&
+      query.queryKey[2] === 'conversations' &&
+      query.queryKey[3] === 'list',
+  });
+}
+
 /** The conversation-detail query (`useConversationDetail`) caches a single object under
  * `queryKeys.ws.conversations.detail(...)` — a different shape from the paginated list queries
  * above (`{ pages, pageParams }`). Every list-cache mutation here should also patch the detail
@@ -103,10 +118,6 @@ function rollbackDetail(
 ) {
   if (!snapshot || !snapshot.previous) return;
   queryClient.setQueryData(snapshot.key, snapshot.previous);
-}
-
-interface ActionContext {
-  workspaceId: string;
 }
 
 interface SingleActionSnapshot {
@@ -147,10 +158,12 @@ export function useMarkConversationRead(workspaceId: string) {
       });
       if (error) throw new ApiError(error);
     },
-    onMutate: (conversationId) =>
-      patchSingleConversation(queryClient, workspaceId, conversationId, {
+    onMutate: async (conversationId) => {
+      await cancelConversationQueries(queryClient, workspaceId);
+      return patchSingleConversation(queryClient, workspaceId, conversationId, {
         agentLastReadAt: new Date().toISOString(),
-      }),
+      });
+    },
     onError: (_err, _vars, snapshot) => rollbackSingle(queryClient, snapshot),
   });
 }
@@ -168,8 +181,12 @@ export function useMarkConversationUnread(workspaceId: string) {
       );
       if (error) throw new ApiError(error);
     },
-    onMutate: (conversationId) =>
-      patchSingleConversation(queryClient, workspaceId, conversationId, { agentLastReadAt: null }),
+    onMutate: async (conversationId) => {
+      await cancelConversationQueries(queryClient, workspaceId);
+      return patchSingleConversation(queryClient, workspaceId, conversationId, {
+        agentLastReadAt: null,
+      });
+    },
     onError: (_err, _vars, snapshot) => rollbackSingle(queryClient, snapshot),
   });
 }
@@ -187,8 +204,10 @@ export function useFollowConversation(workspaceId: string) {
       );
       if (error) throw new ApiError(error);
     },
-    onMutate: (conversationId) =>
-      patchSingleConversation(queryClient, workspaceId, conversationId, { followed: true }),
+    onMutate: async (conversationId) => {
+      await cancelConversationQueries(queryClient, workspaceId);
+      return patchSingleConversation(queryClient, workspaceId, conversationId, { followed: true });
+    },
     onError: (_err, _vars, snapshot) => rollbackSingle(queryClient, snapshot),
   });
 }
@@ -206,8 +225,12 @@ export function useUnfollowConversation(workspaceId: string) {
       );
       if (error) throw new ApiError(error);
     },
-    onMutate: (conversationId) =>
-      patchSingleConversation(queryClient, workspaceId, conversationId, { followed: false }),
+    onMutate: async (conversationId) => {
+      await cancelConversationQueries(queryClient, workspaceId);
+      return patchSingleConversation(queryClient, workspaceId, conversationId, {
+        followed: false,
+      });
+    },
     onError: (_err, _vars, snapshot) => rollbackSingle(queryClient, snapshot),
   });
 }
@@ -226,7 +249,7 @@ function useBatchConversationAction(
     | '/workspaces/{workspaceId}/conversations/unarchive'
     | '/workspaces/{workspaceId}/conversations/enable-bot'
     | '/workspaces/{workspaceId}/conversations/disable-bot',
-  patch: Partial<ConversationListItem>,
+  buildPatch: () => Partial<ConversationListItem>,
   onSuccessIds?: (queryClient: ReturnType<typeof useQueryClient>, ids: string[]) => void,
 ) {
   const queryClient = useQueryClient();
@@ -239,8 +262,11 @@ function useBatchConversationAction(
       });
       if (error) throw new ApiError(error);
     },
-    onMutate: (ids: string[]) =>
-      ids.map((id) => patchSingleConversation(queryClient, workspaceId, id, patch)),
+    onMutate: async (ids: string[]) => {
+      await cancelConversationQueries(queryClient, workspaceId);
+      const patch = buildPatch();
+      return ids.map((id) => patchSingleConversation(queryClient, workspaceId, id, patch));
+    },
     onError: (_err, _vars, snapshots) => {
       snapshots?.forEach((snapshot) => rollbackSingle(queryClient, snapshot));
     },
@@ -252,9 +278,7 @@ export function useArchiveConversations(workspaceId: string) {
   return useBatchConversationAction(
     workspaceId,
     '/workspaces/{workspaceId}/conversations/archive',
-    {
-      archivedAt: new Date().toISOString(),
-    },
+    () => ({ archivedAt: new Date().toISOString() }),
   );
 }
 
@@ -262,9 +286,7 @@ export function useUnarchiveConversations(workspaceId: string) {
   return useBatchConversationAction(
     workspaceId,
     '/workspaces/{workspaceId}/conversations/unarchive',
-    {
-      archivedAt: null,
-    },
+    () => ({ archivedAt: null }),
   );
 }
 
@@ -272,9 +294,7 @@ export function useEnableBot(workspaceId: string) {
   return useBatchConversationAction(
     workspaceId,
     '/workspaces/{workspaceId}/conversations/enable-bot',
-    {
-      botEnabled: true,
-    },
+    () => ({ botEnabled: true }),
   );
 }
 
@@ -289,9 +309,7 @@ export function useDisableBot(workspaceId: string) {
   return useBatchConversationAction(
     workspaceId,
     '/workspaces/{workspaceId}/conversations/disable-bot',
-    {
-      botEnabled: false,
-    },
+    () => ({ botEnabled: false }),
     (queryClient, ids) => {
       ids.forEach((id) => {
         queryClient.invalidateQueries({
@@ -362,10 +380,10 @@ export function useAssignConversations(workspaceId: string) {
       });
       if (error) throw new ApiError(error);
     },
-    onMutate: ({ contactIds, assignedId }) =>
-      patchAssignedUserByContact(queryClient, workspaceId, contactIds, assignedId),
+    onMutate: async ({ contactIds, assignedId }) => {
+      await cancelConversationQueries(queryClient, workspaceId);
+      return patchAssignedUserByContact(queryClient, workspaceId, contactIds, assignedId);
+    },
     onError: (_err, _vars, snapshot) => snapshot && rollback(queryClient, snapshot),
   });
 }
-
-export type { ActionContext };

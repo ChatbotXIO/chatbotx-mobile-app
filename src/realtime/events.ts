@@ -64,7 +64,7 @@ export type RealtimeEventMessageFailed = {
   data: {
     messageId: string;
     clientId?: string;
-    error: string | null;
+    error?: string | null;
   };
 };
 

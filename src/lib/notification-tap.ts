@@ -22,7 +22,10 @@ function navigateToNotification(data: NotificationTapData): void {
     useWorkspaceStore.getState().setCurrentWorkspaceId(data.workspaceId);
   }
 
-  router.push(`/(app)/conversations/${data.conversationId}` as never);
+  router.push({
+    pathname: '/(app)/conversations/[conversationId]',
+    params: { conversationId: data.conversationId },
+  });
 }
 
 /** Handles a notification tap once the user is authenticated. If auth is still pending (tapped
@@ -41,10 +44,20 @@ function handleResponse(response: Notifications.NotificationResponse): void {
  * result stays available until consumed, so a short delay here doesn't lose it.
  */
 export function initNotificationTapHandling(): () => void {
-  Notifications.getLastNotificationResponseAsync().then((response) => {
-    if (response) handleResponse(response);
-  });
+  let cancelled = false;
+
+  Notifications.getLastNotificationResponseAsync()
+    .then((response) => {
+      if (!cancelled && response) handleResponse(response);
+    })
+    .catch(() => {
+      // Best-effort cold-start check — a failure here just means the cold-start tap (if any) is
+      // missed; the warm/background listener below still covers every subsequent tap.
+    });
 
   const subscription = Notifications.addNotificationResponseReceivedListener(handleResponse);
-  return () => subscription.remove();
+  return () => {
+    cancelled = true;
+    subscription.remove();
+  };
 }

@@ -22,7 +22,7 @@ export function SearchBar({ value, onChangeText, placeholder }: SearchBarProps) 
       style={[
         styles.container,
         {
-          backgroundColor: colors.surface,
+          backgroundColor: colors.surface2,
           borderRadius: radius.md,
           paddingHorizontal: spacing.ms,
           gap: spacing.xs,
@@ -35,7 +35,7 @@ export function SearchBar({ value, onChangeText, placeholder }: SearchBarProps) 
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={colors.textSecondary}
-        style={[styles.input, { color: colors.text }]}
+        style={[styles.input, { color: colors.textPrimary }]}
         returnKeyType="search"
         autoCorrect={false}
         keyboardAppearance={scheme}

@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import {
   MAX_FILE_SIZE_BYTES,
   useSendMessage,
 } from '@/features/chat/api/use-send-message';
+import { triggerHaptic } from '@/lib/haptics';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
 import { useTheme } from '@/theme/use-theme';
 
@@ -52,6 +53,7 @@ export default function CameraScreen() {
 
   async function handleCapture() {
     if (!cameraRef.current || !workspaceId || !conversationId) return;
+    triggerHaptic('light');
     setIsCapturing(true);
     setError(null);
 
@@ -77,8 +79,10 @@ export default function CameraScreen() {
           { uri: photo.uri, mimeType: 'image/jpeg', fileName: `photo-${Date.now()}.jpg` },
         ],
       });
+      triggerHaptic('success');
       router.back();
     } catch (err) {
+      triggerHaptic('error');
       setError(err instanceof AttachmentTooLargeError ? err.message : t('chat.failedToSendPhoto'));
     } finally {
       setIsCapturing(false);
@@ -103,8 +107,13 @@ export default function CameraScreen() {
           accessibilityLabel={t('chat.camera')}
           onPress={handleCapture}
           disabled={isCapturing}
-          style={[styles.captureButton, { borderColor: colors.textInverse }]}
-        />
+          style={[
+            styles.captureButton,
+            { borderColor: colors.textInverse, opacity: isCapturing ? 0.6 : 1 },
+          ]}
+        >
+          {isCapturing ? <ActivityIndicator color={colors.textPrimary} /> : null}
+        </Pressable>
       </View>
       {error ? (
         <View
@@ -148,6 +157,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     alignSelf: 'center',
     marginHorizontal: 'auto',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorBanner: {
     position: 'absolute',

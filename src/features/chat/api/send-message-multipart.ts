@@ -1,4 +1,5 @@
 import { getAuthToken } from '@/api/auth-token';
+import { ApiError } from '@/api/errors';
 import { env } from '@/config/env';
 
 /**
@@ -46,18 +47,6 @@ export interface SendMultipartMessageParams {
   onProgress?: (ratio: number) => void;
 }
 
-export class SendMessageError extends Error {
-  readonly status: number;
-  readonly body: unknown;
-
-  constructor(status: number, body: unknown, message: string) {
-    super(message);
-    this.name = 'SendMessageError';
-    this.status = status;
-    this.body = body;
-  }
-}
-
 function parseResponseBody(rawBody: string): unknown {
   if (!rawBody) return null;
   try {
@@ -68,11 +57,20 @@ function parseResponseBody(rawBody: string): unknown {
   }
 }
 
-function extractMessage(body: unknown, fallback: string): string {
-  if (body && typeof body === 'object' && 'message' in body && typeof body.message === 'string') {
-    return body.message;
-  }
-  return fallback;
+/** Builds an `ApiError` from a raw XHR response body, matching the shape
+ * `normalizeApiError`/`ApiError` expect from the typed `apiClient` path (`{ code, status,
+ * message }`) — so a 402/401/etc. from an attachment send is classified identically to a
+ * JSON-body send instead of silently falling through as an unrecognized error type. */
+function toApiError(status: number, body: unknown, fallbackMessage: string): ApiError {
+  const parsedBody = body && typeof body === 'object' ? (body as Record<string, unknown>) : {};
+  const code = typeof parsedBody.code === 'string' ? parsedBody.code : undefined;
+  const message = typeof parsedBody.message === 'string' ? parsedBody.message : fallbackMessage;
+  const data =
+    parsedBody.data && typeof parsedBody.data === 'object'
+      ? (parsedBody.data as { reason?: string })
+      : undefined;
+
+  return new ApiError({ code, status, message, data });
 }
 
 export async function sendMultipartMessage(params: SendMultipartMessageParams): Promise<unknown> {
@@ -116,18 +114,18 @@ export async function sendMultipartMessage(params: SendMultipartMessageParams): 
       const body = parseResponseBody(xhr.responseText);
       const ok = xhr.status >= 200 && xhr.status < 300;
       if (!ok) {
-        reject(new SendMessageError(xhr.status, body, extractMessage(body, xhr.statusText)));
+        reject(toApiError(xhr.status, body, xhr.statusText));
         return;
       }
       resolve(body);
     };
 
     xhr.onerror = () => {
-      reject(new SendMessageError(0, null, 'Network request failed'));
+      reject(toApiError(0, null, 'Network request failed'));
     };
 
     xhr.onabort = () => {
-      reject(new SendMessageError(0, null, 'Upload aborted'));
+      reject(toApiError(0, null, 'Upload aborted'));
     };
 
     xhr.send(form);

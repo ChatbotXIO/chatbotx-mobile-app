@@ -194,9 +194,9 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
     }
   }
 
-  async function handleCamera() {
+  function handleCamera() {
     actionsSheetRef.current?.close();
-    router.push(`/camera?conversationId=${conversationId}` as never);
+    router.push({ pathname: '/camera', params: { conversationId } });
   }
 
   async function handlePhotoLibrary() {
@@ -210,7 +210,7 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
     actionsSheetRef.current?.close();
     const assets = await pickDocuments();
     if (assets.length === 0) return;
-    await sendAssets(assets.map((asset) => ({ ...asset, mimeType: asset.mimeType })));
+    await sendAssets(assets);
   }
 
   function handleOpenFlowPicker() {

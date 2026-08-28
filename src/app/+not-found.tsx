@@ -1,7 +1,6 @@
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Screen } from '@/components/ui/screen';
 import { useAuthStore } from '@/stores/use-auth-store';
@@ -23,8 +22,8 @@ export default function NotFoundScreen() {
         icon="compass-outline"
         title={t('errors.notFoundTitle')}
         description={t('errors.notFoundBody')}
+        action={{ label: t('errors.goHome'), onPress: handleGoHome }}
       />
-      <Button label={t('errors.goHome')} onPress={handleGoHome} />
     </Screen>
   );
 }

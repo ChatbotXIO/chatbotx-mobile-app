@@ -63,7 +63,7 @@ export function TagsTab({ contact, workspaceId }: TagsTabProps) {
             <ListItem
               key={item.id}
               title={item.name}
-              trailing={<Icon name="add-circle-outline" size={20} color={colors.primary} />}
+              trailing={<Icon name="add-circle-outline" size={20} color={colors.brand} />}
               onPress={() => addTag.mutate(item)}
             />
           ))}

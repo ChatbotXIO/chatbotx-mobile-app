@@ -82,7 +82,10 @@ export const ConversationActionsSheet = forwardRef<BottomSheet, ConversationActi
 
     function handleViewContact() {
       onClose();
-      router.push(`/(app)/conversations/${conversationId}/contact` as never);
+      router.push({
+        pathname: '/(app)/conversations/[conversationId]/contact',
+        params: { conversationId },
+      });
     }
 
     return (

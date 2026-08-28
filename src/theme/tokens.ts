@@ -6,18 +6,7 @@
  * Style direction: "Layered Workbench" — a tinted-neutral canvas with two raised surface levels,
  * hairline borders instead of heavy shadows, a strong type hierarchy, and color reserved for
  * meaning (channel identity, unread state, bot state, semantic status) rather than decoration.
- *
- * `colorTokens.light`/`colorTokens.dark` also carry a handful of OLD flat keys (`background`,
- * `surface`, `surfaceElevated`, `border`, `text`, `primary`, `primaryForeground`) as DEPRECATED
- * ALIASES of the new semantic keys below, kept because Phase 7's audit found ~35 live call sites
- * still on the old names — removing them in that pass would have been a risky mass-rename for a
- * final-phase sweep. `unreadDot`, `bubbleOutbound(Text)`, `bubbleInbound(Text)` were removed in
- * Phase 7 once their last call sites migrated to `brand`/`bubbleOut(Text)`/`bubbleIn(Text)`. New
- * code should use the new keys directly; the remaining aliases are still slated for eventual
- * removal once every call site migrates.
  */
-
-import { Easing } from 'react-native';
 
 import { withAlpha } from './color-utils';
 
@@ -34,7 +23,10 @@ const lightBase = {
   borderStrong: '#cfcabd',
   textPrimary: '#1c1b17',
   textSecondary: '#615c4f',
-  textTertiary: '#948d7c',
+  // WCAG AA (4.5:1) against `bg` (#f6f5f2) requires darkening past the original #948d7c
+  // (~3.0:1) — #767063 is the same warm-neutral hue, darkened just enough to clear 4.5:1
+  // (measured ~4.51:1).
+  textTertiary: '#767063',
   textInverse: '#ffffff',
   brand: '#3c6df0',
   brandStrong: '#2851c9',
@@ -145,21 +137,6 @@ function buildColorTokens(base: ColorBase, channel: ChannelMap, avatarPalette: r
     scrim: withAlpha('#000000', 0.5),
     channel,
     avatarPalette,
-
-    // --- deprecated aliases (Phase 1 compatibility shim) ---
-    // Phase 7 removed `unreadDot`, `bubbleOutbound(Text)`, `bubbleInbound(Text)` — every call site
-    // had already migrated to the new semantic keys (`brand`, `bubbleOut(Text)`, `bubbleIn(Text)`).
-    // The remaining aliases below still have live call sites (35 across ~20 files as of Phase 7's
-    // audit) — removing them now would be a risky mass-rename for a final-phase pass, so they stay
-    // until a future cleanup migrates the rest. New code should use the new keys directly.
-    background: base.bg,
-    surface: base.surface2,
-    surfaceElevated: base.surface1,
-    border: base.borderSubtle,
-    text: base.textPrimary,
-    textSecondary: base.textSecondary,
-    primary: base.brand,
-    primaryForeground: base.onBrand,
   };
 }
 
@@ -300,18 +277,6 @@ export const motionDurations = {
   slow: 320,
   enter: 240,
   exit: 160,
-} as const;
-
-export const motionEasings = {
-  standard: Easing.bezier(0.4, 0, 0.2, 1),
-  decelerate: Easing.bezier(0, 0, 0.2, 1),
-  accelerate: Easing.bezier(0.4, 0, 1, 1),
-} as const;
-
-export const motionSprings = {
-  snappy: { damping: 20, stiffness: 300, mass: 0.6 },
-  gentle: { damping: 18, stiffness: 160, mass: 0.8 },
-  bouncy: { damping: 12, stiffness: 220, mass: 0.7 },
 } as const;
 
 export const pressScale = 0.97;

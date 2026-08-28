@@ -1,4 +1,5 @@
 import type { ComponentProps } from 'react';
+import { useMemo } from 'react';
 import { Text as RNText, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -50,17 +51,22 @@ export function Text({
   const { colors, typography } = useTheme();
   const { i18n } = useTranslation();
 
-  const colorMap: Record<ColorRole, string> = {
-    primary: colors.textPrimary,
-    secondary: colors.textSecondary,
-    tertiary: colors.textTertiary,
-    inverse: colors.textInverse,
-    brand: colors.brand,
-    danger: colors.danger,
-    success: colors.success,
-    warning: colors.warning,
-    onBrand: colors.onBrand,
-  };
+  // Hoisted behind useMemo — this component renders on every message/list row, so rebuilding a
+  // fresh object every render (to read a single value out of it) was needless per-render churn.
+  const colorMap: Record<ColorRole, string> = useMemo(
+    () => ({
+      primary: colors.textPrimary,
+      secondary: colors.textSecondary,
+      tertiary: colors.textTertiary,
+      inverse: colors.textInverse,
+      brand: colors.brand,
+      danger: colors.danger,
+      success: colors.success,
+      warning: colors.warning,
+      onBrand: colors.onBrand,
+    }),
+    [colors],
+  );
 
   const token = typography[variant];
   const fontFamily = DISPLAY_FAMILY_VARIANTS.includes(variant)

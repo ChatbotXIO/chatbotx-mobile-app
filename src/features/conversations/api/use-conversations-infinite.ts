@@ -4,7 +4,7 @@ import { useShallow } from 'zustand/react/shallow';
 
 import { apiClient } from '@/api/client';
 import { ApiError } from '@/api/errors';
-import { flattenPages, getNextPageParam } from '@/api/pagination';
+import { getNextPageParam } from '@/api/pagination';
 import { queryKeys } from '@/api/query-keys';
 import type { operations } from '@/api/generated/schema';
 import {
@@ -80,10 +80,4 @@ export function useConversationsInfinite(workspaceId: string | null) {
     },
     getNextPageParam,
   });
-}
-
-export function flattenConversationPages(
-  pages: ListConversationsResponse[] | undefined,
-): ConversationListItem[] {
-  return flattenPages(pages);
 }

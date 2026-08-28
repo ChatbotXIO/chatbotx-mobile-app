@@ -1,6 +1,5 @@
 import type BottomSheet from '@gorhom/bottom-sheet';
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
-import { useQuery } from '@tanstack/react-query';
 import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -8,24 +7,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ListItem } from '@/components/ui/list-item';
 import { Sheet } from '@/components/ui/sheet';
-import { apiClient } from '@/api/client';
-import { ApiError } from '@/api/errors';
-import { queryKeys } from '@/api/query-keys';
-
-/** `GET /workspaces/{workspaceId}/members` — confirmed live in the generated schema, so this is a
- * real (not stubbed) member list, not the deferred Phase 8 members *management* screen. */
-function useWorkspaceMembers(workspaceId: string) {
-  return useQuery({
-    queryKey: queryKeys.ws.members.list(workspaceId),
-    queryFn: async () => {
-      const { data, error } = await apiClient.GET('/workspaces/{workspaceId}/members', {
-        params: { path: { workspaceId } },
-      });
-      if (error) throw new ApiError(error);
-      return data.data;
-    },
-  });
-}
+import { useWorkspaceMembersList } from '@/features/permissions/use-permissions';
 
 interface AssignmentSheetProps {
   sheetRef: RefObject<BottomSheet | null>;
@@ -35,7 +17,7 @@ interface AssignmentSheetProps {
 
 export function AssignmentSheet({ sheetRef, workspaceId, onAssign }: AssignmentSheetProps) {
   const { t } = useTranslation();
-  const { data: members } = useWorkspaceMembers(workspaceId);
+  const { data: members } = useWorkspaceMembersList(workspaceId);
 
   return (
     <Sheet ref={sheetRef} snapPoints={['50%', '80%']}>

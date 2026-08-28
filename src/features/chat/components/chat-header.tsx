@@ -89,7 +89,12 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
       <Pressable
         style={styles.identity}
         accessibilityRole="button"
-        onPress={() => router.push(`/(app)/conversations/${conversationId}/contact` as never)}
+        onPress={() =>
+          router.push({
+            pathname: '/(app)/conversations/[conversationId]/contact',
+            params: { conversationId },
+          })
+        }
       >
         <Avatar
           uri={conversation?.contact?.avatar}

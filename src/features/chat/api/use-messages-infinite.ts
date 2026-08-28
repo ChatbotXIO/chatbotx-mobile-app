@@ -2,7 +2,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/api/client';
 import { ApiError } from '@/api/errors';
-import { flattenPages, getNextPageParam } from '@/api/pagination';
+import { getNextPageParam } from '@/api/pagination';
 import { queryKeys } from '@/api/query-keys';
 import type { operations } from '@/api/generated/schema';
 
@@ -41,8 +41,4 @@ export function useMessagesInfinite(workspaceId: string | null, conversationId: 
     },
     getNextPageParam,
   });
-}
-
-export function flattenMessagePages(pages: ListMessagesResponse[] | undefined): Message[] {
-  return flattenPages(pages);
 }

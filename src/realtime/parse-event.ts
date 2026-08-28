@@ -62,7 +62,9 @@ function validateMessageFailed(data: unknown): boolean {
   if (!isObject(data)) return false;
   if (!isString(data.messageId)) return false;
   if (data.clientId !== undefined && typeof data.clientId !== 'string') return false;
-  if (data.error !== null && typeof data.error !== 'string') return false;
+  // `error` is optional — a payload that omits it entirely (rather than sending `null`) must not
+  // fail validation and drop the whole event.
+  if (!isOptionalNullableString(data.error)) return false;
   return true;
 }
 

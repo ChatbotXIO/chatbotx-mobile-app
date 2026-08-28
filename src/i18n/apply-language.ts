@@ -21,18 +21,22 @@ export async function applyLanguage(language: SupportedLanguage): Promise<void> 
  * app was built before the `expo-updates` package/plugin were added (needs a fresh build to pick
  * up the native module), independent of whether EAS Update hosting is configured. In that case
  * there is no reload mechanism available at all; the RTL/language change still takes effect on
- * the *next* natural app relaunch, so we surface an alert rather than silently doing nothing.
+ * the *next* natural app relaunch. `silent: true` (the bootstrap path, before anything has
+ * rendered) falls back to that quietly instead of alerting — there's no user-initiated action to
+ * report back on yet.
  */
-export async function reloadApp(): Promise<void> {
+export async function reloadApp(options?: { silent?: boolean }): Promise<void> {
   if (__DEV__) {
     DevSettings.reload();
     return;
   }
   if (!Updates.isEnabled) {
-    Alert.alert(
-      i18next.t('settings.restartRequiredTitle'),
-      i18next.t('settings.restartManuallyMessage'),
-    );
+    if (!options?.silent) {
+      Alert.alert(
+        i18next.t('settings.restartRequiredTitle'),
+        i18next.t('settings.restartManuallyMessage'),
+      );
+    }
     return;
   }
   await Updates.reloadAsync();

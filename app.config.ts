@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+
 import type { ExpoConfig } from 'expo/config';
 
 /**
@@ -8,13 +10,15 @@ import type { ExpoConfig } from 'expo/config';
  * (see src/config/env.ts) — process.env is only available here, in the Expo config context.
  */
 const config: ExpoConfig = {
-  name: 'chatbotx-mobile-app',
+  name: 'ChatbotX',
   slug: 'chatbotx-mobile-app',
   version: '1.0.0',
   orientation: 'portrait',
   icon: './assets/images/icon.png',
   scheme: 'chatbotxmobileapp',
   userInterfaceStyle: 'automatic',
+  // New Architecture is mandatory (no opt-out) as of this SDK — no `newArchEnabled` property
+  // exists in the config schema to set.
   ios: {
     icon: './assets/expo.icon',
     bundleIdentifier: 'com.chatconnectx.mobile',
@@ -28,14 +32,14 @@ const config: ExpoConfig = {
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
+    // Edge-to-edge display is mandatory (no opt-out) as of this SDK — no `edgeToEdgeEnabled` knob
+    // exists in the Android config schema to set.
     // Required for Android FCM V1 push delivery — prerequisite: a Firebase project with this
     // package name registered, its google-services.json downloaded to the repo root (gitignored,
-    // not committed). Builds will fail without this file once this config is active.
-    googleServicesFile: './google-services.json',
-  },
-  web: {
-    output: 'static',
-    favicon: './assets/images/favicon.png',
+    // not committed). Conditional on the file actually existing locally: it's a per-developer/CI
+    // secret (see README for the EAS file-secret setup), and an unconditional reference here fails
+    // every clean checkout's Android build/prebuild before that secret is provisioned.
+    googleServicesFile: existsSync('./google-services.json') ? './google-services.json' : undefined,
   },
   plugins: [
     'expo-router',
@@ -81,10 +85,19 @@ const config: ExpoConfig = {
         color: '#208AEF',
       },
     ],
+    'expo-updates',
   ],
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
+  },
+  // EAS Update: OTA JS-bundle updates without an app-store resubmission. `runtimeVersion` gates
+  // which updates a given build can receive — 'appVersion' policy means any build sharing the
+  // same `version` above can receive the same update (no native code change assumed between
+  // updates to the same version).
+  runtimeVersion: { policy: 'appVersion' },
+  updates: {
+    url: 'https://u.expo.dev/8cfd58a8-15f8-4f64-b16c-abf26166e80f',
   },
   extra: {
     // Falls back to the builder app's default local dev URL. Override via `API_BASE_URL` env var

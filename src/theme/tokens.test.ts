@@ -33,19 +33,10 @@ const NEW_SEMANTIC_COLOR_KEYS = [
   'scrim',
 ] as const;
 
-// Phase 7 removed `unreadDot`, `bubbleOutbound(Text)`, `bubbleInbound(Text)` once their last call
-// sites migrated to the new semantic keys — see tokens.ts's doc comment. The rest still have live
-// call sites and stay as compatibility aliases.
-const DEPRECATED_ALIAS_KEYS = [
-  'background',
-  'surface',
-  'surfaceElevated',
-  'border',
-  'text',
-  'primary',
-  'primaryForeground',
-] as const;
-
+// Phase 7 removed `unreadDot`, `bubbleOutbound(Text)`, `bubbleInbound(Text)`; a later cleanup
+// removed the remaining flat-key aliases (`background`, `surface`, `surfaceElevated`, `border`,
+// `text`, `primary`, `primaryForeground`) once every call site migrated to the semantic keys
+// above — see tokens.ts's doc comment.
 const CHANNEL_KEYS = [
   'messenger',
   'instagram',
@@ -68,13 +59,6 @@ describe('colorTokens', () => {
     }
   });
 
-  it.each(['light', 'dark'] as const)('keeps every deprecated alias for %s', (scheme) => {
-    for (const key of DEPRECATED_ALIAS_KEYS) {
-      expect(colorTokens[scheme]).toHaveProperty(key);
-      expect(typeof colorTokens[scheme][key]).toBe('string');
-    }
-  });
-
   it.each(['light', 'dark'] as const)('defines exactly the 11 channel keys for %s', (scheme) => {
     expect(Object.keys(colorTokens[scheme].channel).sort()).toEqual([...CHANNEL_KEYS].sort());
   });
@@ -90,28 +74,24 @@ describe('colorTokens', () => {
     expect(colorTokens[scheme].avatarPalette).toHaveLength(6);
   });
 
-  it('deprecated aliases point at their new-key equivalents', () => {
-    for (const scheme of ['light', 'dark'] as const) {
-      const tokens = colorTokens[scheme];
-      expect(tokens.background).toBe(tokens.bg);
-      expect(tokens.surface).toBe(tokens.surface2);
-      expect(tokens.surfaceElevated).toBe(tokens.surface1);
-      expect(tokens.border).toBe(tokens.borderSubtle);
-      expect(tokens.text).toBe(tokens.textPrimary);
-      expect(tokens.primary).toBe(tokens.brand);
-      expect(tokens.primaryForeground).toBe(tokens.onBrand);
-    }
-  });
-
   it.each(['light', 'dark'] as const)(
-    'no longer exposes the fully-migrated aliases removed in Phase 7 for %s',
+    'no longer exposes any deprecated flat-key alias for %s',
     (scheme) => {
       const tokens = colorTokens[scheme] as Record<string, unknown>;
+      // Phase 7 removals:
       expect(tokens.unreadDot).toBeUndefined();
       expect(tokens.bubbleOutbound).toBeUndefined();
       expect(tokens.bubbleOutboundText).toBeUndefined();
       expect(tokens.bubbleInbound).toBeUndefined();
       expect(tokens.bubbleInboundText).toBeUndefined();
+      // Later cleanup removed the rest once every call site migrated to the semantic keys above:
+      expect(tokens.background).toBeUndefined();
+      expect(tokens.surface).toBeUndefined();
+      expect(tokens.surfaceElevated).toBeUndefined();
+      expect(tokens.border).toBeUndefined();
+      expect(tokens.text).toBeUndefined();
+      expect(tokens.primary).toBeUndefined();
+      expect(tokens.primaryForeground).toBeUndefined();
     },
   );
 });

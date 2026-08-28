@@ -4,11 +4,9 @@ import { router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking, ScrollView, View } from 'react-native';
+import { Linking, ScrollView, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { signOut as signOutRequest } from '@/api/auth-endpoints';
-import { clearAuthToken, getAuthToken } from '@/api/auth-token';
 import { Avatar } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/surface';
 import { Divider } from '@/components/ui/divider';
@@ -18,6 +16,7 @@ import { SectionHeader } from '@/components/ui/section-header';
 import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 import { Text } from '@/components/ui/text';
 import { ToggleRow } from '@/components/ui/toggle-row';
+import { useSignOut } from '@/features/auth/use-sign-out';
 import {
   useRegisterDeviceToken,
   useUnregisterDeviceToken,
@@ -26,7 +25,6 @@ import { LanguageSheet } from '@/features/settings/components/language-sheet';
 import { WorkspaceSwitcherSheet } from '@/features/workspaces/components/workspace-switcher-sheet';
 import { useWorkspaces } from '@/features/workspaces/api/use-workspaces';
 import { localeMeta } from '@/i18n/locales';
-import { queryClient } from '@/lib/query-client';
 import { useReducedMotion } from '@/theme/motion';
 import { useResolvedScheme, useTheme } from '@/theme/use-theme';
 import { useAuthStore } from '@/stores/use-auth-store';
@@ -43,7 +41,7 @@ export default function SettingsScreen() {
   const reducedMotion = useReducedMotion();
 
   const user = useAuthStore((state) => state.user);
-  const setSignedOut = useAuthStore((state) => state.setSignedOut);
+  const signOut = useSignOut();
 
   const themePreference = useSettingsStore((state) => state.themePreference);
   const setThemePreference = useSettingsStore((state) => state.setThemePreference);
@@ -53,7 +51,6 @@ export default function SettingsScreen() {
   const workspaceSwitcherSheetRef = useRef<BottomSheet>(null);
 
   const currentWorkspaceId = useWorkspaceStore((state) => state.currentWorkspaceId);
-  const setCurrentWorkspaceId = useWorkspaceStore((state) => state.setCurrentWorkspaceId);
   const { data: workspaces } = useWorkspaces();
   const currentWorkspace = workspaces?.find((workspace) => workspace.id === currentWorkspaceId);
 
@@ -84,24 +81,6 @@ export default function SettingsScreen() {
       onSuccess: () => setPushEnabled(true),
       onError: () => setPushEnabled(false),
     });
-  }
-
-  async function performSignOut() {
-    const token = await getAuthToken();
-    if (token) {
-      await signOutRequest(token).catch(() => {});
-    }
-    await clearAuthToken();
-    queryClient.clear();
-    setCurrentWorkspaceId(null);
-    setSignedOut();
-  }
-
-  function handleSignOut() {
-    Alert.alert(t('auth.signOutConfirmTitle'), t('auth.signOutConfirmBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('auth.signOut'), style: 'destructive', onPress: () => void performSignOut() },
-    ]);
   }
 
   return (
@@ -190,7 +169,7 @@ export default function SettingsScreen() {
           </View>
 
           <Card>
-            <ListItem title={t('auth.signOut')} onPress={handleSignOut} destructive />
+            <ListItem title={t('auth.signOut')} onPress={signOut} destructive />
           </Card>
 
           {appVersion ? (

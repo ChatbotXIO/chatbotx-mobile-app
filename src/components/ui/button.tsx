@@ -1,4 +1,5 @@
 import type { ComponentProps } from 'react';
+import { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet } from 'react-native';
 
 import { useTheme } from '@/theme/use-theme';
@@ -42,16 +43,26 @@ export function Button({
   const { colors, spacing, radius } = useTheme();
   const isDisabled = disabled || loading;
 
+  // Hoisted behind useMemo — Button renders on every list row/action bar, so rebuilding this
+  // object every render (to read a single variant's entry out of it) was needless per-render
+  // churn.
   const variantStyles: Record<
     Variant,
     { background: string; text: 'onBrand' | 'primary' | 'danger' | 'brand'; borderColor?: string }
-  > = {
-    primary: { background: colors.brand, text: 'onBrand' },
-    danger: { background: colors.danger, text: 'onBrand' },
-    secondary: { background: colors.surface1, text: 'primary', borderColor: colors.borderStrong },
-    tonal: { background: colors.brandSoft, text: 'brand' },
-    ghost: { background: 'transparent', text: 'primary' },
-  };
+  > = useMemo(
+    () => ({
+      primary: { background: colors.brand, text: 'onBrand' },
+      danger: { background: colors.danger, text: 'onBrand' },
+      secondary: {
+        background: colors.surface1,
+        text: 'primary',
+        borderColor: colors.borderStrong,
+      },
+      tonal: { background: colors.brandSoft, text: 'brand' },
+      ghost: { background: 'transparent', text: 'primary' },
+    }),
+    [colors],
+  );
   const { background, text, borderColor } = variantStyles[variant];
   const sizeStyle = SIZE_STYLES[size];
 

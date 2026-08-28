@@ -44,8 +44,9 @@ export function Badge({ children, color, textColor, tone, count, max = DEFAULT_M
   if (typeof count === 'number' && count <= 0 && children === undefined) return null;
 
   const toneTokens = tone ? TONE_TOKENS[tone] : undefined;
-  const backgroundColor = color ?? (toneTokens ? colors[toneTokens.bgKey] : colors.surface);
-  const resolvedTextColor = textColor ?? (toneTokens ? colors[toneTokens.textKey] : colors.text);
+  const backgroundColor = color ?? (toneTokens ? colors[toneTokens.bgKey] : colors.surface2);
+  const resolvedTextColor =
+    textColor ?? (toneTokens ? colors[toneTokens.textKey] : colors.textPrimary);
 
   const content = typeof count === 'number' ? (count > max ? `${max}+` : String(count)) : children;
 

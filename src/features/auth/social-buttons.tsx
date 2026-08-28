@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -63,7 +63,10 @@ export function SocialButtons() {
 
       setSignedIn(user);
       const pendingDeepLink = user.mustChangePassword ? null : consumePendingDeepLink();
-      router.replace((pendingDeepLink ?? '/') as never);
+      // A captured deep link is an arbitrary runtime string, not a route this app's typed-routes
+      // manifest can know statically — `Href` (rather than `as never`) is expo-router's own type
+      // for exactly this "any valid path string" case.
+      router.replace((pendingDeepLink ?? '/') as Href);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errors.unknown'));
     } finally {

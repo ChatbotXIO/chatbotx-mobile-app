@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
+import { flattenPages } from '@/api/pagination';
 import { ConnectionBanner } from '@/components/ui/connection-banner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorBanner } from '@/components/ui/error-banner';
@@ -26,7 +27,6 @@ import {
 import { FilterChipsRow } from '@/features/conversations/components/filter-chips-row';
 import { FilterSheet } from '@/features/conversations/components/filter-sheet';
 import {
-  flattenConversationPages,
   useConversationsInfinite,
   type ConversationListItem,
 } from '@/features/conversations/api/use-conversations-infinite';
@@ -95,7 +95,7 @@ export default function ConversationsScreen() {
   }, [searchText, setKeyword]);
 
   const query = useConversationsInfinite(workspaceId);
-  const conversations = flattenConversationPages(query.data?.pages);
+  const conversations = flattenPages(query.data?.pages);
   const assignMutation = useAssignConversations(workspaceId ?? '');
   const markRead = useMarkConversationRead(workspaceId ?? '');
   const markUnread = useMarkConversationUnread(workspaceId ?? '');

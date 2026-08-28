@@ -77,6 +77,11 @@ export function ToastProvider({ children }: PropsWithChildren) {
     }
 
     const duration = current.durationMs ?? DEFAULT_DURATION_MS;
+    // Both timers are tracked (not just the outer one) so cleanup can cancel the exit-animation
+    // dismiss too — previously only the outer timer was cleared, so if `current` changed (or this
+    // unmounted) mid-exit-animation, the inner `setTimeout` still fired later and called
+    // `dismissCurrent` against a stale render.
+    let exitTimer: ReturnType<typeof setTimeout> | undefined;
     const timer = setTimeout(() => {
       if (reducedMotion) {
         translateY.value = TOAST_HEIGHT + 40;
@@ -85,13 +90,23 @@ export function ToastProvider({ children }: PropsWithChildren) {
       } else {
         opacity.value = withTiming(0, { duration: motion.durations.exit });
         translateY.value = withTiming(TOAST_HEIGHT + 40, { duration: motion.durations.exit });
-        setTimeout(dismissCurrent, motion.durations.exit);
+        exitTimer = setTimeout(dismissCurrent, motion.durations.exit);
       }
     }, duration);
 
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- shared values are stable refs, motion/reducedMotion are effectively static.
-  }, [current, dismissCurrent]);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(exitTimer);
+    };
+  }, [
+    current,
+    dismissCurrent,
+    reducedMotion,
+    motion.durations.enter,
+    motion.durations.exit,
+    translateY,
+    opacity,
+  ]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,

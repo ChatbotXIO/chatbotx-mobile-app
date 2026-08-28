@@ -1,3 +1,11 @@
+import * as SecureStore from 'expo-secure-store';
+import type { Middleware } from 'openapi-fetch';
+
+import { apiClient } from '@/api/client';
+
+// Jest hoists `jest.mock` calls above these imports at compile time regardless of source
+// position, so this ordering (imports first, mocks after) is purely to satisfy `import/first` —
+// it does not change which runs first.
 jest.mock('expo-constants', () => ({
   __esModule: true,
   default: {
@@ -7,11 +15,6 @@ jest.mock('expo-constants', () => ({
   },
 }));
 jest.mock('expo-secure-store', () => ({ getItemAsync: jest.fn() }));
-
-import * as SecureStore from 'expo-secure-store';
-import type { Middleware } from 'openapi-fetch';
-
-import { apiClient } from '@/api/client';
 
 /**
  * Stand-in for React Native's second `Response` realm (see the plan this test accompanies):

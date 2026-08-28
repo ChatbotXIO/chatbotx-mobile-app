@@ -24,10 +24,6 @@ export const queryKeys = {
         ['ws', workspaceId, 'contacts', 'list', filters] as const,
       detail: (workspaceId: string, contactId: string) =>
         ['ws', workspaceId, 'contacts', 'detail', contactId] as const,
-      tags: (workspaceId: string, contactId: string) =>
-        ['ws', workspaceId, 'contacts', 'tags', contactId] as const,
-      sequences: (workspaceId: string, contactId: string) =>
-        ['ws', workspaceId, 'contacts', 'sequences', contactId] as const,
     },
     flows: {
       list: (workspaceId: string) => ['ws', workspaceId, 'flows', 'list'] as const,

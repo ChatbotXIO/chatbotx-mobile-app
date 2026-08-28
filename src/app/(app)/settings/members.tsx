@@ -9,7 +9,7 @@ import { ErrorBanner } from '@/components/ui/error-banner';
 import { ListItem } from '@/components/ui/list-item';
 import { Screen } from '@/components/ui/screen';
 import { SectionHeader } from '@/components/ui/section-header';
-import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonRow } from '@/components/ui/skeleton';
 import { useTeamsList } from '@/features/settings/api/use-teams';
 import { useWorkspaceMembersList } from '@/features/permissions/use-permissions';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
@@ -35,10 +35,10 @@ export default function MembersScreen() {
       <ScrollView>
         <SectionHeader title={t('settings.members')} />
         {membersQuery.isPending ? (
-          <View style={{ paddingHorizontal: spacing.md, gap: spacing.sm }}>
-            <Skeleton height={56} />
-            <Skeleton height={56} />
-            <Skeleton height={56} />
+          <View>
+            <SkeletonRow.Conversation />
+            <SkeletonRow.Conversation />
+            <SkeletonRow.Conversation />
           </View>
         ) : membersQuery.isError ? (
           <View style={{ paddingHorizontal: spacing.md }}>
@@ -69,8 +69,8 @@ export default function MembersScreen() {
           <>
             <SectionHeader title={t('settings.teams')} />
             {teamsQuery.isPending ? (
-              <View style={{ paddingHorizontal: spacing.md, gap: spacing.sm }}>
-                <Skeleton height={56} />
+              <View>
+                <SkeletonRow.Conversation />
               </View>
             ) : teams.length === 0 ? (
               <EmptyState icon="people-circle-outline" title={t('settings.noTeams')} />
