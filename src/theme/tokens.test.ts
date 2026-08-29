@@ -1,4 +1,5 @@
 import { colorTokens, radiusTokens, spacingTokens, typographyTokens } from '@/theme/tokens';
+import { darken, lighten } from '@/theme/color-utils';
 
 const NEW_SEMANTIC_COLOR_KEYS = [
   'bg',
@@ -155,5 +156,17 @@ describe('typographyTokens', () => {
   it('marks label as uppercase with letter spacing', () => {
     expect(typographyTokens.label.textTransform).toBe('uppercase');
     expect(typographyTokens.label.letterSpacing).toBeGreaterThan(0);
+  });
+});
+
+describe('brand-derived color tokens', () => {
+  // jest.setup.ts mocks `extra.brandColor` as '#3c6df0'.
+  it('derives light and dark brand shades from the configured brand color', () => {
+    expect(colorTokens.light.brand).toBe('#3c6df0');
+    expect(colorTokens.light.bubbleOut).toBe('#3c6df0');
+    expect(colorTokens.light.brandStrong).toBe(darken('#3c6df0', 0.2));
+    expect(colorTokens.dark.brand).toBe(lighten('#3c6df0', 0.35));
+    expect(colorTokens.dark.brandStrong).toBe(lighten('#3c6df0', 0.55));
+    expect(colorTokens.dark.bubbleOut).toBe(darken('#3c6df0', 0.1));
   });
 });

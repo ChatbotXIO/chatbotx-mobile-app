@@ -10,12 +10,21 @@
 
 import { brand } from '@/config/brand';
 
-import { darken, withAlpha } from './color-utils';
+import { darken, lighten, withAlpha } from './color-utils';
 
-/** Pressed/emphasis shade of the brand color, derived rather than hand-picked so each brand only
- * needs to supply one color in brand.json. Darkened ~20% — matches the original ChatbotX
- * `#3c6df0` → `#2851c9` relationship closely enough to keep existing screens' contrast intact. */
-const brandStrong = darken(brand.brandColor, 0.2);
+/** Brand shades derived from the single `colors.brand` in brand.json rather than hand-picked per
+ * brand and per scheme. The light-scheme `brandStrong` (pressed/emphasis) is darkened ~20%; the
+ * dark scheme lifts the color toward white so it reads on near-black surfaces (`brand` ≈ the
+ * original ChatbotX `#7d9eff`, `brandStrong` ≈ `#a4bcff`) while `bubbleOut` stays close to the
+ * base color so outgoing bubbles keep enough contrast against white bubble text. */
+const brandShades = {
+  light: { brand: brand.brandColor, brandStrong: darken(brand.brandColor, 0.2) },
+  dark: {
+    brand: lighten(brand.brandColor, 0.35),
+    brandStrong: lighten(brand.brandColor, 0.55),
+    bubbleOut: darken(brand.brandColor, 0.1),
+  },
+} as const;
 
 // ---------------------------------------------------------------------------
 // Colors
@@ -35,12 +44,12 @@ const lightBase = {
   // (measured ~4.51:1).
   textTertiary: '#767063',
   textInverse: '#ffffff',
-  brand: brand.brandColor,
-  brandStrong,
+  brand: brandShades.light.brand,
+  brandStrong: brandShades.light.brandStrong,
   onBrand: '#ffffff',
   bubbleIn: '#ffffff',
   bubbleInText: '#1c1b17',
-  bubbleOut: brand.brandColor,
+  bubbleOut: brandShades.light.brand,
   bubbleOutText: '#ffffff',
   bubbleBot: '#f1ecff',
   bubbleBotText: '#2f1f66',
@@ -62,12 +71,12 @@ const darkBase = {
   textSecondary: '#b9b3a2',
   textTertiary: '#847d6b',
   textInverse: '#1c1b17',
-  brand: '#7d9eff',
-  brandStrong: '#a4bcff',
+  brand: brandShades.dark.brand,
+  brandStrong: brandShades.dark.brandStrong,
   onBrand: '#0e152b',
   bubbleIn: '#28261f',
   bubbleInText: '#f4f2ec',
-  bubbleOut: '#3c5fd9',
+  bubbleOut: brandShades.dark.bubbleOut,
   bubbleOutText: '#ffffff',
   bubbleBot: '#2a2145',
   bubbleBotText: '#e4d9ff',

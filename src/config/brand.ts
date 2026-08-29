@@ -1,54 +1,39 @@
 import Constants from 'expo-constants';
 
-type AppEnv = 'development' | 'preview' | 'production';
-
 interface BrandExtraConfig {
   brandId: string;
-  displayName: string;
   brandScheme: string;
   brandColor: string;
-  appEnv: AppEnv;
-  updateChannel: string;
 }
 
-function readExtra(): BrandExtraConfig {
-  const extra = Constants.expoConfig?.extra as Partial<BrandExtraConfig> | undefined;
+const REQUIRED_FIELDS: readonly (keyof BrandExtraConfig)[] = [
+  'brandId',
+  'brandScheme',
+  'brandColor',
+];
 
-  if (!extra?.brandId) {
-    throw new Error(
-      'Missing "extra.brandId" in Expo config. Check app.config.ts and the BRAND env var.',
-    );
-  }
-  if (!extra?.displayName) {
-    throw new Error('Missing "extra.displayName" in Expo config. Check app.config.ts.');
-  }
-  if (!extra?.brandScheme) {
-    throw new Error('Missing "extra.brandScheme" in Expo config. Check app.config.ts.');
-  }
-  if (!extra?.brandColor) {
-    throw new Error('Missing "extra.brandColor" in Expo config. Check app.config.ts.');
-  }
-  if (!extra?.appEnv) {
-    throw new Error(
-      'Missing "extra.appEnv" in Expo config. Check app.config.ts and the APP_ENV env var.',
-    );
-  }
-  if (!extra?.updateChannel) {
-    throw new Error('Missing "extra.updateChannel" in Expo config. Check app.config.ts.');
+function readExtra(): BrandExtraConfig {
+  const extra = (Constants.expoConfig?.extra ?? {}) as Partial<BrandExtraConfig>;
+
+  for (const field of REQUIRED_FIELDS) {
+    if (!extra[field]) {
+      throw new Error(
+        `Missing "extra.${field}" in Expo config. Check app.config.ts and the BRAND env var.`,
+      );
+    }
   }
 
   return {
-    brandId: extra.brandId,
-    displayName: extra.displayName,
-    brandScheme: extra.brandScheme,
-    brandColor: extra.brandColor,
-    appEnv: extra.appEnv,
-    updateChannel: extra.updateChannel,
+    brandId: extra.brandId!,
+    brandScheme: extra.brandScheme!,
+    brandColor: extra.brandColor!,
   };
 }
 
 /**
- * Brand identity, sourced from `brands/<BRAND>/brand.json` via app.config.ts `extra`. See
- * docs/white-label.md for how a new brand is created and built.
+ * Brand identity the app reads at runtime, sourced from `brands/<BRAND>/brand.json` via
+ * app.config.ts `extra`. Only what src/ actually consumes is exposed here — the display name is
+ * available as `Constants.expoConfig.name`, and the environment/update channel are build-time
+ * concerns owned by eas.json. See docs/white-label.md for how a new brand is created and built.
  */
 export const brand: BrandExtraConfig = readExtra();

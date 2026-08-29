@@ -24,10 +24,14 @@ jobs:
       - uses: eas/checkout
       - name: Clone private brand overlay repo
         run: |
-          rm -rf "brands/${{ inputs.brand }}"
+          set -euo pipefail
+          : "${BRANDS_REPO_TOKEN:?BRANDS_REPO_TOKEN secret is not set}"
+          rm -rf "brands/${{ inputs.brand }}" /tmp/chatbotx-mobile-brands
           git clone --depth 1 \
             "https://x-access-token:${BRANDS_REPO_TOKEN}@github.com/ChatbotXIO/chatbotx-mobile-brands.git" \
             /tmp/chatbotx-mobile-brands
+          test -f "/tmp/chatbotx-mobile-brands/${{ inputs.brand }}/brand.json" \
+            || { echo "No brand.json for brand '${{ inputs.brand }}' in chatbotx-mobile-brands"; exit 1; }
           cp -R "/tmp/chatbotx-mobile-brands/${{ inputs.brand }}" "brands/${{ inputs.brand }}"
 
   build_android_production:

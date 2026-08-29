@@ -43,15 +43,21 @@ export const APP_ENV_CONFIG: Record<
   production: { idSuffix: '', nameSuffix: '', channel: 'production' },
 };
 
+const APP_ENVS = Object.keys(APP_ENV_CONFIG) as AppEnv[];
+
+function isAppEnv(value: string): value is AppEnv {
+  return (APP_ENVS as string[]).includes(value);
+}
+
 export function readAppEnv(raw: string | undefined): AppEnv {
   const value = raw ?? 'development';
-  if (value === 'development' || value === 'preview' || value === 'production') {
-    return value;
-  }
+  if (isAppEnv(value)) return value;
   throw new Error(
-    `Invalid APP_ENV "${value}" — expected "development", "preview", or "production".`,
+    `Invalid APP_ENV "${value}" — expected ${APP_ENVS.map((e) => `"${e}"`).join(', ')}.`,
   );
 }
+
+const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 
 /** Hand-rolled validation (matching the src/config/env.ts pattern elsewhere in the repo) rather
  * than pulling in zod for one call site that only ever runs in the Node config-evaluation
@@ -61,51 +67,52 @@ export function validateBrand(raw: unknown, brandId: string): BrandConfig {
     throw new Error(`brands/${brandId}/brand.json is missing or has an invalid "${field}" field.`);
   };
 
-  if (typeof raw !== 'object' || raw === null) fail('(root)');
-  const b = raw as Record<string, unknown>;
+  const asRecord = (value: unknown, field: string): Record<string, unknown> =>
+    typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : fail(field);
 
-  if (typeof b.id !== 'string' || !b.id) fail('id');
-  if (typeof b.displayName !== 'string' || !b.displayName) fail('displayName');
-  if (typeof b.slug !== 'string' || !b.slug) fail('slug');
-  if (typeof b.scheme !== 'string' || !b.scheme) fail('scheme');
+  /** Reads `path` (e.g. "ios.bundleIdentifier") off the raw object as a string. Empty strings are
+   * rejected unless `allowEmpty`; `optional` also accepts an absent key (returned as ''); `hex`
+   * additionally requires a 6-digit `#rrggbb` color so a bad value fails here, naming the file,
+   * instead of at module load deep inside src/theme/tokens.ts. */
+  const requireString = (
+    path: string,
+    {
+      allowEmpty = false,
+      optional = false,
+      hex = false,
+    }: { allowEmpty?: boolean; optional?: boolean; hex?: boolean } = {},
+  ): string => {
+    const value = path.split('.').reduce<unknown>((obj, key) => asRecord(obj, path)[key], raw);
+    if (value === undefined && optional) return '';
+    if (typeof value !== 'string') return fail(path);
+    if (!allowEmpty && !value) return fail(path);
+    if (hex && !HEX_COLOR_PATTERN.test(value)) return fail(path);
+    return value;
+  };
 
-  const ios = b.ios as Record<string, unknown> | undefined;
-  if (!ios || typeof ios.bundleIdentifier !== 'string' || !ios.bundleIdentifier) {
-    fail('ios.bundleIdentifier');
-  }
-
-  const android = b.android as Record<string, unknown> | undefined;
-  if (!android || typeof android.package !== 'string' || !android.package) {
-    fail('android.package');
-  }
-  if (typeof android?.adaptiveIconBackgroundColor !== 'string') {
-    fail('android.adaptiveIconBackgroundColor');
-  }
-
-  const colors = b.colors as Record<string, unknown> | undefined;
-  if (!colors || typeof colors.brand !== 'string') fail('colors.brand');
-  if (typeof colors?.splashBackground !== 'string') fail('colors.splashBackground');
-
-  const eas = b.eas as Record<string, unknown> | undefined;
-  if (!eas || typeof eas.projectId !== 'string') fail('eas.projectId');
+  asRecord(raw, '(root)');
+  const owner = requireString('eas.owner', { optional: true, allowEmpty: true });
 
   return {
-    id: b.id as string,
-    displayName: b.displayName as string,
-    slug: b.slug as string,
-    scheme: b.scheme as string,
-    ios: { bundleIdentifier: ios!.bundleIdentifier as string },
+    id: requireString('id'),
+    displayName: requireString('displayName'),
+    slug: requireString('slug'),
+    scheme: requireString('scheme'),
+    ios: { bundleIdentifier: requireString('ios.bundleIdentifier') },
     android: {
-      package: android!.package as string,
-      adaptiveIconBackgroundColor: android!.adaptiveIconBackgroundColor as string,
+      package: requireString('android.package'),
+      adaptiveIconBackgroundColor: requireString('android.adaptiveIconBackgroundColor', {
+        hex: true,
+      }),
     },
     colors: {
-      brand: colors!.brand as string,
-      splashBackground: colors!.splashBackground as string,
+      brand: requireString('colors.brand', { hex: true }),
+      splashBackground: requireString('colors.splashBackground', { hex: true }),
     },
+    // `owner` is optional; an absent or empty value means "use the logged-in EAS account".
     eas: {
-      projectId: eas!.projectId as string,
-      owner: typeof eas!.owner === 'string' && eas!.owner ? (eas!.owner as string) : undefined,
+      projectId: requireString('eas.projectId', { allowEmpty: true }),
+      owner: owner || undefined,
     },
   };
 }
@@ -218,8 +225,8 @@ const config: ExpoConfig = {
       {
         // No dedicated notification icon asset exists yet (Android requires a flat white
         // silhouette, distinct from the app icon) — falls back to Expo's generated default until
-        // one is designed. `color` matches the splash-screen brand color.
-        color: brand.colors.splashBackground,
+        // one is designed. `color` tints that icon with the brand color.
+        color: brand.colors.brand,
       },
     ],
     'expo-updates',
@@ -254,11 +261,8 @@ const config: ExpoConfig = {
     // native Info.plist/strings.xml values the plugin writes at build time.
     supportsRTL: true,
     brandId: brand.id,
-    displayName: brand.displayName,
     brandScheme: brand.scheme,
     brandColor: brand.colors.brand,
-    appEnv,
-    updateChannel: envConfig.channel,
     ...(hasEasProject
       ? {
           // Written by `eas init` — required by `getExpoPushTokenAsync` in src/lib/notifications.ts.

@@ -39,6 +39,22 @@ describe('validateBrand', () => {
     expect(result.eas.owner).toBe('my-org');
   });
 
+  test('treats an empty eas.owner as absent', () => {
+    const result = validateBrand(
+      { ...VALID_BRAND, eas: { projectId: 'abc-123', owner: '' } },
+      'acme',
+    );
+    expect(result.eas.owner).toBeUndefined();
+  });
+
+  test('accepts uppercase hex colors', () => {
+    const result = validateBrand(
+      { ...VALID_BRAND, colors: { brand: '#136EF1', splashBackground: '#FFFFFF' } },
+      'acme',
+    );
+    expect(result.colors.brand).toBe('#136EF1');
+  });
+
   test('allows an empty eas.projectId (no EAS project configured yet)', () => {
     const result = validateBrand({ ...VALID_BRAND, eas: { projectId: '' } }, 'acme');
     expect(result.eas.projectId).toBe('');
@@ -50,13 +66,18 @@ describe('validateBrand', () => {
     ['slug', { ...VALID_BRAND, slug: 123 }],
     ['scheme', { ...VALID_BRAND, scheme: '' }],
     ['ios.bundleIdentifier', { ...VALID_BRAND, ios: {} }],
-    ['android.package', { ...VALID_BRAND, android: { adaptiveIconBackgroundColor: '#fff' } }],
+    ['android.package', { ...VALID_BRAND, android: { adaptiveIconBackgroundColor: '#ffffff' } }],
     [
       'android.adaptiveIconBackgroundColor',
       { ...VALID_BRAND, android: { package: 'com.acme.app' } },
     ],
-    ['colors.brand', { ...VALID_BRAND, colors: { splashBackground: '#fff' } }],
-    ['colors.splashBackground', { ...VALID_BRAND, colors: { brand: '#fff' } }],
+    ['colors.brand', { ...VALID_BRAND, colors: { splashBackground: '#ffffff' } }],
+    ['colors.brand', { ...VALID_BRAND, colors: { ...VALID_BRAND.colors, brand: '#fff' } }],
+    [
+      'android.adaptiveIconBackgroundColor',
+      { ...VALID_BRAND, android: { ...VALID_BRAND.android, adaptiveIconBackgroundColor: 'blue' } },
+    ],
+    ['colors.splashBackground', { ...VALID_BRAND, colors: { brand: '#ffffff' } }],
     ['eas.projectId', { ...VALID_BRAND, eas: {} }],
   ])('throws a message naming the missing field "%s"', (field, invalidBrand) => {
     expect(() => validateBrand(invalidBrand, 'acme')).toThrow(

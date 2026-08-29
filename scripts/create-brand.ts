@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
@@ -27,14 +27,19 @@ if (existsSync(targetDir)) {
   process.exit(1);
 }
 
-mkdirSync(targetDir, { recursive: true });
-cpSync(templateDir, targetDir, { recursive: true });
+try {
+  cpSync(templateDir, targetDir, { recursive: true });
 
-const brandJsonPath = join(targetDir, 'brand.json');
-const brandJson = JSON.parse(readFileSync(brandJsonPath, 'utf8')) as Record<string, unknown>;
-delete brandJson['//'];
-brandJson.id = brandId;
-writeFileSync(brandJsonPath, `${JSON.stringify(brandJson, null, 2)}\n`);
+  const brandJsonPath = join(targetDir, 'brand.json');
+  const { '//': _templateNote, ...brandJson } = JSON.parse(
+    readFileSync(brandJsonPath, 'utf8'),
+  ) as Record<string, unknown>;
+  writeFileSync(brandJsonPath, `${JSON.stringify({ ...brandJson, id: brandId }, null, 2)}\n`);
+} catch (error) {
+  // Don't leave a half-scaffolded folder behind — it would trip the "already exists" guard on retry.
+  rmSync(targetDir, { recursive: true, force: true });
+  throw error;
+}
 
 console.log(`Created brands/${brandId} from brands/_template.`);
 console.log(
