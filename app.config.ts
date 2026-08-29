@@ -143,9 +143,12 @@ const assetsDir = `./brands/${brandId}/assets`;
 
 // Loud stdout log: `BRAND` must be correct wherever eas-cli evaluates this file locally (e.g. to
 // resolve `extra.eas.projectId` before a build upload) — a silently-wrong brand would build straight
-// into the wrong customer's EAS project. See plan risk notes in docs/deploy.md.
-// eslint-disable-next-line no-console -- deliberate build-time diagnostic, not app runtime code
-console.log(`[app.config] brand=${brand.id} appEnv=${appEnv}`);
+// into the wrong customer's EAS project. See plan risk notes in docs/deploy.md. Skipped under Jest
+// (app.config.ts is exercised directly by app.config.test.ts) since it's pure noise there.
+if (!process.env.JEST_WORKER_ID) {
+  // eslint-disable-next-line no-console -- deliberate build-time diagnostic, not app runtime code
+  console.log(`[app.config] brand=${brand.id} appEnv=${appEnv}`);
+}
 
 const hasEasProject = brand.eas.projectId.length > 0;
 

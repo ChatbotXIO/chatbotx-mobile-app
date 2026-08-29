@@ -83,3 +83,21 @@ jest.mock('expo-document-picker', () => ({
   __esModule: true,
   getDocumentAsync: jest.fn(),
 }));
+
+// react-native-gesture-handler's ReanimatedSwipeable (used by SwipeableRow) composes internal
+// Tap/Pan gestures whose callbacks are worklet-ized by Reanimated's babel plugin inconsistently
+// under Jest's transform — some callbacks read as worklets, some don't — which trips RNGH's own
+// `checkGestureCallbacksForWorklets` dev-mode check (react-native-gesture-handler/src/handlers/
+// gestures/GestureDetector/utils.ts). It's a false positive against RNGH's own compiled
+// ReanimatedSwipeable.js, not anything in our code, and the gestures work correctly at runtime.
+// Filter only this exact message so real console.error calls still fail tests as expected.
+const RNGH_WORKLET_MIXED_CALLBACKS_MESSAGE =
+  "Some of the callbacks in the gesture are worklets and some are not. Either make sure that all calbacks are marked as 'worklet' if you wish to run them on the UI thread or use '.runOnJS(true)' modifier on the gesture explicitly to run all callbacks on the JS thread.";
+
+const originalConsoleError = console.error.bind(console);
+jest.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+  if (typeof args[0] === 'string' && args[0].includes(RNGH_WORKLET_MIXED_CALLBACKS_MESSAGE)) {
+    return;
+  }
+  originalConsoleError(...args);
+});
