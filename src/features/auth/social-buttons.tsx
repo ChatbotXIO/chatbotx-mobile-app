@@ -16,7 +16,7 @@ type Provider = 'google' | 'facebook';
 /**
  * Social sign-in buttons. Flow: `startSocialSignIn` gets the provider authorize URL from
  * better-auth, `WebBrowser.openAuthSessionAsync` opens it and resolves once the broker redirects
- * back to our `chatbotxmobileapp://auth-callback` scheme (see auth-endpoints.ts for the
+ * back to our brand's `<scheme>://auth-callback` (see auth-endpoints.ts for the
  * trustedOrigins gap that currently blocks this redirect server-side — this UI is correct but
  * won't complete end-to-end until that backend change lands).
  *
@@ -29,7 +29,7 @@ type Provider = 'google' | 'facebook';
  * `getSession()` call below only works if a token is ALREADY in SecureStore, which it isn't yet at
  * this point in the flow. So this currently cannot complete sign-in even once trustedOrigins is
  * fixed, UNLESS the backend's broker relay is changed to also forward a bearer token (e.g. as a
- * `token` query param on the `chatbotxmobileapp://auth-callback` redirect, mirroring what
+ * `token` query param on the `<scheme>://auth-callback` redirect, mirroring what
  * `set-auth-token` does for same-origin requests) — or a dedicated mobile token-exchange endpoint
  * is added. Neither is implemented here; both are backend-shaped decisions outside this repo.
  */

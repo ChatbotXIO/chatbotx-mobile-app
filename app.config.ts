@@ -1,4 +1,5 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 import type { ExpoConfig } from 'expo/config';
 
@@ -7,29 +8,174 @@ import type { ExpoConfig } from 'expo/config';
  * time and expose runtime-configurable values (like the API base URL) via `expo-constants`.
  *
  * Values consumed by the app at runtime must be read through `expo-constants`
- * (see src/config/env.ts) — process.env is only available here, in the Expo config context.
+ * (see src/config/env.ts, src/config/brand.ts) — process.env is only available here, in the
+ * Expo config context.
+ *
+ * Brand-loading/validation logic lives inline here (not in a separate `config/` module) because
+ * Expo's config loader only Babel-transpiles this one entry file — a `require()` from inside it
+ * to another sibling `.ts` file fails with "Cannot find module" (no TS-stripping registered for
+ * transitive requires). See app.config.test.ts, which imports these exports directly under Jest
+ * (which *does* handle the full `.ts` require graph) to unit-test them.
  */
+
+export interface BrandConfig {
+  id: string;
+  displayName: string;
+  slug: string;
+  scheme: string;
+  ios: { bundleIdentifier: string };
+  android: { package: string; adaptiveIconBackgroundColor: string };
+  colors: { brand: string; splashBackground: string };
+  eas: { projectId: string; owner?: string };
+}
+
+/** `APP_ENV` selects the environment suffix applied to bundle id / display name / update channel
+ * — lets dev/preview/production builds coexist on one device and route to distinct EAS Update
+ * channels. See docs/deploy.md. */
+export type AppEnv = 'development' | 'preview' | 'production';
+
+export const APP_ENV_CONFIG: Record<
+  AppEnv,
+  { idSuffix: string; nameSuffix: string; channel: string }
+> = {
+  development: { idSuffix: '.dev', nameSuffix: ' (Dev)', channel: 'development' },
+  preview: { idSuffix: '.preview', nameSuffix: ' (Test)', channel: 'preview' },
+  production: { idSuffix: '', nameSuffix: '', channel: 'production' },
+};
+
+const APP_ENVS = Object.keys(APP_ENV_CONFIG) as AppEnv[];
+
+function isAppEnv(value: string): value is AppEnv {
+  return (APP_ENVS as string[]).includes(value);
+}
+
+export function readAppEnv(raw: string | undefined): AppEnv {
+  const value = raw ?? 'development';
+  if (isAppEnv(value)) return value;
+  throw new Error(
+    `Invalid APP_ENV "${value}" — expected ${APP_ENVS.map((e) => `"${e}"`).join(', ')}.`,
+  );
+}
+
+const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
+
+/** Hand-rolled validation (matching the src/config/env.ts pattern elsewhere in the repo) rather
+ * than pulling in zod for one call site that only ever runs in the Node config-evaluation
+ * context, never bundled into the app. */
+export function validateBrand(raw: unknown, brandId: string): BrandConfig {
+  const fail = (field: string): never => {
+    throw new Error(`brands/${brandId}/brand.json is missing or has an invalid "${field}" field.`);
+  };
+
+  const asRecord = (value: unknown, field: string): Record<string, unknown> =>
+    typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : fail(field);
+
+  /** Reads `path` (e.g. "ios.bundleIdentifier") off the raw object as a string. Empty strings are
+   * rejected unless `allowEmpty`; `optional` also accepts an absent key (returned as ''); `hex`
+   * additionally requires a 6-digit `#rrggbb` color so a bad value fails here, naming the file,
+   * instead of at module load deep inside src/theme/tokens.ts. */
+  const requireString = (
+    path: string,
+    {
+      allowEmpty = false,
+      optional = false,
+      hex = false,
+    }: { allowEmpty?: boolean; optional?: boolean; hex?: boolean } = {},
+  ): string => {
+    const value = path.split('.').reduce<unknown>((obj, key) => asRecord(obj, path)[key], raw);
+    if (value === undefined && optional) return '';
+    if (typeof value !== 'string') return fail(path);
+    if (!allowEmpty && !value) return fail(path);
+    if (hex && !HEX_COLOR_PATTERN.test(value)) return fail(path);
+    return value;
+  };
+
+  asRecord(raw, '(root)');
+  const owner = requireString('eas.owner', { optional: true, allowEmpty: true });
+
+  return {
+    id: requireString('id'),
+    displayName: requireString('displayName'),
+    slug: requireString('slug'),
+    scheme: requireString('scheme'),
+    ios: { bundleIdentifier: requireString('ios.bundleIdentifier') },
+    android: {
+      package: requireString('android.package'),
+      adaptiveIconBackgroundColor: requireString('android.adaptiveIconBackgroundColor', {
+        hex: true,
+      }),
+    },
+    colors: {
+      brand: requireString('colors.brand', { hex: true }),
+      splashBackground: requireString('colors.splashBackground', { hex: true }),
+    },
+    // `owner` is optional; an absent or empty value means "use the logged-in EAS account".
+    eas: {
+      projectId: requireString('eas.projectId', { allowEmpty: true }),
+      owner: owner || undefined,
+    },
+  };
+}
+
+/** Loads and validates `brands/<id>/brand.json` relative to the repo root. */
+export function loadBrand(brandId: string, repoRoot: string): BrandConfig {
+  const brandDir = join(repoRoot, 'brands', brandId);
+  const brandJsonPath = join(brandDir, 'brand.json');
+
+  if (!existsSync(brandJsonPath)) {
+    throw new Error(
+      `Unknown BRAND "${brandId}": no brands/${brandId}/brand.json found. ` +
+        `Run "pnpm brand:new ${brandId}" to create it, or set BRAND to an existing brand folder.`,
+    );
+  }
+
+  const raw: unknown = JSON.parse(readFileSync(brandJsonPath, 'utf8'));
+  return validateBrand(raw, brandId);
+}
+
+const brandId = process.env.BRAND ?? 'chatbotx';
+const brand = loadBrand(brandId, __dirname);
+const appEnv = readAppEnv(process.env.APP_ENV);
+const envConfig = APP_ENV_CONFIG[appEnv];
+// Uses the BRAND folder name, not `brand.id` — the two commonly diverge for `_template` (folder
+// `_template`, placeholder `id: "example"`) and must not be assumed identical.
+const assetsDir = `./brands/${brandId}/assets`;
+
+// Loud stdout log: `BRAND` must be correct wherever eas-cli evaluates this file locally (e.g. to
+// resolve `extra.eas.projectId` before a build upload) — a silently-wrong brand would build straight
+// into the wrong customer's EAS project. See plan risk notes in docs/deploy.md. Skipped under Jest
+// (app.config.ts is exercised directly by app.config.test.ts) since it's pure noise there.
+if (!process.env.JEST_WORKER_ID) {
+  // eslint-disable-next-line no-console -- deliberate build-time diagnostic, not app runtime code
+  console.log(`[app.config] brand=${brand.id} appEnv=${appEnv}`);
+}
+
+const hasEasProject = brand.eas.projectId.length > 0;
+
 const config: ExpoConfig = {
-  name: 'ChatbotX',
-  slug: 'chatbotx-mobile-app',
+  name: `${brand.displayName}${envConfig.nameSuffix}`,
+  slug: brand.slug,
   version: '1.0.0',
   orientation: 'portrait',
-  icon: './assets/images/icon.png',
-  scheme: 'chatbotxmobileapp',
+  icon: `${assetsDir}/icon.png`,
+  scheme: brand.scheme,
   userInterfaceStyle: 'automatic',
   // New Architecture is mandatory (no opt-out) as of this SDK — no `newArchEnabled` property
   // exists in the config schema to set.
   ios: {
     icon: './assets/expo.icon',
-    bundleIdentifier: 'com.chatconnectx.mobile',
+    bundleIdentifier: `${brand.ios.bundleIdentifier}${envConfig.idSuffix}`,
+    // Only OS-provided TLS/Keychain + random UUIDs — no custom crypto, so export-compliance exempt.
+    // Skips the App Store Connect "App Encryption Documentation" prompt on every upload.
+    infoPlist: { ITSAppUsesNonExemptEncryption: false },
   },
   android: {
-    package: 'com.chatconnectx.mobile',
+    package: `${brand.android.package}${envConfig.idSuffix}`,
     adaptiveIcon: {
-      backgroundColor: '#E6F4FE',
-      foregroundImage: './assets/images/android-icon-foreground.png',
-      backgroundImage: './assets/images/android-icon-background.png',
-      monochromeImage: './assets/images/android-icon-monochrome.png',
+      backgroundColor: brand.android.adaptiveIconBackgroundColor,
+      foregroundImage: `${assetsDir}/android-icon-foreground.png`,
+      backgroundImage: `${assetsDir}/android-icon-background.png`,
+      monochromeImage: `${assetsDir}/android-icon-monochrome.png`,
     },
     predictiveBackGestureEnabled: false,
     // Edge-to-edge display is mandatory (no opt-out) as of this SDK — no `edgeToEdgeEnabled` knob
@@ -37,8 +183,8 @@ const config: ExpoConfig = {
     // Required for Android FCM V1 push delivery — prerequisite: a Firebase project with this
     // package name registered, its google-services.json downloaded to the repo root (gitignored,
     // not committed). Conditional on the file actually existing locally: it's a per-developer/CI
-    // secret (see README for the EAS file-secret setup), and an unconditional reference here fails
-    // every clean checkout's Android build/prebuild before that secret is provisioned.
+    // secret (see docs/deploy.md for the EAS file-secret setup), and an unconditional reference here
+    // fails every clean checkout's Android build/prebuild before that secret is provisioned.
     googleServicesFile: existsSync('./google-services.json') ? './google-services.json' : undefined,
   },
   plugins: [
@@ -47,8 +193,8 @@ const config: ExpoConfig = {
     [
       'expo-splash-screen',
       {
-        backgroundColor: '#208AEF',
-        image: './assets/images/splash-icon.png',
+        backgroundColor: brand.colors.splashBackground,
+        image: `${assetsDir}/splash-icon.png`,
         imageWidth: 76,
       },
     ],
@@ -82,8 +228,8 @@ const config: ExpoConfig = {
       {
         // No dedicated notification icon asset exists yet (Android requires a flat white
         // silhouette, distinct from the app icon) — falls back to Expo's generated default until
-        // one is designed. `color` matches the splash-screen brand color.
-        color: '#208AEF',
+        // one is designed. `color` tints that icon with the brand color.
+        color: brand.colors.brand,
       },
     ],
     'expo-updates',
@@ -97,9 +243,15 @@ const config: ExpoConfig = {
   // same `version` above can receive the same update (no native code change assumed between
   // updates to the same version).
   runtimeVersion: { policy: 'appVersion' },
-  updates: {
-    url: 'https://u.expo.dev/8cfd58a8-15f8-4f64-b16c-abf26166e80f',
-  },
+  // A brand with no EAS project yet (e.g. a fresh open-source fork, or `_template`) omits
+  // `updates`/`extra.eas` entirely so `expo start`/Expo Go work with zero EAS setup. Run
+  // `eas init` (writes the resulting projectId into brands/<id>/brand.json, not app.json) to
+  // opt back in — see docs/deploy.md.
+  ...(hasEasProject
+    ? {
+        updates: { url: `https://u.expo.dev/${brand.eas.projectId}` },
+      }
+    : {}),
   extra: {
     // Falls back to the backend's default local dev URL. Override via `API_BASE_URL` env var
     // (e.g. in `.env`, loaded by `expo start` through the standard EXPO_PUBLIC_ / dotenv support,
@@ -111,11 +263,17 @@ const config: ExpoConfig = {
     // Mirrors the expo-localization plugin's supportsRTL above for Expo Go, which can't read the
     // native Info.plist/strings.xml values the plugin writes at build time.
     supportsRTL: true,
-    // Written by `eas init` — required by `getExpoPushTokenAsync` in src/lib/notifications.ts.
-    eas: {
-      projectId: '8cfd58a8-15f8-4f64-b16c-abf26166e80f',
-    },
+    brandId: brand.id,
+    brandScheme: brand.scheme,
+    brandColor: brand.colors.brand,
+    ...(hasEasProject
+      ? {
+          // Written by `eas init` — required by `getExpoPushTokenAsync` in src/lib/notifications.ts.
+          eas: { projectId: brand.eas.projectId },
+        }
+      : {}),
   },
+  ...(brand.eas.owner ? { owner: brand.eas.owner } : {}),
 };
 
 export default config;

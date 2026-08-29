@@ -2,9 +2,10 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
-// src/config/env.ts reads Expo config at MODULE LOAD and throws when `extra` is absent, so any
-// test importing a module that transitively pulls in `env` (e.g. api/client.ts) fails to load
-// without this. app.config.ts is not evaluated under Jest, so supply the `extra` block here.
+// src/config/env.ts and src/config/brand.ts read Expo config at MODULE LOAD and throw when
+// `extra` is absent, so any test importing a module that transitively pulls in either (e.g.
+// api/client.ts, theme/tokens.ts) fails to load without this. app.config.ts is not evaluated
+// under Jest, so supply the `extra` block here.
 jest.mock('expo-constants', () => ({
   __esModule: true,
   default: {
@@ -12,6 +13,9 @@ jest.mock('expo-constants', () => ({
       extra: {
         apiBaseUrl: 'https://test.invalid',
         wsUrl: 'wss://test.invalid',
+        brandId: 'chatbotx',
+        brandScheme: 'chatbotxmobileapp',
+        brandColor: '#3c6df0',
       },
     },
   },
@@ -79,3 +83,21 @@ jest.mock('expo-document-picker', () => ({
   __esModule: true,
   getDocumentAsync: jest.fn(),
 }));
+
+// react-native-gesture-handler's ReanimatedSwipeable (used by SwipeableRow) composes internal
+// Tap/Pan gestures whose callbacks are worklet-ized by Reanimated's babel plugin inconsistently
+// under Jest's transform — some callbacks read as worklets, some don't — which trips RNGH's own
+// `checkGestureCallbacksForWorklets` dev-mode check (react-native-gesture-handler/src/handlers/
+// gestures/GestureDetector/utils.ts). It's a false positive against RNGH's own compiled
+// ReanimatedSwipeable.js, not anything in our code, and the gestures work correctly at runtime.
+// Filter only this exact message so real console.error calls still fail tests as expected.
+const RNGH_WORKLET_MIXED_CALLBACKS_MESSAGE =
+  "Some of the callbacks in the gesture are worklets and some are not. Either make sure that all calbacks are marked as 'worklet' if you wish to run them on the UI thread or use '.runOnJS(true)' modifier on the gesture explicitly to run all callbacks on the JS thread.";
+
+const originalConsoleError = console.error.bind(console);
+jest.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+  if (typeof args[0] === 'string' && args[0].includes(RNGH_WORKLET_MIXED_CALLBACKS_MESSAGE)) {
+    return;
+  }
+  originalConsoleError(...args);
+});

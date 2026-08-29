@@ -1,0 +1,21 @@
+{
+  "id": "chatbotx",
+  "displayName": "ChatbotX",
+  "slug": "chatbotx-mobile-app",
+  "scheme": "chatbotxmobileapp",
+  "ios": {
+    "bundleIdentifier": "com.chatconnectx.mobile"
+  },
+  "android": {
+    "package": "com.chatconnectx.mobile",
+    "adaptiveIconBackgroundColor": "#136EF1"
+  },
+  "colors": {
+    "brand": "#136EF1",
+    "splashBackground": "#136EF1"
+  },
+  "eas": {
+    "projectId": "8cfd58a8-15f8-4f64-b16c-abf26166e80f",
+    "owner": ""
+  }
+}

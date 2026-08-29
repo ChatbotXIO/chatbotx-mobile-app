@@ -1,0 +1,76 @@
+name: Release (production build + store submit)
+
+# Triggered by pushing a `vX.Y.Z` tag (ChatbotX's own release) or manually for a white-label
+# customer build via `eas workflow:run .eas/workflows/release.yml -F brand=<customer-id>`. A
+# non-default `brand` is expected to live in the private `chatbotx-mobile-brands` repo — see
+# docs/white-label.md — cloned into `brands/` before the build so the customer's brand.json/assets
+# are never committed to this (public) repo.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      brand:
+        type: string
+        description: 'Brand id (brands/<id>/) to build and submit'
+        default: chatbotx
+
+jobs:
+  fetch_brand:
+    name: Fetch customer brand overlay
+    type: custom
+    if: ${{ inputs.brand != '' && inputs.brand != 'chatbotx' }}
+    steps:
+      - uses: eas/checkout
+      - name: Clone private brand overlay repo
+        run: |
+          set -euo pipefail
+          : "${BRANDS_REPO_TOKEN:?BRANDS_REPO_TOKEN secret is not set}"
+          rm -rf "brands/${{ inputs.brand }}" /tmp/chatbotx-mobile-brands
+          git clone --depth 1 \
+            "https://x-access-token:${BRANDS_REPO_TOKEN}@github.com/ChatbotXIO/chatbotx-mobile-brands.git" \
+            /tmp/chatbotx-mobile-brands
+          test -f "/tmp/chatbotx-mobile-brands/${{ inputs.brand }}/brand.json" \
+            || { echo "No brand.json for brand '${{ inputs.brand }}' in chatbotx-mobile-brands"; exit 1; }
+          cp -R "/tmp/chatbotx-mobile-brands/${{ inputs.brand }}" "brands/${{ inputs.brand }}"
+
+  build_android_production:
+    name: Build Android (production)
+    type: build
+    # `after` (not `needs`) — `needs` requires the dependency to *succeed*, which would block this
+    # job whenever `fetch_brand` is skipped (the default chatbotx brand, nothing to clone). `after`
+    # only waits for it to complete, success or skip, so the `if` below is the only real gate.
+    after: [fetch_brand]
+    if: ${{ always() && (after.fetch_brand.status == 'success' || after.fetch_brand.status == 'skipped') }}
+    env:
+      BRAND: ${{ inputs.brand || 'chatbotx' }}
+    params:
+      platform: android
+      profile: production
+
+  build_ios_production:
+    name: Build iOS (production)
+    type: build
+    after: [fetch_brand]
+    if: ${{ always() && (after.fetch_brand.status == 'success' || after.fetch_brand.status == 'skipped') }}
+    env:
+      BRAND: ${{ inputs.brand || 'chatbotx' }}
+    params:
+      platform: ios
+      profile: production
+
+  submit_android_production:
+    name: Submit to Play Store
+    type: submit
+    needs: [build_android_production]
+    params:
+      build_id: ${{ needs.build_android_production.outputs.build_id }}
+      profile: production
+
+  submit_ios_production:
+    name: Submit to App Store
+    type: submit
+    needs: [build_ios_production]
+    params:
+      build_id: ${{ needs.build_ios_production.outputs.build_id }}
+      profile: production

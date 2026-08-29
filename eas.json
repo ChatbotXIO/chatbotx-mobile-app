@@ -1,36 +1,71 @@
 {
   "cli": {
-    "version": ">= 13.0.0",
+    "version": ">= 22.6.0",
     "appVersionSource": "remote"
   },
   "build": {
+    "base": {
+      "env": {
+        "BRAND": "chatbotx"
+      }
+    },
     "development": {
+      "extends": "base",
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
+      "environment": "development",
       "env": {
-        "API_BASE_URL": "http://localhost:3123",
-        "WS_URL": "http://localhost:1999"
+        "APP_ENV": "development"
       }
     },
     "preview": {
+      "extends": "base",
       "distribution": "internal",
       "channel": "preview",
+      "environment": "preview",
       "env": {
-        "API_BASE_URL": "https://preview.example.com",
-        "WS_URL": "https://preview-realtime.example.com"
+        "APP_ENV": "preview"
+      },
+      "android": {
+        "buildType": "apk"
       }
     },
+    "preview-testflight": {
+      "extends": "preview",
+      "distribution": "store",
+      "autoIncrement": true
+    },
     "production": {
+      "extends": "base",
       "autoIncrement": true,
       "channel": "production",
+      "environment": "production",
       "env": {
-        "API_BASE_URL": "https://api.example.com",
-        "WS_URL": "https://realtime.example.com"
+        "APP_ENV": "production"
       }
     }
   },
   "submit": {
-    "production": {}
+    "base": {
+      "ios": {
+        "ascApiKeyPath": "./AuthKey_238L44SV57.p8",
+        "ascApiKeyId": "238L44SV57",
+        "ascApiKeyIssuerId": "a888294a-adc3-4201-a022-67fbbc4a597d",
+        "appleTeamId": "5H3UF98Q3H"
+      }
+    },
+    "preview-testflight": {
+      "extends": "base",
+      "ios": {
+        "ascAppId": "6806470556"
+      }
+    },
+    "production": {
+      "extends": "base",
+      "android": {
+        "track": "internal"
+      }
+    }
   }
 }

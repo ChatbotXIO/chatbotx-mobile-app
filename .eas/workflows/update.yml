@@ -1,0 +1,27 @@
+name: OTA update
+
+# Automatic: every push to main publishes a JS-only OTA update to the `preview` (TEST) channel —
+# the common case when no native config changed. Manual: publish to either channel on demand via
+# `eas workflow:run .eas/workflows/update.yml -F channel=production`. See docs/deploy.md for the
+# `runtimeVersion: appVersion` implication (a native change requires a new build, not just an OTA
+# update, or the update won't be receivable by builds on a different `version`).
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+    inputs:
+      channel:
+        type: choice
+        description: 'Which channel to publish the OTA update to'
+        options:
+          - preview
+          - production
+        default: preview
+
+jobs:
+  publish_update:
+    name: Publish OTA update
+    type: update
+    environment: ${{ inputs.channel || 'preview' }}
+    params:
+      channel: ${{ inputs.channel || 'preview' }}

@@ -1,7 +1,7 @@
 import * as Linking from 'expo-linking';
 
 /**
- * Cold-start deep link to a conversation or contact (`chatbotxmobileapp://conversations/:id` or
+ * Cold-start deep link to a conversation or contact (`<brand-scheme>://conversations/:id` or
  * `.../contacts/:id`, e.g. from a push notification once delivery lands) arrives before the auth
  * bootstrap gate resolves. `(app)/_layout.tsx` redirects an unauthenticated visitor to sign-in,
  * which drops the original target — expo-router has no built-in "return to this deep link after
@@ -19,7 +19,7 @@ let captured = false;
 /** Deep-link path shapes this app knows how to resolve to a route, in order of priority. Each
  * pattern is matched against the URL's path with the scheme/host stripped (what `Linking.parse`
  * gives us) — accepting both a bare `conversations/:id` / `contacts/:id` link (the natural shape
- * for a push-notification deep link, e.g. `chatbotxmobileapp://conversations/12345`) and one that
+ * for a push-notification deep link, e.g. `<brand-scheme>://conversations/12345`) and one that
  * already embeds the `(app)` route-group prefix (e.g. from a universal link that mirrors the
  * app's own internal route paths verbatim). */
 const DEEP_LINK_PATTERNS: { regex: RegExp; buildPath: (id: string) => string }[] = [
