@@ -155,6 +155,9 @@ const config: ExpoConfig = {
   ios: {
     icon: './assets/expo.icon',
     bundleIdentifier: `${brand.ios.bundleIdentifier}${envConfig.idSuffix}`,
+    // Only OS-provided TLS/Keychain + random UUIDs — no custom crypto, so export-compliance exempt.
+    // Skips the App Store Connect "App Encryption Documentation" prompt on every upload.
+    infoPlist: { ITSAppUsesNonExemptEncryption: false },
   },
   android: {
     package: `${brand.android.package}${envConfig.idSuffix}`,

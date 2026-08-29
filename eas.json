@@ -31,6 +31,11 @@
         "buildType": "apk"
       }
     },
+    "preview-testflight": {
+      "extends": "preview",
+      "distribution": "store",
+      "autoIncrement": true
+    },
     "production": {
       "extends": "base",
       "autoIncrement": true,
@@ -42,8 +47,22 @@
     }
   },
   "submit": {
+    "preview-testflight": {
+      "ios": {
+        "ascApiKeyPath": "./AuthKey_238L44SV57.p8",
+        "ascApiKeyId": "238L44SV57",
+        "ascApiKeyIssuerId": "a888294a-adc3-4201-a022-67fbbc4a597d",
+        "appleTeamId": "5H3UF98Q3H",
+        "ascAppId": "6806470556"
+      }
+    },
     "production": {
-      "ios": {},
+      "ios": {
+        "ascApiKeyPath": "./AuthKey_238L44SV57.p8",
+        "ascApiKeyId": "238L44SV57",
+        "ascApiKeyIssuerId": "a888294a-adc3-4201-a022-67fbbc4a597d",
+        "appleTeamId": "5H3UF98Q3H"
+      },
       "android": {
         "track": "internal"
       }
