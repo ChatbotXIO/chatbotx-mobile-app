@@ -42,7 +42,7 @@ export function LocationView({ contentAttributes, outbound }: LocationViewProps)
 
   return (
     <View style={[styles.row, { gap: spacing.xs }]}>
-      <Icon name="location" size={18} color={textColor} />
+      <Icon name="map-pin" size={18} color={textColor} />
       <Text variant="caption" style={{ color: textColor }}>
         {coords ? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}` : t('chat.locationShared')}
       </Text>

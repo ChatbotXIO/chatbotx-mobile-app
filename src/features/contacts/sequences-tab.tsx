@@ -1,4 +1,4 @@
-import type BottomSheet from '@gorhom/bottom-sheet';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useRef } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Icon } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
 import { RelativeTime } from '@/components/ui/relative-time';
 import type { ContactDetail } from '@/features/contacts/api/use-contact-detail';
@@ -27,7 +28,7 @@ interface SequencesTabProps {
 export function SequencesTab({ contact, workspaceId }: SequencesTabProps) {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
-  const pickerSheetRef = useRef<BottomSheet>(null);
+  const pickerSheetRef = useRef<BottomSheetModal>(null);
 
   return (
     <View style={{ paddingBottom: spacing.md }}>
@@ -35,20 +36,21 @@ export function SequencesTab({ contact, workspaceId }: SequencesTabProps) {
         <Button
           label={t('contacts.addToSequence')}
           variant="tonal"
-          icon="add-circle-outline"
-          onPress={() => pickerSheetRef.current?.expand()}
+          icon="circle-plus"
+          onPress={() => pickerSheetRef.current?.present()}
           disabled={!workspaceId}
         />
       </View>
 
       {contact.contactsOnSequences.length === 0 ? (
-        <EmptyState icon="git-network-outline" title={t('contacts.noSequences')} />
+        <EmptyState icon="layers-2" title={t('contacts.noSequences')} />
       ) : (
         contact.contactsOnSequences.map((enrollment) => (
           <View key={enrollment.sequenceId}>
             <ListItem
               title={enrollment.sequence.name}
               subtitle={t('contacts.sequenceStep', { step: enrollment.currentStep })}
+              leading={<Icon name="layers-2" size={20} color={colors.textSecondary} />}
               trailing={
                 <Badge color={enrollment.completedAt ? colors.success : colors.surface2}>
                   {enrollment.completedAt

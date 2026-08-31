@@ -108,4 +108,41 @@ describe('ConversationRow', () => {
     const button = screen.getByLabelText(/Jane Doe/);
     expect(button.props.accessibilityActions).toEqual([]);
   });
+
+  it('renders an ellipsis button that calls onOpenActions when provided', async () => {
+    const onOpenActions = jest.fn();
+    await render(
+      <ConversationRow
+        conversation={fakeConversation()}
+        onPress={() => {}}
+        onOpenActions={onOpenActions}
+      />,
+    );
+
+    fireEvent.press(screen.getByLabelText('Open conversation actions'));
+    expect(onOpenActions).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not render an ellipsis button when onOpenActions is not provided', async () => {
+    await render(<ConversationRow conversation={fakeConversation()} onPress={() => {}} />);
+
+    expect(screen.queryByLabelText('Open conversation actions')).toBeNull();
+  });
+
+  it('includes unarchive in the swipe/accessibility actions when the conversation is archived', async () => {
+    const onArchive = jest.fn();
+    await render(
+      <ConversationRow
+        conversation={fakeConversation({ archivedAt: '2026-01-01T00:00:00.000Z' })}
+        onPress={() => {}}
+        onArchive={onArchive}
+      />,
+    );
+
+    const button = screen.getByLabelText(/Jane Doe/);
+    const archiveAction = (
+      button.props.accessibilityActions as { name: string; label: string }[]
+    ).find((action) => action.name === 'archive');
+    expect(archiveAction?.label).toBe('Unarchive');
+  });
 });

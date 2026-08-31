@@ -66,7 +66,7 @@ export function ConnectionBanner({ state }: ConnectionBannerProps) {
   const config: Record<
     ConnectionState,
     {
-      icon: 'cloud-offline-outline' | 'sync-outline' | 'checkmark-circle-outline';
+      icon: 'cloud-off' | 'refresh-cw' | 'circle-check';
       background: string;
       textColor: string;
       label: string;
@@ -74,25 +74,25 @@ export function ConnectionBanner({ state }: ConnectionBannerProps) {
   > = useMemo(
     () => ({
       online: {
-        icon: 'checkmark-circle-outline',
+        icon: 'circle-check',
         background: colors.successSoft,
         textColor: colors.success,
         label: t('realtime.online', { defaultValue: 'Back online' }),
       },
       connecting: {
-        icon: 'sync-outline',
+        icon: 'refresh-cw',
         background: colors.infoSoft,
         textColor: colors.info,
         label: t('realtime.connecting', { defaultValue: 'Connecting…' }),
       },
       reconnecting: {
-        icon: 'sync-outline',
+        icon: 'refresh-cw',
         background: colors.warningSoft,
         textColor: colors.warning,
         label: t('realtime.reconnecting', { defaultValue: 'Reconnecting…' }),
       },
       offline: {
-        icon: 'cloud-offline-outline',
+        icon: 'cloud-off',
         background: colors.dangerSoft,
         textColor: colors.danger,
         label: t('realtime.offline', { defaultValue: "You're offline" }),

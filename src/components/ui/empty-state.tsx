@@ -17,12 +17,7 @@ interface EmptyStateProps {
 
 const ICON_CIRCLE_SIZE = 72;
 
-export function EmptyState({
-  icon = 'file-tray-outline',
-  title,
-  description,
-  action,
-}: EmptyStateProps) {
+export function EmptyState({ icon = 'inbox', title, description, action }: EmptyStateProps) {
   const { colors, spacing } = useTheme();
   const reducedMotion = useReducedMotion();
 

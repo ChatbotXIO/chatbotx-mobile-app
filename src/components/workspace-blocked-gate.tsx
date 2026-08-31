@@ -45,7 +45,7 @@ export function WorkspaceBlockedGate({ reason, message }: WorkspaceBlockedGatePr
         gap: spacing.md,
       }}
     >
-      <Icon name="lock-closed-outline" size={40} color={colors.textSecondary} />
+      <Icon name="lock" size={40} color={colors.textSecondary} />
       <Text variant="title" style={{ textAlign: 'center' }}>
         {t('errors.workspaceBlockedTitle')}
       </Text>

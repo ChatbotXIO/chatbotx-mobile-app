@@ -35,16 +35,16 @@ function formatBytes(bytes: number): string {
   return `${value.toFixed(value >= 10 || exponent === 0 ? 0 : 1)} ${units[exponent]}`;
 }
 
-function fileIcon(fileType: string): 'videocam' | 'musical-notes' | 'image' | 'document' {
+function fileIcon(fileType: string): 'video' | 'music' | 'image' | 'file' {
   switch (fileType) {
     case 'video':
-      return 'videocam';
+      return 'video';
     case 'audio':
-      return 'musical-notes';
+      return 'music';
     case 'gif':
       return 'image';
     default:
-      return 'document';
+      return 'file';
   }
 }
 

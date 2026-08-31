@@ -1,4 +1,4 @@
-import { isBotActive, isUnread } from './conversation-status';
+import { botState, isBotActive, isUnread } from './conversation-status';
 
 describe('isBotActive', () => {
   it('returns true when the bot is enabled, regardless of botResumeAt', () => {
@@ -26,6 +26,34 @@ describe('isBotActive', () => {
     const afterResume = new Date('2026-01-02T00:00:00.000Z').getTime();
     expect(isBotActive(false, resumeAt, beforeResume)).toBe(false);
     expect(isBotActive(false, resumeAt, afterResume)).toBe(true);
+  });
+});
+
+describe('botState', () => {
+  it('returns "on" when the bot is enabled', () => {
+    expect(botState(true, null)).toBe('on');
+  });
+
+  it('returns "paused" when disabled and botResumeAt is in the future', () => {
+    const future = new Date(Date.now() + 60_000).toISOString();
+    expect(botState(false, future)).toBe('paused');
+  });
+
+  it('returns "on" when disabled but botResumeAt has already elapsed (auto-resumed)', () => {
+    const past = new Date(Date.now() - 60_000).toISOString();
+    expect(botState(false, past)).toBe('on');
+  });
+
+  it('returns "off" when disabled with no botResumeAt', () => {
+    expect(botState(false, null)).toBe('off');
+  });
+
+  it('respects an explicit `now` for deterministic testing', () => {
+    const resumeAt = new Date('2026-01-01T00:00:00.000Z').toISOString();
+    const beforeResume = new Date('2025-12-31T00:00:00.000Z').getTime();
+    const afterResume = new Date('2026-01-02T00:00:00.000Z').getTime();
+    expect(botState(false, resumeAt, beforeResume)).toBe('paused');
+    expect(botState(false, resumeAt, afterResume)).toBe('on');
   });
 });
 

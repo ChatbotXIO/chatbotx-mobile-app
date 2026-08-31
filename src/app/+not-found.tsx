@@ -19,7 +19,7 @@ export default function NotFoundScreen() {
   return (
     <Screen padded>
       <EmptyState
-        icon="compass-outline"
+        icon="compass"
         title={t('errors.notFoundTitle')}
         description={t('errors.notFoundBody')}
         action={{ label: t('errors.goHome'), onPress: handleGoHome }}

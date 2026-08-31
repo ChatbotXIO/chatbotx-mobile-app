@@ -115,7 +115,7 @@ export function SheetHeader({ title, onClose, trailing }: SheetHeaderProps) {
       {onClose ? (
         <IconButton
           accessibilityLabel={t('common.close', { defaultValue: 'Close' })}
-          icon="close"
+          icon="x"
           size="sm"
           variant="tonal"
           onPress={onClose}

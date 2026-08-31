@@ -1,4 +1,5 @@
 import '@/lib/install-crypto-polyfill';
+import '@/lib/install-message-event-polyfill';
 
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -215,7 +216,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 
   return (
     <EmptyState
-      icon="warning-outline"
+      icon="triangle-alert"
       title={t('common.error')}
       description={error.message || t('errors.unknown')}
       action={{ label: t('common.retry'), onPress: retry }}

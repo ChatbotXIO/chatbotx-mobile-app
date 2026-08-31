@@ -4,19 +4,18 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/ui/avatar';
+import { IconButton } from '@/components/ui/icon-button';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { RelativeTime } from '@/components/ui/relative-time';
 import type { SwipeAction } from '@/components/ui/swipeable-row';
 import { SwipeableRow } from '@/components/ui/swipeable-row';
 import { Text } from '@/components/ui/text';
 import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
-import { isBotActive, isUnread } from '@/features/conversations/lib/conversation-status';
-import { withAlpha } from '@/theme/color-utils';
+import { isUnread } from '@/features/conversations/lib/conversation-status';
 import { useTheme } from '@/theme/use-theme';
 
 import { ChannelBadge } from './channel-badge';
-import type { ConversationStatusChip } from './tag-chips';
-import { TagChips } from './tag-chips';
+import { AssigneeBadge, BotStateIcon, StatusIconStrip } from './status-icons';
 
 interface ConversationRowProps {
   conversation: ConversationListItem;
@@ -25,6 +24,7 @@ interface ConversationRowProps {
   onToggleRead?: () => void;
   onToggleBot?: () => void;
   onArchive?: () => void;
+  onOpenActions?: () => void;
 }
 
 function lastMessagePreview(conversation: ConversationListItem, t: TFunction): string {
@@ -35,14 +35,6 @@ function lastMessagePreview(conversation: ConversationListItem, t: TFunction): s
     return t('conversations.attachmentPreview', { count: lastMessage.attachmentCount });
   }
   return '';
-}
-
-function statusChips(conversation: ConversationListItem): ConversationStatusChip[] {
-  const chips: ConversationStatusChip[] = [];
-  if (conversation.followed) chips.push('followUp');
-  if (conversation.archivedAt) chips.push('archived');
-  if (conversation.contact?.blockedAt) chips.push('blocked');
-  return chips;
 }
 
 /**
@@ -63,6 +55,7 @@ export const ConversationRow = memo(function ConversationRow({
   onToggleRead,
   onToggleBot,
   onArchive,
+  onOpenActions,
 }: ConversationRowProps) {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
@@ -70,14 +63,10 @@ export const ConversationRow = memo(function ConversationRow({
   const channel = conversation.contactInboxes[0]?.channel ?? 'omnichannel';
   const preview = lastMessagePreview(conversation, t);
   const unread = isUnread(conversation);
-  const botActive = isBotActive(conversation.botEnabled, conversation.botResumeAt);
-  const botPaused = !conversation.botEnabled && !botActive;
-  const assigneeName = conversation.assignedUser?.name;
+  const isArchived = Boolean(conversation.archivedAt);
   const relativeTimeLabel = conversation.lastActivityAt
     ? new Date(conversation.lastActivityAt).toLocaleString()
     : '';
-
-  const chips = statusChips(conversation);
 
   const accessibilityLabel = [
     contactName,
@@ -92,7 +81,7 @@ export const ConversationRow = memo(function ConversationRow({
   const leftActions: SwipeAction[] | undefined = onToggleRead
     ? [
         {
-          icon: unread ? 'mail-open-outline' : 'mail-unread-outline',
+          icon: unread ? 'mail-open' : 'mail',
           label: unread ? t('conversations.markRead') : t('conversations.markUnread'),
           color: colors.brand,
           onPress: onToggleRead,
@@ -102,8 +91,9 @@ export const ConversationRow = memo(function ConversationRow({
 
   const rightActions: SwipeAction[] = [];
   if (onToggleBot) {
+    const botActive = conversation.botEnabled;
     rightActions.push({
-      icon: botActive ? 'sparkles' : 'sparkles-outline',
+      icon: botActive ? 'bot' : 'user',
       label: botActive ? t('conversations.disableBot') : t('conversations.enableBot'),
       color: colors.bubbleBotAccent,
       onPress: onToggleBot,
@@ -111,10 +101,10 @@ export const ConversationRow = memo(function ConversationRow({
   }
   if (onArchive) {
     rightActions.push({
-      icon: 'archive-outline',
-      label: t('conversations.archive'),
+      icon: isArchived ? 'archive-x' : 'archive',
+      label: isArchived ? t('conversations.unarchive') : t('conversations.archive'),
       color: colors.textSecondary,
-      destructive: true,
+      destructive: !isArchived,
       onPress: onArchive,
     });
   }
@@ -132,11 +122,21 @@ export const ConversationRow = memo(function ConversationRow({
       ? [
           {
             name: 'toggleBot',
-            label: botActive ? t('conversations.disableBot') : t('conversations.enableBot'),
+            label: conversation.botEnabled
+              ? t('conversations.disableBot')
+              : t('conversations.enableBot'),
           },
         ]
       : []),
-    ...(onArchive ? [{ name: 'archive', label: t('conversations.archive') }] : []),
+    ...(onArchive
+      ? [
+          {
+            name: 'archive',
+            label: isArchived ? t('conversations.unarchive') : t('conversations.archive'),
+          },
+        ]
+      : []),
+    ...(onOpenActions ? [{ name: 'openActions', label: t('conversations.openActions') }] : []),
   ];
 
   function handleAccessibilityAction(event: { nativeEvent: { actionName: string } }) {
@@ -150,6 +150,9 @@ export const ConversationRow = memo(function ConversationRow({
       case 'archive':
         onArchive?.();
         return;
+      case 'openActions':
+        onOpenActions?.();
+        return;
     }
   }
 
@@ -161,7 +164,7 @@ export const ConversationRow = memo(function ConversationRow({
         accessibilityActions={accessibilityActions}
         onAccessibilityAction={handleAccessibilityAction}
         onPress={onPress}
-        onLongPress={onLongPress}
+        onLongPress={onLongPress ?? onOpenActions}
         haptic={false}
         style={[
           styles.row,
@@ -178,9 +181,15 @@ export const ConversationRow = memo(function ConversationRow({
             uri={conversation.contact?.avatar}
             name={contactName}
             size={52}
-            ring={botActive ? 'bot' : 'none'}
+            ring={conversation.botEnabled ? 'bot' : 'none'}
             badge={<ChannelBadge channel={channel} size={14} />}
           />
+          <View style={styles.assigneeBadgeAnchor} pointerEvents="none">
+            <AssigneeBadge
+              assignedUser={conversation.assignedUser}
+              assignedInboxTeam={conversation.assignedInboxTeam}
+            />
+          </View>
         </View>
 
         <View style={styles.body}>
@@ -205,37 +214,28 @@ export const ConversationRow = memo(function ConversationRow({
           </View>
 
           <View style={[styles.metaRow, { gap: spacing.xs }]}>
-            {botActive || botPaused ? (
-              <View
-                style={[
-                  styles.metaChip,
-                  {
-                    backgroundColor: botPaused
-                      ? colors.warningSoft
-                      : withAlpha(colors.bubbleBotAccent, 0.16),
-                  },
-                ]}
-              >
-                <Text
-                  variant="micro"
-                  style={{
-                    color: botPaused ? colors.warning : colors.bubbleBotAccent,
-                    fontWeight: '600',
-                  }}
-                >
-                  {botPaused ? t('conversations.botPaused') : t('conversations.botActive')}
-                </Text>
-              </View>
-            ) : null}
-            {assigneeName ? (
-              <Text variant="micro" color="tertiary" numberOfLines={1}>
-                {t('conversations.assignedTo', { name: assigneeName })}
-              </Text>
-            ) : null}
+            <BotStateIcon
+              botEnabled={conversation.botEnabled}
+              botResumeAt={conversation.botResumeAt}
+            />
+            <StatusIconStrip
+              followed={conversation.followed}
+              archivedAt={conversation.archivedAt}
+              blockedAt={conversation.contact?.blockedAt}
+              unread={unread}
+            />
           </View>
-
-          <TagChips chips={chips} />
         </View>
+
+        {onOpenActions ? (
+          <IconButton
+            accessibilityLabel={t('conversations.openActions')}
+            icon="ellipsis-vertical"
+            size="sm"
+            variant="ghost"
+            onPress={onOpenActions}
+          />
+        ) : null}
       </PressableScale>
     </SwipeableRow>
   );
@@ -248,6 +248,11 @@ const styles = StyleSheet.create({
   },
   avatarWrap: {
     position: 'relative',
+  },
+  assigneeBadgeAnchor: {
+    position: 'absolute',
+    bottom: -2,
+    start: -2,
   },
   body: {
     flex: 1,

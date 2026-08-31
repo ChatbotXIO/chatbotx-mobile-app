@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import type BottomSheet from '@gorhom/bottom-sheet';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { router } from 'expo-router';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -9,15 +9,22 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Avatar } from '@/components/ui/avatar';
 import { IconButton } from '@/components/ui/icon-button';
 import { Text } from '@/components/ui/text';
+import { useToast } from '@/components/ui/toast';
+import { normalizeApiError } from '@/api/errors';
 import { ChannelBadge } from '@/features/conversations/components/channel-badge';
 import { useConversationDetail } from '@/features/conversations/api/use-conversation-detail';
 import { useDisableBot, useEnableBot } from '@/features/conversations/api/use-conversation-actions';
-import { isBotActive } from '@/features/conversations/lib/conversation-status';
+import { botState, isBotActive } from '@/features/conversations/lib/conversation-status';
 import { findConversationInListCache } from '@/features/conversations/lib/find-conversation-in-cache';
+import type { FlowListItem } from '@/features/flows/api/use-flows';
+import { useSendMessage } from '@/features/chat/api/use-send-message';
+import { useChatStore } from '@/features/chat/stores/use-chat-store';
 import { withAlpha } from '@/theme/color-utils';
 import { useTheme } from '@/theme/use-theme';
 
 import { ConversationActionsSheet } from './conversation-actions-sheet';
+import { FlowPickerSheet } from './flow-picker-sheet';
+import { SavedRepliesSheet } from './saved-replies-sheet';
 
 interface ChatHeaderProps {
   workspaceId: string;
@@ -36,7 +43,10 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
   const queryClient = useQueryClient();
-  const actionsSheetRef = useRef<BottomSheet>(null);
+  const toast = useToast();
+  const actionsSheetRef = useRef<BottomSheetModal>(null);
+  const flowPickerRef = useRef<BottomSheetModal>(null);
+  const savedRepliesRef = useRef<BottomSheetModal>(null);
 
   const { data: conversation } = useConversationDetail(workspaceId, conversationId, {
     placeholderData: () => findConversationInListCache(queryClient, workspaceId, conversationId),
@@ -44,6 +54,8 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
 
   const enableBot = useEnableBot(workspaceId);
   const disableBot = useDisableBot(workspaceId);
+  const sendMessage = useSendMessage(workspaceId, conversationId);
+  const setDraft = useChatStore((state) => state.setDraft);
 
   const contactName = conversation?.contact?.fullName ?? t('conversations.unknownContact');
   const channel = conversation?.contactInboxes?.[0]?.channel;
@@ -51,6 +63,9 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
   const botActive = conversation
     ? isBotActive(conversation.botEnabled, conversation.botResumeAt)
     : false;
+  const botTriState = conversation
+    ? botState(conversation.botEnabled, conversation.botResumeAt)
+    : 'off';
 
   function handleToggleBot() {
     if (!conversation) return;
@@ -58,6 +73,19 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
       disableBot.mutate([conversationId]);
     } else {
       enableBot.mutate([conversationId]);
+    }
+  }
+
+  async function handleSelectFlow(flow: FlowListItem) {
+    flowPickerRef.current?.dismiss();
+    toast({ message: t('chat.sendingFlow', { name: flow.name }), tone: 'info' });
+    try {
+      await sendMessage.mutateAsync({ workspaceId, conversationId, flowId: flow.id });
+    } catch (error) {
+      const normalized = normalizeApiError(error);
+      if (normalized.kind !== 'workspaceBlocked') {
+        toast({ message: t('chat.flowSendFailed'), tone: 'danger' });
+      }
     }
   }
 
@@ -81,7 +109,7 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
     >
       <IconButton
         accessibilityLabel={t('common.back', { defaultValue: 'Back' })}
-        icon="chevron-back"
+        icon="chevron-left"
         variant="ghost"
         onPress={onBack}
       />
@@ -119,10 +147,22 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
         accessibilityLabel={
           botActive ? t('conversations.disableBot') : t('conversations.enableBot')
         }
-        icon="sparkles"
+        icon={botTriState === 'on' ? 'bot' : botTriState === 'paused' ? 'clock' : 'bot-off'}
         variant="tonal"
-        tint={botActive ? colors.bubbleBotAccent : undefined}
-        style={botActive ? { backgroundColor: withAlpha(colors.bubbleBotAccent, 0.16) } : undefined}
+        tint={
+          botTriState === 'on'
+            ? colors.bubbleBotAccent
+            : botTriState === 'paused'
+              ? colors.warning
+              : undefined
+        }
+        style={
+          botTriState === 'on'
+            ? { backgroundColor: withAlpha(colors.bubbleBotAccent, 0.16) }
+            : botTriState === 'paused'
+              ? { backgroundColor: withAlpha(colors.warning, 0.16) }
+              : undefined
+        }
         haptic="medium"
         onPress={handleToggleBot}
       />
@@ -131,7 +171,7 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
         accessibilityLabel={t('conversations.actions')}
         icon="ellipsis-vertical"
         variant="ghost"
-        onPress={() => actionsSheetRef.current?.expand()}
+        onPress={() => actionsSheetRef.current?.present()}
       />
 
       <ConversationActionsSheet
@@ -139,7 +179,25 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
         workspaceId={workspaceId}
         conversationId={conversationId}
         conversation={conversation}
-        onClose={() => actionsSheetRef.current?.close()}
+        onClose={() => actionsSheetRef.current?.dismiss()}
+        onSendFlow={() => flowPickerRef.current?.present()}
+        onSavedReplies={() => savedRepliesRef.current?.present()}
+      />
+
+      <FlowPickerSheet
+        ref={flowPickerRef}
+        workspaceId={workspaceId}
+        onSelect={handleSelectFlow}
+        onClose={() => flowPickerRef.current?.dismiss()}
+      />
+
+      <SavedRepliesSheet
+        ref={savedRepliesRef}
+        workspaceId={workspaceId}
+        onSelect={(text) => {
+          setDraft(conversationId, text);
+          savedRepliesRef.current?.dismiss();
+        }}
       />
     </View>
   );

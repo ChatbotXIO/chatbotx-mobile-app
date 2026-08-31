@@ -85,7 +85,7 @@ export function ListItem({
         ) : null}
         {trailing}
         {showChevron ? (
-          <Icon name="chevron-forward" size={18} color={colors.textSecondary} flipRTL />
+          <Icon name="chevron-right" size={18} color={colors.textSecondary} flipRTL />
         ) : null}
       </View>
       <Animated.View

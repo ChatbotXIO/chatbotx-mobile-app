@@ -84,7 +84,7 @@ export function Chip({
       {onRemove ? (
         <IconButton
           accessibilityLabel={t('common.removeItem', { defaultValue: 'Remove {{label}}', label })}
-          icon="close"
+          icon="x"
           size="sm"
           variant="ghost"
           tint={textColorStyle}

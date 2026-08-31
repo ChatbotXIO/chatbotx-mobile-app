@@ -82,7 +82,7 @@ export default function ChangePasswordScreen() {
               returnKeyType="next"
               blurOnSubmit={false}
               onSubmitEditing={() => newPasswordInputRef.current?.focus()}
-              trailingIcon={isCurrentPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+              trailingIcon={isCurrentPasswordVisible ? 'eye-off' : 'eye'}
               trailingIconAccessibilityLabel={
                 isCurrentPasswordVisible ? t('auth.hidePassword') : t('auth.showPassword')
               }
@@ -99,7 +99,7 @@ export default function ChangePasswordScreen() {
               returnKeyType="done"
               blurOnSubmit
               onSubmitEditing={handleSubmit}
-              trailingIcon={isNewPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+              trailingIcon={isNewPasswordVisible ? 'eye-off' : 'eye'}
               trailingIconAccessibilityLabel={
                 isNewPasswordVisible ? t('auth.hidePassword') : t('auth.showPassword')
               }

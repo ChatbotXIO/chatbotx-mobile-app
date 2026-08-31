@@ -1,4 +1,4 @@
-import type BottomSheet from '@gorhom/bottom-sheet';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -66,10 +66,10 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
   const sendMessage = useSendMessage(workspaceId, conversationId);
   const editMessage = useEditMessage(workspaceId, conversationId);
 
-  const actionsSheetRef = useRef<BottomSheet>(null);
-  const savedRepliesRef = useRef<BottomSheet>(null);
-  const flowPickerRef = useRef<BottomSheet>(null);
-  const sequencePickerRef = useRef<BottomSheet>(null);
+  const actionsSheetRef = useRef<BottomSheetModal>(null);
+  const savedRepliesRef = useRef<BottomSheetModal>(null);
+  const flowPickerRef = useRef<BottomSheetModal>(null);
+  const sequencePickerRef = useRef<BottomSheetModal>(null);
 
   // `FEATURES.sendSequence` is off until the backend route ships (see src/config/features.ts) —
   // fetching the conversation detail here just to resolve `contactId` would be wasted work while
@@ -195,36 +195,40 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
   }
 
   function handleCamera() {
-    actionsSheetRef.current?.close();
+    actionsSheetRef.current?.dismiss();
+    router.push({ pathname: '/camera', params: { conversationId } });
+  }
+
+  function handleInlineCamera() {
     router.push({ pathname: '/camera', params: { conversationId } });
   }
 
   async function handlePhotoLibrary() {
-    actionsSheetRef.current?.close();
+    actionsSheetRef.current?.dismiss();
     const assets = await pickFromLibrary();
     if (assets.length === 0) return;
     await sendAssets(assets);
   }
 
   async function handleDocument() {
-    actionsSheetRef.current?.close();
+    actionsSheetRef.current?.dismiss();
     const assets = await pickDocuments();
     if (assets.length === 0) return;
     await sendAssets(assets);
   }
 
   function handleOpenFlowPicker() {
-    actionsSheetRef.current?.close();
-    flowPickerRef.current?.expand();
+    actionsSheetRef.current?.dismiss();
+    flowPickerRef.current?.present();
   }
 
   function handleOpenSendSequence() {
-    actionsSheetRef.current?.close();
-    sequencePickerRef.current?.expand();
+    actionsSheetRef.current?.dismiss();
+    sequencePickerRef.current?.present();
   }
 
   async function handleSelectFlow(flow: FlowListItem) {
-    flowPickerRef.current?.close();
+    flowPickerRef.current?.dismiss();
     toast({ message: t('chat.sendingFlow', { name: flow.name }), tone: 'info' });
     try {
       await sendMessage.mutateAsync({ workspaceId, conversationId, flowId: flow.id });
@@ -239,8 +243,8 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
   }
 
   function handleOpenSavedReplies() {
-    actionsSheetRef.current?.close();
-    savedRepliesRef.current?.expand();
+    actionsSheetRef.current?.dismiss();
+    savedRepliesRef.current?.present();
   }
 
   const modeBarLabel = isEditing
@@ -280,9 +284,10 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
           ]}
         >
           <Icon
-            name={isEditing ? 'create-outline' : 'arrow-undo-outline'}
+            name={isEditing ? 'square-pen' : 'reply'}
             size={16}
             color={colors.brand}
+            flipRTL={!isEditing}
           />
           <View style={styles.modeBarBody}>
             <Text variant="caption" style={{ color: colors.brand, fontWeight: '700' }}>
@@ -296,7 +301,7 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
           </View>
           <IconButton
             accessibilityLabel={t('common.close', { defaultValue: 'Close' })}
-            icon="close"
+            icon="x"
             size="sm"
             variant="ghost"
             onPress={dismissComposerMode}
@@ -312,10 +317,19 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
       >
         <IconButton
           accessibilityLabel={t('chat.attach')}
-          icon="add-circle"
+          icon="circle-plus"
           size="lg"
           variant="ghost"
-          onPress={() => actionsSheetRef.current?.expand()}
+          onPress={() => actionsSheetRef.current?.present()}
+          disabled={Boolean(quotaBlocked)}
+        />
+
+        <IconButton
+          accessibilityLabel={t('chat.camera')}
+          icon="camera"
+          size="lg"
+          variant="ghost"
+          onPress={handleInlineCamera}
           disabled={Boolean(quotaBlocked)}
         />
 
@@ -340,6 +354,17 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
           ]}
         />
 
+        {hasContent ? null : (
+          <IconButton
+            accessibilityLabel={t('chat.savedReplies')}
+            icon="message-square-more"
+            size="lg"
+            variant="ghost"
+            onPress={handleOpenSavedReplies}
+            disabled={Boolean(quotaBlocked)}
+          />
+        )}
+
         <Animated.View style={sendButtonStyle}>
           <Pressable
             accessibilityRole="button"
@@ -356,8 +381,8 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
             ]}
           >
             <Icon
-              name={isEditing ? 'checkmark' : 'send'}
-              size={18}
+              name={isEditing ? 'check' : 'send-horizontal'}
+              size={24}
               color={hasContent ? colors.onBrand : colors.textTertiary}
               flipRTL={!isEditing}
             />
@@ -367,7 +392,7 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
 
       <ComposerActionsSheet
         ref={actionsSheetRef}
-        onClose={() => actionsSheetRef.current?.close()}
+        onClose={() => actionsSheetRef.current?.dismiss()}
         onCamera={handleCamera}
         onPhotoLibrary={handlePhotoLibrary}
         onDocument={handleDocument}
@@ -387,7 +412,7 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
         ref={flowPickerRef}
         workspaceId={workspaceId}
         onSelect={handleSelectFlow}
-        onClose={() => flowPickerRef.current?.close()}
+        onClose={() => flowPickerRef.current?.dismiss()}
       />
 
       <SavedRepliesSheet
@@ -395,7 +420,7 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
         workspaceId={workspaceId}
         onSelect={(text) => {
           setDraft(conversationId, text);
-          savedRepliesRef.current?.close();
+          savedRepliesRef.current?.dismiss();
         }}
       />
 
@@ -428,8 +453,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   sendButton: {
-    width: 36,
-    height: 36,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },

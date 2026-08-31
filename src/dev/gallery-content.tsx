@@ -71,7 +71,7 @@ export function GalleryContent() {
           trailing={
             <IconButton
               accessibilityLabel="Toggle color scheme"
-              icon={themePreference === 'dark' ? 'sunny-outline' : 'moon-outline'}
+              icon={themePreference === 'dark' ? 'sun' : 'moon'}
               variant="tonal"
               onPress={toggleScheme}
             />
@@ -104,7 +104,7 @@ export function GalleryContent() {
           <View style={styles.row}>
             <Button label="Danger" variant="danger" onPress={() => {}} />
             <Button label="Ghost" variant="ghost" onPress={() => {}} />
-            <Button label="Icon" icon="send" onPress={() => {}} />
+            <Button label="Icon" icon="send-horizontal" onPress={() => {}} />
           </View>
           <View style={styles.row}>
             <Button label="Small" size="sm" onPress={() => {}} />
@@ -117,35 +117,35 @@ export function GalleryContent() {
           <View style={styles.row}>
             <IconButton
               accessibilityLabel="Ghost"
-              icon="heart-outline"
+              icon="heart"
               variant="ghost"
               onPress={() => {}}
             />
             <IconButton
               accessibilityLabel="Tonal"
-              icon="heart-outline"
+              icon="heart"
               variant="tonal"
               onPress={() => {}}
             />
             <IconButton
               accessibilityLabel="Filled"
-              icon="heart-outline"
+              icon="heart"
               variant="filled"
               onPress={() => {}}
             />
             <IconButton
               accessibilityLabel="Outline"
-              icon="heart-outline"
+              icon="heart"
               variant="outline"
               onPress={() => {}}
             />
             <IconButton
               accessibilityLabel="Badged"
-              icon="notifications-outline"
+              icon="bell"
               badgeCount={5}
               onPress={() => {}}
             />
-            <IconButton accessibilityLabel="Loading" icon="send" loading onPress={() => {}} />
+            <IconButton accessibilityLabel="Loading" icon="send-horizontal" loading onPress={() => {}} />
           </View>
         </Section>
 
@@ -246,7 +246,7 @@ export function GalleryContent() {
         <Section title="EmptyState">
           <View style={{ height: 220 }}>
             <EmptyState
-              icon="chatbubble-ellipses-outline"
+              icon="message-circle-more"
               title="No conversations"
               description="New conversations will show up here."
               action={{ label: 'Clear filters', onPress: () => {} }}

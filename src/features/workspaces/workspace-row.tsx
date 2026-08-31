@@ -21,7 +21,7 @@ export function WorkspaceRow({ workspace, onPress, selected = false }: Workspace
       title={workspace.name}
       leading={<Avatar uri={workspace.logo} name={workspace.name} size={44} />}
       trailing={
-        selected ? <Icon name="checkmark-circle" size={22} color={colors.brand} /> : undefined
+        selected ? <Icon name="circle-check" size={22} color={colors.brand} /> : undefined
       }
       onPress={() => onPress(workspace)}
       showChevron={!selected}

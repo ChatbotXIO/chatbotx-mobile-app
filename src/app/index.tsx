@@ -80,7 +80,7 @@ function LoadingScreen() {
             animatedStyle,
           ]}
         >
-          <Icon name="chatbubbles" size={32} color={colors.brand} />
+          <Icon name="messages-square" size={32} color={colors.brand} />
         </Animated.View>
       </View>
     </Screen>

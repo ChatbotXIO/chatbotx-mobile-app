@@ -6,8 +6,10 @@ import type { PropsWithChildren } from 'react';
 import { apiClient } from '@/api/client';
 import { queryKeys } from '@/api/query-keys';
 import {
+  useArchiveConversations,
   useDisableBot,
   useMarkConversationRead,
+  useUnarchiveConversations,
 } from '@/features/conversations/api/use-conversation-actions';
 import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
 
@@ -150,5 +152,165 @@ describe('useDisableBot', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(queryClient.getQueryData<ConversationListItem>(detailKey)?.botEnabled).toBe(true);
+  });
+});
+
+describe('useArchiveConversations', () => {
+  it('posts to the archive endpoint with the ids array', async () => {
+    mockedPost.mockResolvedValue({ data: {}, error: undefined });
+    const queryClient = createTestQueryClient();
+
+    const { result } = await renderHook(() => useArchiveConversations('ws-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate(['conv-1']);
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockedPost).toHaveBeenCalledWith('/workspaces/{workspaceId}/conversations/archive', {
+      params: { path: { workspaceId: 'ws-1' } },
+      body: { ids: ['conv-1'] },
+    });
+  });
+
+  it('optimistically sets archivedAt on the cached list row', async () => {
+    mockedPost.mockResolvedValue({ data: {}, error: undefined });
+    const queryClient = createTestQueryClient();
+    const listKey = ['ws', 'ws-1', 'conversations', 'list', {}] as const;
+    queryClient.setQueryData(listKey, {
+      pages: [{ data: [fakeConversation({ archivedAt: null })], nextCursor: null }],
+      pageParams: [undefined],
+    });
+
+    const { result } = await renderHook(() => useArchiveConversations('ws-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate(['conv-1']);
+    });
+
+    await waitFor(() => {
+      const data = queryClient.getQueryData<{
+        pages: { data: ConversationListItem[] }[];
+      }>(listKey);
+      expect(data?.pages[0].data[0].archivedAt).not.toBeNull();
+    });
+  });
+
+  it('invalidates list queries for this workspace on success', async () => {
+    mockedPost.mockResolvedValue({ data: {}, error: undefined });
+    const queryClient = createTestQueryClient();
+    const invalidateSpy = jest.spyOn(queryClient, 'invalidateQueries');
+
+    const { result } = await renderHook(() => useArchiveConversations('ws-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate(['conv-1']);
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(invalidateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ predicate: expect.any(Function) }),
+    );
+  });
+
+  it('rolls back the optimistic patch on error', async () => {
+    mockedPost.mockResolvedValue({ data: undefined, error: { message: 'boom' } });
+    const queryClient = createTestQueryClient();
+    const listKey = ['ws', 'ws-1', 'conversations', 'list', {}] as const;
+    queryClient.setQueryData(listKey, {
+      pages: [{ data: [fakeConversation({ archivedAt: null })], nextCursor: null }],
+      pageParams: [undefined],
+    });
+
+    const { result } = await renderHook(() => useArchiveConversations('ws-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate(['conv-1']);
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    const data = queryClient.getQueryData<{ pages: { data: ConversationListItem[] }[] }>(listKey);
+    expect(data?.pages[0].data[0].archivedAt).toBeNull();
+  });
+});
+
+describe('useUnarchiveConversations', () => {
+  it('posts to the unarchive endpoint and clears archivedAt optimistically', async () => {
+    mockedPost.mockResolvedValue({ data: {}, error: undefined });
+    const queryClient = createTestQueryClient();
+    const listKey = ['ws', 'ws-1', 'conversations', 'list', {}] as const;
+    queryClient.setQueryData(listKey, {
+      pages: [
+        { data: [fakeConversation({ archivedAt: '2026-01-01T00:00:00.000Z' })], nextCursor: null },
+      ],
+      pageParams: [undefined],
+    });
+
+    const { result } = await renderHook(() => useUnarchiveConversations('ws-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate(['conv-1']);
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockedPost).toHaveBeenCalledWith('/workspaces/{workspaceId}/conversations/unarchive', {
+      params: { path: { workspaceId: 'ws-1' } },
+      body: { ids: ['conv-1'] },
+    });
+    const data = queryClient.getQueryData<{ pages: { data: ConversationListItem[] }[] }>(listKey);
+    expect(data?.pages[0].data[0].archivedAt).toBeNull();
+  });
+
+  it('invalidates list queries for this workspace on success', async () => {
+    mockedPost.mockResolvedValue({ data: {}, error: undefined });
+    const queryClient = createTestQueryClient();
+    const invalidateSpy = jest.spyOn(queryClient, 'invalidateQueries');
+
+    const { result } = await renderHook(() => useUnarchiveConversations('ws-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate(['conv-1']);
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(invalidateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ predicate: expect.any(Function) }),
+    );
+  });
+
+  it('rolls back the optimistic patch on error', async () => {
+    mockedPost.mockResolvedValue({ data: undefined, error: { message: 'boom' } });
+    const queryClient = createTestQueryClient();
+    const listKey = ['ws', 'ws-1', 'conversations', 'list', {}] as const;
+    queryClient.setQueryData(listKey, {
+      pages: [
+        { data: [fakeConversation({ archivedAt: '2026-01-01T00:00:00.000Z' })], nextCursor: null },
+      ],
+      pageParams: [undefined],
+    });
+
+    const { result } = await renderHook(() => useUnarchiveConversations('ws-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate(['conv-1']);
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    const data = queryClient.getQueryData<{ pages: { data: ConversationListItem[] }[] }>(listKey);
+    expect(data?.pages[0].data[0].archivedAt).toBe('2026-01-01T00:00:00.000Z');
   });
 });

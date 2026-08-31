@@ -168,7 +168,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(funct
   }
 
   if (messages.length === 0) {
-    return <EmptyState icon="chatbubble-ellipses-outline" title={t('chat.noMessages')} />;
+    return <EmptyState icon="message-circle-more" title={t('chat.noMessages')} />;
   }
 
   return (

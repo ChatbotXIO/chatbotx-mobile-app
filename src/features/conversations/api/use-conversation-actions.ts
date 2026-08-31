@@ -26,6 +26,18 @@ import type {
 
 type InfiniteData = { pages: ListConversationsResponse[]; pageParams: unknown[] };
 
+/** Matches every paginated conversations-list query for this workspace (any filter combination) —
+ * shared by cache-patching helpers, `cancelConversationQueries` (before an optimistic patch), and
+ * `invalidateConversationLists` (after archive/unarchive settle, since the backend excludes
+ * archived rows from the default view and shows only archived rows in the archived view — the
+ * optimistic `archivedAt` patch alone can't move a row in or out of the currently active filter). */
+function conversationListPredicate(workspaceId: string) {
+  return (query: { queryKey: readonly unknown[] }) =>
+    isWorkspaceQuery(query.queryKey, workspaceId) &&
+    query.queryKey[2] === 'conversations' &&
+    query.queryKey[3] === 'list';
+}
+
 function patchConversationInCache(
   queryClient: ReturnType<typeof useQueryClient>,
   workspaceId: string,
@@ -36,17 +48,13 @@ function patchConversationInCache(
 
   queryClient
     .getQueryCache()
-    .findAll({
-      // `queryKey[3] === 'list'` narrows this to the paginated list queries specifically — the
-      // detail query lives under the same `['ws', id, 'conversations', ...]` prefix but as
-      // `['ws', id, 'conversations', 'detail', conversationId]` with a single-object cache shape
-      // (`{ pages, data }` doesn't apply), so without this check the `.pages.map(...)` below
-      // throws whenever a detail query happens to be cached for the same workspace.
-      predicate: (query) =>
-        isWorkspaceQuery(query.queryKey, workspaceId) &&
-        query.queryKey[2] === 'conversations' &&
-        query.queryKey[3] === 'list',
-    })
+    // `queryKey[3] === 'list'` (via `conversationListPredicate`) narrows this to the paginated
+    // list queries specifically — the detail query lives under the same
+    // `['ws', id, 'conversations', ...]` prefix but as
+    // `['ws', id, 'conversations', 'detail', conversationId]` with a single-object cache shape
+    // (`{ pages, data }` doesn't apply), so without this check the `.pages.map(...)` below
+    // throws whenever a detail query happens to be cached for the same workspace.
+    .findAll({ predicate: conversationListPredicate(workspaceId) })
     .forEach((query) => {
       previous.set(query.queryKey, query.state.data as InfiniteData | undefined);
       queryClient.setQueryData<InfiniteData>(query.queryKey, (old) => {
@@ -82,12 +90,16 @@ function cancelConversationQueries(
   queryClient: ReturnType<typeof useQueryClient>,
   workspaceId: string,
 ): Promise<void> {
-  return queryClient.cancelQueries({
-    predicate: (query) =>
-      isWorkspaceQuery(query.queryKey, workspaceId) &&
-      query.queryKey[2] === 'conversations' &&
-      query.queryKey[3] === 'list',
-  });
+  return queryClient.cancelQueries({ predicate: conversationListPredicate(workspaceId) });
+}
+
+/** Invalidates every conversations-list query for this workspace so the server authoritatively
+ * drops/adds the row for whatever filter view is active — used after archive/unarchive succeed. */
+function invalidateConversationLists(
+  queryClient: ReturnType<typeof useQueryClient>,
+  workspaceId: string,
+): void {
+  queryClient.invalidateQueries({ predicate: conversationListPredicate(workspaceId) });
 }
 
 /** The conversation-detail query (`useConversationDetail`) caches a single object under
@@ -274,11 +286,16 @@ function useBatchConversationAction(
   });
 }
 
+/** The backend excludes archived rows from the default list view (and shows only archived rows in
+ * the archived view), so the optimistic `archivedAt` patch alone can't move a row in or out of
+ * whichever filter view is currently active — it stays for instant feedback, but once the mutation
+ * succeeds the list queries are invalidated so the server authoritatively drops/adds the row. */
 export function useArchiveConversations(workspaceId: string) {
   return useBatchConversationAction(
     workspaceId,
     '/workspaces/{workspaceId}/conversations/archive',
     () => ({ archivedAt: new Date().toISOString() }),
+    (queryClient) => invalidateConversationLists(queryClient, workspaceId),
   );
 }
 
@@ -287,6 +304,7 @@ export function useUnarchiveConversations(workspaceId: string) {
     workspaceId,
     '/workspaces/{workspaceId}/conversations/unarchive',
     () => ({ archivedAt: null }),
+    (queryClient) => invalidateConversationLists(queryClient, workspaceId),
   );
 }
 
@@ -334,14 +352,7 @@ function patchAssignedUserByContact(
 
   queryClient
     .getQueryCache()
-    .findAll({
-      // See the matching comment in `patchConversationInCache` above — `queryKey[3] === 'list'`
-      // excludes the differently-shaped detail query from this list-only patch.
-      predicate: (query) =>
-        isWorkspaceQuery(query.queryKey, workspaceId) &&
-        query.queryKey[2] === 'conversations' &&
-        query.queryKey[3] === 'list',
-    })
+    .findAll({ predicate: conversationListPredicate(workspaceId) })
     .forEach((query) => {
       previous.set(query.queryKey, query.state.data as InfiniteData | undefined);
       queryClient.setQueryData<InfiniteData>(query.queryKey, (old) => {

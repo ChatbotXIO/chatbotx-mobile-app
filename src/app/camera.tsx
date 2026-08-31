@@ -11,11 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
-import {
-  AttachmentTooLargeError,
-  MAX_FILE_SIZE_BYTES,
-  useSendMessage,
-} from '@/features/chat/api/use-send-message';
+import { MAX_FILE_SIZE_BYTES, useSendMessage } from '@/features/chat/api/use-send-message';
+import { describeApiError } from '@/lib/describe-api-error';
 import { triggerHaptic } from '@/lib/haptics';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
 import { useTheme } from '@/theme/use-theme';
@@ -63,10 +60,16 @@ export default function CameraScreen() {
 
       // SDK 57 replaced the legacy `getInfoAsync` API with a class-based `File` — `new
       // File(uri).size` is the current way to stat a local file (see
-      // https://docs.expo.dev/versions/v57.0.0/sdk/filesystem/). Guard BEFORE attempting to send,
-      // per the plan — previously this screen relied entirely on the backend's own size rejection
-      // with no client-side check at all.
-      const fileSize = new File(photo.uri).size;
+      // https://docs.expo.dev/versions/v57.0.0/sdk/filesystem/). Guarded in its own try/catch:
+      // this stat has thrown for some simulator-captured URIs even though the file sends fine,
+      // and a stat failure must fall through to the send (letting the backend's own size
+      // rejection be the fallback) rather than abort the capture entirely.
+      let fileSize: number | null | undefined;
+      try {
+        fileSize = new File(photo.uri).size;
+      } catch {
+        fileSize = undefined;
+      }
       if (typeof fileSize === 'number' && fileSize > MAX_FILE_SIZE_BYTES) {
         setError(t('chat.attachmentTooLarge', { fileName: 'photo.jpg' }));
         return;
@@ -83,7 +86,7 @@ export default function CameraScreen() {
       router.back();
     } catch (err) {
       triggerHaptic('error');
-      setError(err instanceof AttachmentTooLargeError ? err.message : t('chat.failedToSendPhoto'));
+      setError(describeApiError(err, t));
     } finally {
       setIsCapturing(false);
     }
@@ -100,7 +103,7 @@ export default function CameraScreen() {
           onPress={() => router.back()}
           style={styles.closeButton}
         >
-          <Icon name="close" size={28} color={colors.textInverse} />
+          <Icon name="x" size={28} color={colors.textInverse} />
         </Pressable>
         <Pressable
           accessibilityRole="button"

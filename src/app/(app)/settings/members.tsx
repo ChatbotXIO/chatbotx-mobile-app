@@ -49,7 +49,7 @@ export default function MembersScreen() {
             />
           </View>
         ) : members.length === 0 ? (
-          <EmptyState icon="people-outline" title={t('settings.noMembers')} />
+          <EmptyState icon="users" title={t('settings.noMembers')} />
         ) : (
           members.map((member) => (
             <ListItem
@@ -73,7 +73,7 @@ export default function MembersScreen() {
                 <SkeletonRow.Conversation />
               </View>
             ) : teams.length === 0 ? (
-              <EmptyState icon="people-circle-outline" title={t('settings.noTeams')} />
+              <EmptyState icon="users-round" title={t('settings.noTeams')} />
             ) : (
               teams.map((team) => (
                 <ListItem

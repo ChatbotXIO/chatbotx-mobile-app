@@ -1,4 +1,5 @@
 import type BottomSheet from '@gorhom/bottom-sheet';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -84,7 +85,7 @@ export default function ConversationsScreen() {
   );
 
   const filterSheetRef = useRef<BottomSheet>(null);
-  const assignmentSheetRef = useRef<BottomSheet>(null);
+  const assignmentSheetRef = useRef<BottomSheetModal>(null);
   const workspaceSwitcherSheetRef = useRef<BottomSheet>(null);
   const { data: workspaces } = useWorkspaces();
   const currentWorkspace = workspaces?.find((workspace) => workspace.id === workspaceId);
@@ -106,7 +107,7 @@ export default function ConversationsScreen() {
 
   const openAssignmentSheet = useCallback((conversation: ConversationListItem) => {
     setAssigningConversation(conversation);
-    assignmentSheetRef.current?.expand();
+    assignmentSheetRef.current?.present();
   }, []);
 
   function handleAssign(userId: string | null) {
@@ -131,6 +132,19 @@ export default function ConversationsScreen() {
   }
 
   function handleArchive(conversation: ConversationListItem) {
+    if (conversation.archivedAt) {
+      unarchiveConversations.mutate([conversation.id]);
+      showToast({
+        message: t('conversations.archiveUndone'),
+        tone: 'neutral',
+        action: {
+          label: t('conversations.undo'),
+          onPress: () => archiveConversations.mutate([conversation.id]),
+        },
+      });
+      return;
+    }
+
     archiveConversations.mutate([conversation.id]);
     showToast({
       message: t('conversations.archive'),
@@ -146,13 +160,13 @@ export default function ConversationsScreen() {
     if (filterCount > 0 || filtersSnapshot.keyword) {
       return (
         <EmptyState
-          icon="filter-outline"
+          icon="list-filter"
           title={t('conversations.emptyFiltered')}
           action={{ label: t('conversations.clearFilters'), onPress: resetFilters }}
         />
       );
     }
-    return <EmptyState icon="chatbubbles-outline" title={t('conversations.empty')} />;
+    return <EmptyState icon="messages-square" title={t('conversations.empty')} />;
   }, [filterCount, filtersSnapshot.keyword, resetFilters, t]);
 
   const normalizedError = query.error ? normalizeApiError(query.error) : null;
@@ -184,7 +198,7 @@ export default function ConversationsScreen() {
           </View>
           <IconButton
             accessibilityLabel={t('conversations.filters')}
-            icon="filter"
+            icon="list-filter"
             variant="tonal"
             badgeCount={filterCount}
             onPress={() => filterSheetRef.current?.expand()}
