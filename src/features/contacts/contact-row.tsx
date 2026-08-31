@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -18,11 +19,15 @@ import { useTheme } from '@/theme/use-theme';
 interface ContactRowProps {
   contact: ContactListItem;
   workspaceId: string | null;
-  onPress: () => void;
-  onLongPress?: () => void;
-  onOpenActions?: () => void;
-  onToggleBlock?: () => void;
-  onDelete?: () => void;
+  /** Callbacks take the row's `contact` (not pre-bound) so the parent screen can pass one stable
+   * `useCallback` per action across every row, instead of a fresh inline closure per item on
+   * every render — a fresh closure would defeat `memo` below on every list re-render regardless of
+   * whether this row's own data changed. */
+  onPress: (contact: ContactListItem) => void;
+  onLongPress?: (contact: ContactListItem) => void;
+  onOpenActions?: (contact: ContactListItem) => void;
+  onToggleBlock?: (contact: ContactListItem) => void;
+  onDelete?: (contact: ContactListItem) => void;
 }
 
 /**
@@ -34,8 +39,11 @@ interface ContactRowProps {
  * OMITTED (not shown disabled) — matching the composer-sheet "omit rather than disable"
  * convention. The overflow sheet still lists both with a "Coming soon" badge so the feature stays
  * discoverable.
+ *
+ * Wrapped in `memo` (matching `ConversationRow`) so a list re-render (e.g. from an unrelated
+ * row's optimistic update) only re-renders rows whose own props actually changed.
  */
-export function ContactRow({
+export const ContactRow = memo(function ContactRow({
   contact,
   workspaceId,
   onPress,
@@ -62,39 +70,45 @@ export function ContactRow({
   const isBlocked = Boolean(contact.blockedAt);
   const channel = contact.contactInboxes?.[0]?.channel;
 
-  const leftActions: SwipeAction[] | undefined =
-    onToggleBlock && FEATURES.blockContact
-      ? [
-          {
-            icon: isBlocked ? 'user-check' : 'user-lock',
-            label: isBlocked ? t('contacts.unblock') : t('contacts.block'),
-            color: colors.danger,
-            destructive: !isBlocked,
-            onPress: onToggleBlock,
-          },
-        ]
-      : undefined;
+  const leftActions: SwipeAction[] | undefined = useMemo(
+    () =>
+      onToggleBlock && FEATURES.blockContact
+        ? [
+            {
+              icon: isBlocked ? 'user-check' : 'user-lock',
+              label: isBlocked ? t('contacts.unblock') : t('contacts.block'),
+              color: colors.danger,
+              destructive: !isBlocked,
+              onPress: () => onToggleBlock(contact),
+            },
+          ]
+        : undefined,
+    [onToggleBlock, isBlocked, t, colors.danger, contact],
+  );
 
-  const rightActions: SwipeAction[] | undefined =
-    onDelete && FEATURES.deleteContact
-      ? [
-          {
-            icon: 'user-round-x',
-            label: t('contacts.deleteContact'),
-            color: colors.danger,
-            destructive: true,
-            onPress: onDelete,
-          },
-        ]
-      : undefined;
+  const rightActions: SwipeAction[] | undefined = useMemo(
+    () =>
+      onDelete && FEATURES.deleteContact
+        ? [
+            {
+              icon: 'user-round-x',
+              label: t('contacts.deleteContact'),
+              color: colors.danger,
+              destructive: true,
+              onPress: () => onDelete(contact),
+            },
+          ]
+        : undefined,
+    [onDelete, t, colors.danger, contact],
+  );
 
   return (
     <SwipeableRow leftActions={leftActions} rightActions={rightActions}>
       <PressableScale
         accessibilityRole="button"
         accessibilityLabel={name}
-        onPress={onPress}
-        onLongPress={onLongPress ?? onOpenActions}
+        onPress={() => onPress(contact)}
+        onLongPress={() => (onLongPress ?? onOpenActions)?.(contact)}
         haptic={false}
         style={[
           styles.row,
@@ -127,13 +141,13 @@ export function ContactRow({
             icon="ellipsis-vertical"
             size="sm"
             variant="ghost"
-            onPress={onOpenActions}
+            onPress={() => onOpenActions(contact)}
           />
         ) : null}
       </PressableScale>
     </SwipeableRow>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: {

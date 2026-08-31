@@ -35,19 +35,22 @@ describe('ContactRow', () => {
     expect(screen.getByText('jane@example.com')).toBeTruthy();
   });
 
-  it('calls onPress when the row is tapped', async () => {
+  it('calls onPress with the contact when the row is tapped', async () => {
     const onPress = jest.fn();
-    await render(<ContactRow contact={fakeContact()} workspaceId="ws-1" onPress={onPress} />);
+    const contact = fakeContact();
+    await render(<ContactRow contact={contact} workspaceId="ws-1" onPress={onPress} />);
 
     fireEvent.press(screen.getByLabelText('Jane Doe'));
     expect(onPress).toHaveBeenCalledTimes(1);
+    expect(onPress).toHaveBeenCalledWith(contact);
   });
 
-  it('renders an ellipsis button that calls onOpenActions when provided', async () => {
+  it('renders an ellipsis button that calls onOpenActions with the contact when provided', async () => {
     const onOpenActions = jest.fn();
+    const contact = fakeContact();
     await render(
       <ContactRow
-        contact={fakeContact()}
+        contact={contact}
         workspaceId="ws-1"
         onPress={() => {}}
         onOpenActions={onOpenActions}
@@ -56,6 +59,7 @@ describe('ContactRow', () => {
 
     fireEvent.press(screen.getByLabelText('Contact actions'));
     expect(onOpenActions).toHaveBeenCalledTimes(1);
+    expect(onOpenActions).toHaveBeenCalledWith(contact);
   });
 
   it('does not render an ellipsis button when onOpenActions is not provided', async () => {
