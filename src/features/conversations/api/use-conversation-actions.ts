@@ -2,11 +2,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/api/client';
 import { ApiError } from '@/api/errors';
-import { isWorkspaceQuery, queryKeys } from '@/api/query-keys';
-import type {
-  ConversationListItem,
-  ListConversationsResponse,
-} from '@/features/conversations/api/use-conversations-infinite';
+import { queryKeys } from '@/api/query-keys';
+import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
+import {
+  conversationListPredicate,
+  patchConversationListCache,
+  rollbackConversationListCache,
+  type ConversationListSnapshot,
+} from '@/features/conversations/lib/patch-conversation-list-cache';
 
 /**
  * Conversation action mutations, exactly matching the request shapes read from
@@ -24,64 +27,20 @@ import type {
  * list (any filter combination), rolling back on error via the snapshot each mutation captures.
  */
 
-type InfiniteData = { pages: ListConversationsResponse[]; pageParams: unknown[] };
-
-/** Matches every paginated conversations-list query for this workspace (any filter combination) —
- * shared by cache-patching helpers, `cancelConversationQueries` (before an optimistic patch), and
- * `invalidateConversationLists` (after archive/unarchive settle, since the backend excludes
- * archived rows from the default view and shows only archived rows in the archived view — the
- * optimistic `archivedAt` patch alone can't move a row in or out of the currently active filter). */
-function conversationListPredicate(workspaceId: string) {
-  return (query: { queryKey: readonly unknown[] }) =>
-    isWorkspaceQuery(query.queryKey, workspaceId) &&
-    query.queryKey[2] === 'conversations' &&
-    query.queryKey[3] === 'list';
-}
-
+/** Patches `patch` onto the cached conversation-list row matching `conversationId`, across every
+ * filter combination for this workspace. Thin wrapper over the shared list-cache patcher. */
 function patchConversationInCache(
   queryClient: ReturnType<typeof useQueryClient>,
   workspaceId: string,
   conversationId: string,
   patch: Partial<ConversationListItem>,
-) {
-  const previous = new Map<readonly unknown[], InfiniteData | undefined>();
-
-  queryClient
-    .getQueryCache()
-    // `queryKey[3] === 'list'` (via `conversationListPredicate`) narrows this to the paginated
-    // list queries specifically — the detail query lives under the same
-    // `['ws', id, 'conversations', ...]` prefix but as
-    // `['ws', id, 'conversations', 'detail', conversationId]` with a single-object cache shape
-    // (`{ pages, data }` doesn't apply), so without this check the `.pages.map(...)` below
-    // throws whenever a detail query happens to be cached for the same workspace.
-    .findAll({ predicate: conversationListPredicate(workspaceId) })
-    .forEach((query) => {
-      previous.set(query.queryKey, query.state.data as InfiniteData | undefined);
-      queryClient.setQueryData<InfiniteData>(query.queryKey, (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            data: page.data.map((item) =>
-              item.id === conversationId ? { ...item, ...patch } : item,
-            ),
-          })),
-        };
-      });
-    });
-
-  return previous;
+): ConversationListSnapshot {
+  return patchConversationListCache(queryClient, workspaceId, (data) =>
+    data.map((item) => (item.id === conversationId ? { ...item, ...patch } : item)),
+  );
 }
 
-function rollback(
-  queryClient: ReturnType<typeof useQueryClient>,
-  snapshot: Map<readonly unknown[], InfiniteData | undefined>,
-) {
-  snapshot.forEach((data, key) => {
-    queryClient.setQueryData(key, data);
-  });
-}
+const rollback = rollbackConversationListCache;
 
 /** Cancels every in-flight conversations-list query for this workspace (any filter combination)
  * before an optimistic patch runs, so a refetch that resolves mid-mutation can't clobber the
@@ -133,7 +92,7 @@ function rollbackDetail(
 }
 
 interface SingleActionSnapshot {
-  list: Map<readonly unknown[], InfiniteData | undefined>;
+  list: ConversationListSnapshot;
   detail: { key: readonly unknown[]; previous: ConversationListItem | undefined };
 }
 
@@ -346,30 +305,14 @@ function patchAssignedUserByContact(
   workspaceId: string,
   contactIds: string[],
   assignedId: string | null,
-) {
+): ConversationListSnapshot {
   const contactIdSet = new Set(contactIds);
-  const previous = new Map<readonly unknown[], InfiniteData | undefined>();
 
-  queryClient
-    .getQueryCache()
-    .findAll({ predicate: conversationListPredicate(workspaceId) })
-    .forEach((query) => {
-      previous.set(query.queryKey, query.state.data as InfiniteData | undefined);
-      queryClient.setQueryData<InfiniteData>(query.queryKey, (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            data: page.data.map((item) =>
-              contactIdSet.has(item.contactId) ? { ...item, assignedUserId: assignedId } : item,
-            ),
-          })),
-        };
-      });
-    });
-
-  return previous;
+  return patchConversationListCache(queryClient, workspaceId, (data) =>
+    data.map((item) =>
+      contactIdSet.has(item.contactId) ? { ...item, assignedUserId: assignedId } : item,
+    ),
+  );
 }
 
 /** Assign is keyed by CONTACT id (not conversation id) per the real schema — pass the

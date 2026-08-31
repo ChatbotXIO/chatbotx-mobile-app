@@ -1,14 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { getAuthToken } from '@/api/auth-token';
-import { isWorkspaceQuery, queryKeys } from '@/api/query-keys';
+import { queryKeys } from '@/api/query-keys';
 import { env } from '@/config/env';
 import { FEATURES } from '@/config/features';
+import { authorizedFetch } from '@/features/contacts/api/contact-fetch';
 import type { ContactDetail } from '@/features/contacts/api/use-contact-detail';
-import type {
-  ConversationListItem,
-  ListConversationsResponse,
-} from '@/features/conversations/api/use-conversations-infinite';
+import {
+  conversationListPredicate,
+  patchConversationListCache,
+  rollbackConversationListCache,
+} from '@/features/conversations/lib/patch-conversation-list-cache';
 
 /**
  * Hand-rolled fetch — no generated-client route exists yet for session/bearer-auth block/unblock
@@ -24,31 +25,11 @@ async function postBlockContact(
   contactId: string,
   action: 'block' | 'unblock',
 ): Promise<void> {
-  const token = await getAuthToken();
-  const response = await fetch(
+  await authorizedFetch(
     `${env.apiBaseUrl}/api/workspaces/${workspaceId}/contacts/${contactId}/${action}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    },
+    { method: 'POST', headers: { 'Content-Type': 'application/json' } },
   );
-
-  if (!response.ok) {
-    let message = response.statusText;
-    try {
-      const errorBody = (await response.json()) as { message?: string };
-      message = errorBody.message ?? message;
-    } catch {
-      // Non-JSON error body — fall back to statusText.
-    }
-    throw new Error(message);
-  }
 }
-
-type InfiniteData = { pages: ListConversationsResponse[]; pageParams: unknown[] };
 
 /** Patches `contact.blockedAt` on every cached conversation row for this contact — mirrors
  * `patchAssignedUserByContact` in use-conversation-actions.ts (assign is also keyed by contact
@@ -59,45 +40,16 @@ function patchContactBlockedInConversations(
   contactId: string,
   blockedAt: string | null,
 ) {
-  const previous = new Map<readonly unknown[], InfiniteData | undefined>();
-
-  queryClient
-    .getQueryCache()
-    .findAll({
-      predicate: (query) =>
-        isWorkspaceQuery(query.queryKey, workspaceId) &&
-        query.queryKey[2] === 'conversations' &&
-        query.queryKey[3] === 'list',
-    })
-    .forEach((query) => {
-      previous.set(query.queryKey, query.state.data as InfiniteData | undefined);
-      queryClient.setQueryData<InfiniteData>(query.queryKey, (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            data: page.data.map((item: ConversationListItem) =>
-              item.contactId === contactId && item.contact
-                ? { ...item, contact: { ...item.contact, blockedAt } }
-                : item,
-            ),
-          })),
-        };
-      });
-    });
-
-  return previous;
+  return patchConversationListCache(queryClient, workspaceId, (data) =>
+    data.map((item) =>
+      item.contactId === contactId && item.contact
+        ? { ...item, contact: { ...item.contact, blockedAt } }
+        : item,
+    ),
+  );
 }
 
-function rollbackConversations(
-  queryClient: ReturnType<typeof useQueryClient>,
-  snapshot: Map<readonly unknown[], InfiniteData | undefined>,
-) {
-  snapshot.forEach((data, key) => {
-    queryClient.setQueryData(key, data);
-  });
-}
+const rollbackConversations = rollbackConversationListCache;
 
 /** Takes `contactId` as the mutate-time argument (not bound at hook-call-time) — a list screen
  * rendering many rows needs one shared hook instance per action, invoked with whichever row's id
@@ -119,7 +71,14 @@ function useToggleContactBlock(workspaceId: string, action: 'block' | 'unblock')
     onMutate: async (contactId: string) => {
       const detailKey = queryKeys.ws.contacts.detail(workspaceId, contactId);
       const blockedAt = action === 'block' ? new Date().toISOString() : null;
-      await queryClient.cancelQueries({ queryKey: detailKey });
+      // Cancel both the detail query and every conversations-list query before patching — without
+      // this, a list refetch that resolves mid-mutation can clobber the optimistic patch below
+      // with stale server data (same race `cancelConversationQueries` guards against in
+      // use-conversation-actions.ts).
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: detailKey }),
+        queryClient.cancelQueries({ predicate: conversationListPredicate(workspaceId) }),
+      ]);
       const previousDetail = queryClient.getQueryData<ContactDetail>(detailKey);
       if (previousDetail) {
         queryClient.setQueryData<ContactDetail>(detailKey, { ...previousDetail, blockedAt });
@@ -144,6 +103,7 @@ function useToggleContactBlock(workspaceId: string, action: 'block' | 'unblock')
       queryClient.invalidateQueries({
         queryKey: queryKeys.ws.contacts.detail(workspaceId, contactId),
       });
+      queryClient.invalidateQueries({ predicate: conversationListPredicate(workspaceId) });
     },
   });
 }

@@ -8,6 +8,10 @@ import type {
   ContactListItem,
   ListContactsResponse,
 } from '@/features/contacts/api/use-contacts-infinite';
+import type {
+  ConversationListItem,
+  ListConversationsResponse,
+} from '@/features/conversations/api/use-conversations-infinite';
 
 import { useDeleteContact } from './use-delete-contact';
 
@@ -43,6 +47,14 @@ function fakeContactListItem(id: string): ContactListItem {
     phoneNumber: null,
     avatar: null,
   } as unknown as ContactListItem;
+}
+
+function fakeConversationListItem(id: string, contactId: string): ConversationListItem {
+  return {
+    id,
+    contactId,
+    contact: { id: contactId, blockedAt: null },
+  } as unknown as ConversationListItem;
 }
 
 function wrapper(queryClient: QueryClient) {
@@ -91,5 +103,43 @@ describe('useDeleteContact', () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
     const cached = queryClient.getQueryData<{ pages: ListContactsResponse[] }>(listKey);
     expect(cached?.pages[0]?.data.map((item) => item.id)).toEqual(['contact-1', 'contact-2']);
+  });
+
+  it('removes only the deleted contact rows from the conversations-list cache on success', async () => {
+    // FEATURES.deleteContact is a hardcoded `false` constant with no env override — flip it
+    // directly (TS `as const` is compile-time-only, not runtime-frozen) to reach the success path.
+    const { FEATURES } =
+      jest.requireActual<typeof import('@/config/features')>('@/config/features');
+    (FEATURES as { deleteContact: boolean }).deleteContact = true;
+
+    mockFetch.mockResolvedValue({ ok: true, statusText: 'OK', json: async () => ({}) });
+    const queryClient = createTestQueryClient();
+    const conversationsListKey = queryKeys.ws.conversations.list('ws-1', {});
+    const conversationsPage: ListConversationsResponse = {
+      data: [
+        fakeConversationListItem('conv-1', 'contact-1'),
+        fakeConversationListItem('conv-2', 'contact-2'),
+      ],
+    } as unknown as ListConversationsResponse;
+    queryClient.setQueryData(conversationsListKey, {
+      pages: [conversationsPage],
+      pageParams: [undefined],
+    });
+
+    const { result } = await renderHook(() => useDeleteContact('ws-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate('contact-1');
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const cached = queryClient.getQueryData<{ pages: ListConversationsResponse[] }>(
+      conversationsListKey,
+    );
+    expect(cached?.pages[0]?.data.map((item) => item.id)).toEqual(['conv-2']);
+
+    (FEATURES as { deleteContact: boolean }).deleteContact = false;
   });
 });

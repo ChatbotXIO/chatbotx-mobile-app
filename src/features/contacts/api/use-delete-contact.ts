@@ -1,10 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { getAuthToken } from '@/api/auth-token';
 import { isWorkspaceQuery } from '@/api/query-keys';
 import { env } from '@/config/env';
 import { FEATURES } from '@/config/features';
+import { authorizedFetch } from '@/features/contacts/api/contact-fetch';
 import type { ListContactsResponse } from '@/features/contacts/api/use-contacts-infinite';
+import {
+  conversationListPredicate,
+  patchConversationListCache,
+} from '@/features/conversations/lib/patch-conversation-list-cache';
 
 /**
  * Hand-rolled fetch — no generated-client route exists for this endpoint at all
@@ -16,35 +20,19 @@ import type { ListContactsResponse } from '@/features/contacts/api/use-contacts-
 class FeatureUnavailableError extends Error {}
 
 async function deleteContactRequest(workspaceId: string, contactId: string): Promise<void> {
-  const token = await getAuthToken();
-  const response = await fetch(
-    `${env.apiBaseUrl}/api/workspaces/${workspaceId}/contacts/${contactId}`,
-    {
-      method: 'DELETE',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    },
-  );
-
-  if (!response.ok) {
-    let message = response.statusText;
-    try {
-      const errorBody = (await response.json()) as { message?: string };
-      message = errorBody.message ?? message;
-    } catch {
-      // Non-JSON error body — fall back to statusText.
-    }
-    throw new Error(message);
-  }
+  await authorizedFetch(`${env.apiBaseUrl}/api/workspaces/${workspaceId}/contacts/${contactId}`, {
+    method: 'DELETE',
+  });
 }
 
 type InfiniteData = { pages: ListContactsResponse[]; pageParams: unknown[] };
 
 /** Removes the contact from every cached contacts-list page (any keyword filter) — same
  * find-all-matching-queries approach as the conversations list patches in
- * use-conversation-actions.ts. Also invalidates the conversations list, since a deleted contact's
- * conversations should no longer appear there either. */
+ * use-conversation-actions.ts. Also removes the deleted contact's rows from the conversations
+ * list cache directly (targeted patch, not a whole-space invalidate — refetching every
+ * conversations-list query on every delete is unnecessary churn when we already know exactly
+ * which rows must go). */
 export function useDeleteContact(workspaceId: string) {
   const queryClient = useQueryClient();
 
@@ -93,11 +81,13 @@ export function useDeleteContact(workspaceId: string) {
         queryClient.setQueryData(key, data);
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        predicate: (query) =>
-          isWorkspaceQuery(query.queryKey, workspaceId) && query.queryKey[2] === 'conversations',
-      });
+    onSuccess: async (_data, contactId) => {
+      // Cancel first so an in-flight conversations-list refetch can't clobber this patch with
+      // stale server data still containing the now-deleted contact's rows.
+      await queryClient.cancelQueries({ predicate: conversationListPredicate(workspaceId) });
+      patchConversationListCache(queryClient, workspaceId, (data) =>
+        data.filter((item) => item.contactId !== contactId),
+      );
     },
     onSettled: () => {
       queryClient.invalidateQueries({
