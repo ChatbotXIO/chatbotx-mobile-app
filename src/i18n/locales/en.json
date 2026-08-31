@@ -207,6 +207,8 @@
     "unblock": "Unblock contact",
     "blockConfirm": "Block this contact? They won't be able to message this workspace.",
     "unblockConfirm": "Unblock this contact?",
+    "blockedSuccess": "Contact blocked",
+    "unblockedSuccess": "Contact unblocked",
     "deleteContact": "Delete contact",
     "deleteConfirm": "Delete this contact? This cannot be undone.",
     "deleted": "Contact deleted",

@@ -3,10 +3,19 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { PropsWithChildren } from 'react';
 
 import { apiClient } from '@/api/client';
+import { ToastProvider } from '@/components/ui/toast';
 import { initI18n } from '@/i18n';
 import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
 
 import { ConversationActionsSheet } from './conversation-actions-sheet';
+
+jest.mock('react-native-safe-area-context', () => {
+  const actual = jest.requireActual('react-native-safe-area-context');
+  return {
+    ...actual,
+    useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+  };
+});
 
 jest.mock('@/api/client', () => ({
   apiClient: {
@@ -96,7 +105,11 @@ function fakeConversation(overrides: Partial<ConversationListItem> = {}): Conver
 
 function wrapper(queryClient: QueryClient) {
   return function Wrapper({ children }: PropsWithChildren) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>{children}</ToastProvider>
+      </QueryClientProvider>
+    );
   };
 }
 
@@ -157,10 +170,12 @@ describe('ConversationActionsSheet', () => {
       { wrapper: wrapper(queryClient) },
     );
 
-    // `AssignmentSheet` (nested inside `ConversationActionsSheet`) always renders its own
-    // unconditional "Unassign" row in the member picker list, so only the top-level sheet's
-    // conditional row should appear/disappear here — expect exactly that one when unassigned.
-    expect(screen.getAllByText('Unassign')).toHaveLength(1);
+    // `AssignmentSheet` (nested inside `ConversationActionsSheet`) lazy-mounts only after "Assign"
+    // is pressed at least once (it fires its own ungated members-list query on mount) — press it
+    // first so its own unconditional "Unassign" row in the member picker list is present, then
+    // assert only the top-level sheet's conditional row appears/disappears here.
+    fireEvent.press(screen.getByText('Assign'));
+    await waitFor(() => expect(screen.getAllByText('Unassign')).toHaveLength(1));
   });
 
   it('shows the top-level Unassign row when the conversation has an assignee', async () => {
@@ -177,7 +192,26 @@ describe('ConversationActionsSheet', () => {
       { wrapper: wrapper(queryClient) },
     );
 
-    expect(screen.getAllByText('Unassign')).toHaveLength(2);
+    fireEvent.press(screen.getByText('Assign'));
+    await waitFor(() => expect(screen.getAllByText('Unassign')).toHaveLength(2));
+  });
+
+  it('does not fetch the members list until Assign is pressed (lazy-mounted AssignmentSheet)', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    await render(
+      <ConversationActionsSheet
+        workspaceId="ws-1"
+        conversationId="conv-1"
+        conversation={fakeConversation()}
+        onClose={() => {}}
+      />,
+      { wrapper: wrapper(queryClient) },
+    );
+
+    expect(mockedGet).not.toHaveBeenCalled();
+
+    fireEvent.press(screen.getByText('Assign'));
+    await waitFor(() => expect(mockedGet).toHaveBeenCalled());
   });
 
   it('disables block/delete and shows Coming soon while their feature flags are off', async () => {

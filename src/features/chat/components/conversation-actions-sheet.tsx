@@ -1,15 +1,16 @@
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { router } from 'expo-router';
-import { forwardRef, useRef } from 'react';
-import { Alert } from 'react-native';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Badge } from '@/components/ui/badge';
+import { FeatureGatedListItem } from '@/components/ui/feature-gated-list-item';
 import { Icon } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
 import { SheetHeader, SheetModal } from '@/components/ui/sheet';
+import { useToast } from '@/components/ui/toast';
 import { FEATURES } from '@/config/features';
-import { AssignmentSheet } from '@/features/conversations/components/assignment-sheet';
+import { useBlockContact, useUnblockContact } from '@/features/contacts/api/use-contact-block';
+import { useDeleteContact } from '@/features/contacts/api/use-delete-contact';
 import {
   useArchiveConversations,
   useAssignConversations,
@@ -21,9 +22,10 @@ import {
   useUnfollowConversation,
 } from '@/features/conversations/api/use-conversation-actions';
 import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
+import { AssignmentSheet } from '@/features/conversations/components/assignment-sheet';
 import { isBotActive } from '@/features/conversations/lib/conversation-status';
-import { useBlockContact, useUnblockContact } from '@/features/contacts/api/use-contact-block';
-import { useDeleteContact } from '@/features/contacts/api/use-delete-contact';
+import { confirmDestructive } from '@/lib/confirm-destructive';
+import { describeApiError } from '@/lib/describe-api-error';
 import { useTheme } from '@/theme/use-theme';
 
 interface ConversationActionsSheetProps {
@@ -52,7 +54,23 @@ export const ConversationActionsSheet = forwardRef<BottomSheetModal, Conversatio
   ) {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const showToast = useToast();
     const assignmentSheetRef = useRef<BottomSheetModal>(null);
+    // `AssignmentSheet` fires its own ungated `useWorkspaceMembersList` query on mount — mount it
+    // only once "Assign" has been pressed at least once (matches the same lazy-mount fix applied
+    // to `ContactActionsSheet`'s four child sheets). `pendingAssignmentRef` defers the `.present()`
+    // call to the effect below since the ref is still null on the render that flips
+    // `openedAssignment` to true (the sheet hasn't mounted yet). A ref (not state) so clearing it
+    // doesn't itself trigger another render.
+    const [openedAssignment, setOpenedAssignment] = useState(false);
+    const pendingAssignmentRef = useRef(false);
+
+    useEffect(() => {
+      if (pendingAssignmentRef.current && openedAssignment) {
+        assignmentSheetRef.current?.present();
+        pendingAssignmentRef.current = false;
+      }
+    }, [openedAssignment]);
 
     const enableBot = useEnableBot(workspaceId);
     const disableBot = useDisableBot(workspaceId);
@@ -114,64 +132,70 @@ export const ConversationActionsSheet = forwardRef<BottomSheetModal, Conversatio
     }
 
     function handleArchive() {
-      Alert.alert(
-        isArchived ? t('conversations.unarchive') : t('conversations.archive'),
-        isArchived ? t('conversations.unarchiveConfirm') : t('conversations.archiveConfirm'),
-        [
-          { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
-          {
-            text: isArchived ? t('conversations.unarchive') : t('conversations.archive'),
-            style: 'destructive',
-            onPress: () => {
-              if (isArchived) {
-                unarchiveConversations.mutate([conversationId]);
-              } else {
-                archiveConversations.mutate([conversationId]);
-              }
-              onClose();
+      confirmDestructive({
+        title: isArchived ? t('conversations.unarchive') : t('conversations.archive'),
+        message: isArchived
+          ? t('conversations.unarchiveConfirm')
+          : t('conversations.archiveConfirm'),
+        cancelLabel: t('common.cancel', { defaultValue: 'Cancel' }),
+        confirmLabel: isArchived ? t('conversations.unarchive') : t('conversations.archive'),
+        onConfirm: () => {
+          const mutation = isArchived ? unarchiveConversations : archiveConversations;
+          mutation.mutate([conversationId], {
+            onError: (error) => {
+              showToast({ message: describeApiError(error, t), tone: 'danger' });
             },
-          },
-        ],
-      );
+          });
+          onClose();
+        },
+      });
     }
 
     function handleToggleBlock() {
       if (!contactId) return;
-      Alert.alert(
-        isBlocked ? t('contacts.unblock') : t('contacts.block'),
-        isBlocked ? t('contacts.unblockConfirm') : t('contacts.blockConfirm'),
-        [
-          { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
-          {
-            text: isBlocked ? t('contacts.unblock') : t('contacts.block'),
-            style: 'destructive',
-            onPress: () => {
-              if (!contactId) return;
-              if (isBlocked) {
-                unblockContact.mutate(contactId);
-              } else {
-                blockContact.mutate(contactId);
-              }
-              onClose();
+      confirmDestructive({
+        title: isBlocked ? t('contacts.unblock') : t('contacts.block'),
+        message: isBlocked ? t('contacts.unblockConfirm') : t('contacts.blockConfirm'),
+        cancelLabel: t('common.cancel', { defaultValue: 'Cancel' }),
+        confirmLabel: isBlocked ? t('contacts.unblock') : t('contacts.block'),
+        onConfirm: () => {
+          if (!contactId) return;
+          const mutation = isBlocked ? unblockContact : blockContact;
+          mutation.mutate(contactId, {
+            onSuccess: () => {
+              showToast({
+                message: isBlocked ? t('contacts.unblockedSuccess') : t('contacts.blockedSuccess'),
+                tone: 'success',
+              });
             },
-          },
-        ],
-      );
+            onError: (error) => {
+              showToast({ message: describeApiError(error, t), tone: 'danger' });
+            },
+          });
+          onClose();
+        },
+      });
     }
 
     function handleDeleteContact() {
       if (!contactId) return;
-      Alert.alert(t('contacts.deleteContact'), t('contacts.deleteConfirm'), [
-        { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
-        {
-          text: t('contacts.deleteContact'),
-          style: 'destructive',
-          onPress: () => {
-            deleteContact.mutate(contactId);
-            onClose();
-          },
+      confirmDestructive({
+        title: t('contacts.deleteContact'),
+        message: t('contacts.deleteConfirm'),
+        cancelLabel: t('common.cancel', { defaultValue: 'Cancel' }),
+        confirmLabel: t('contacts.deleteContact'),
+        onConfirm: () => {
+          deleteContact.mutate(contactId, {
+            onSuccess: () => {
+              showToast({ message: t('contacts.deleted'), tone: 'success' });
+            },
+            onError: (error) => {
+              showToast({ message: describeApiError(error, t), tone: 'danger' });
+            },
+          });
+          onClose();
         },
-      ]);
+      });
     }
 
     return (
@@ -205,7 +229,8 @@ export const ConversationActionsSheet = forwardRef<BottomSheetModal, Conversatio
             leading={<Icon name="user-plus" size={20} color={colors.textSecondary} />}
             onPress={() => {
               onClose();
-              assignmentSheetRef.current?.present();
+              pendingAssignmentRef.current = true;
+              setOpenedAssignment(true);
             }}
           />
           {isAssigned ? (
@@ -254,45 +279,33 @@ export const ConversationActionsSheet = forwardRef<BottomSheetModal, Conversatio
             destructive
             onPress={handleArchive}
           />
-          <ListItem
+          <FeatureGatedListItem
             title={isBlocked ? t('contacts.unblock') : t('contacts.block')}
-            leading={
-              <Icon name={isBlocked ? 'user-check' : 'user-lock'} size={20} color={colors.danger} />
-            }
-            trailing={
-              FEATURES.blockContact ? undefined : (
-                <Badge tone="neutral">{t('common.comingSoon')}</Badge>
-              )
-            }
-            destructive
-            disabled={!FEATURES.blockContact}
+            icon={isBlocked ? 'user-check' : 'user-lock'}
+            enabled={FEATURES.blockContact}
             onPress={handleToggleBlock}
           />
-          <ListItem
+          <FeatureGatedListItem
             title={t('contacts.deleteContact')}
-            leading={<Icon name="user-round-x" size={20} color={colors.danger} />}
-            trailing={
-              FEATURES.deleteContact ? undefined : (
-                <Badge tone="neutral">{t('common.comingSoon')}</Badge>
-              )
-            }
-            destructive
-            disabled={!FEATURES.deleteContact}
+            icon="user-round-x"
+            enabled={FEATURES.deleteContact}
             onPress={handleDeleteContact}
           />
         </SheetModal>
-        <AssignmentSheet
-          sheetRef={assignmentSheetRef}
-          workspaceId={workspaceId}
-          onAssign={(userId) => {
-            if (conversation?.contactId) {
-              assignConversations.mutate({
-                contactIds: [conversation.contactId],
-                assignedId: userId,
-              });
-            }
-          }}
-        />
+        {openedAssignment ? (
+          <AssignmentSheet
+            sheetRef={assignmentSheetRef}
+            workspaceId={workspaceId}
+            onAssign={(userId) => {
+              if (conversation?.contactId) {
+                assignConversations.mutate({
+                  contactIds: [conversation.contactId],
+                  assignedId: userId,
+                });
+              }
+            }}
+          />
+        ) : null}
       </>
     );
   },
