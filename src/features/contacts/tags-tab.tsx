@@ -20,10 +20,10 @@ interface TagsTabProps {
 }
 
 /**
- * `contact.tags` comes embedded from useContactDetail — these are real workspace tags, unrelated
- * to the conversations feature's `tag-chips.tsx` (which renders derived status chips like
- * unread/followUp, not contact tags — the conversations-list response has no `tags` field at all,
- * confirmed against the schema). There is nothing to keep in sync with the inbox there.
+ * `contact.tags` comes embedded from useContactDetail — these are real workspace tags, distinct
+ * from any derived status indicators (e.g. unread/followUp) shown elsewhere in the app, which are
+ * computed client-side rather than stored as tags — the conversations-list response has no `tags`
+ * field at all (confirmed against the schema), so there is nothing to keep in sync with the inbox.
  *
  * Renders inline (no own scroll/list container — `ContactPanel` owns the single scroll surface).
  * Assigned tags render as removable `Chip`s (optimistic add/remove — see use-contact-tags.ts).

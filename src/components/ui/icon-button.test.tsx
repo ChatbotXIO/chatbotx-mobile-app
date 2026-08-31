@@ -39,7 +39,7 @@ describe('IconButton', () => {
   it('does not call onPress when disabled', async () => {
     const onPress = jest.fn();
     await render(
-      <IconButton accessibilityLabel="Delete" icon="trash-2" disabled onPress={onPress} />,
+      <IconButton accessibilityLabel="Delete" icon="user-round-x" disabled onPress={onPress} />,
     );
 
     fireEvent.press(screen.getByRole('button', { name: 'Delete' }));

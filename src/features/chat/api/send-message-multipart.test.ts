@@ -88,9 +88,7 @@ describe('sendMultipartMessage', () => {
 
   beforeEach(() => {
     FakeXHR.instances = [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- test doubles, not the real classes
     global.XMLHttpRequest = FakeXHR as any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- test doubles, not the real classes
     global.FormData = FakeFormData as any;
   });
 
