@@ -139,13 +139,13 @@ export function GalleryContent() {
               variant="outline"
               onPress={() => {}}
             />
+            <IconButton accessibilityLabel="Badged" icon="bell" badgeCount={5} onPress={() => {}} />
             <IconButton
-              accessibilityLabel="Badged"
-              icon="bell"
-              badgeCount={5}
+              accessibilityLabel="Loading"
+              icon="send-horizontal"
+              loading
               onPress={() => {}}
             />
-            <IconButton accessibilityLabel="Loading" icon="send-horizontal" loading onPress={() => {}} />
           </View>
         </Section>
 
