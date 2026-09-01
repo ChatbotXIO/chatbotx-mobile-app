@@ -27,7 +27,7 @@ export default function ImageViewerScreen() {
         onPress={() => router.back()}
         style={[styles.closeButton, { top: insets.top + 8 }]}
       >
-        <Icon name="close" size={28} color={colors.textInverse} />
+        <Icon name="x" size={28} color={colors.textInverse} />
       </Pressable>
       {url ? <Image source={{ uri: url }} style={styles.image} contentFit="contain" /> : null}
     </View>

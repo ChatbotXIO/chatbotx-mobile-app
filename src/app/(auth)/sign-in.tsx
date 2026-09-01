@@ -80,7 +80,7 @@ export default function SignInScreen() {
                   { backgroundColor: colors.brandSoft, borderRadius: LOGO_SIZE / 2 },
                 ]}
               >
-                <Icon name="chatbubbles" size={32} color={colors.brand} />
+                <Icon name="messages-square" size={32} color={colors.brand} />
               </View>
             </Animated.View>
 
@@ -117,7 +117,7 @@ export default function SignInScreen() {
               returnKeyType="go"
               blurOnSubmit
               onSubmitEditing={handleSubmit}
-              trailingIcon={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+              trailingIcon={isPasswordVisible ? 'eye-off' : 'eye'}
               trailingIconAccessibilityLabel={
                 isPasswordVisible ? t('auth.hidePassword') : t('auth.showPassword')
               }

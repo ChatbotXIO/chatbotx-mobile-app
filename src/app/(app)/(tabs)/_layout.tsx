@@ -11,10 +11,20 @@ import { useWorkspaceStore } from '@/stores/use-workspace-store';
 import { useTheme } from '@/theme/use-theme';
 
 /** react-navigation types tabBarIcon's `color` as `ColorValue` (includes opaque platform colors);
- * our theme tokens are always plain hex strings, so this casts back for the Icon primitive. */
+ * our theme tokens are always plain hex strings, so this casts back for the Icon primitive.
+ * `strokeWidth` bumps to 2.5 when focused — lucide icons are stroke-only, so this is how the
+ * active tab recovers the visual weight Ionicons' filled/outline pair used to convey. */
 function tabIcon(name: IconName) {
-  function TabIcon({ color, size }: { color: ColorValue; size: number }) {
-    return <Icon name={name} size={size} color={color as string} />;
+  function TabIcon({
+    color,
+    size,
+    focused,
+  }: {
+    color: ColorValue;
+    size: number;
+    focused: boolean;
+  }) {
+    return <Icon name={name} size={size} color={color as string} strokeWidth={focused ? 2.5 : 2} />;
   }
   return TabIcon;
 }
@@ -52,7 +62,7 @@ export default function TabsLayout() {
           name="conversations/index"
           options={{
             title: t('inbox.title'),
-            tabBarIcon: tabIcon('chatbubbles'),
+            tabBarIcon: tabIcon('messages-square'),
             // `useInboxUnreadCount` only counts CACHED list pages, not a true server-side unread
             // total (no such endpoint exists yet — see the hook's own doc comment). `undefined`
             // (not 0) hides the badge entirely when there's nothing unread.
@@ -61,7 +71,7 @@ export default function TabsLayout() {
         />
         <Tabs.Screen
           name="contacts/index"
-          options={{ title: t('contacts.title'), tabBarIcon: tabIcon('people') }}
+          options={{ title: t('contacts.title'), tabBarIcon: tabIcon('users') }}
         />
         <Tabs.Screen
           name="settings/index"

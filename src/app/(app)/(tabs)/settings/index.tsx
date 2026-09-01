@@ -124,7 +124,6 @@ export default function SettingsScreen() {
                 showChevron
               />
             </Card>
-            <WorkspaceSwitcherSheet ref={workspaceSwitcherSheetRef} />
           </View>
 
           <View>
@@ -152,7 +151,6 @@ export default function SettingsScreen() {
                 showChevron
               />
             </Card>
-            <LanguageSheet sheetRef={languageSheetRef} currentLanguage={language} />
           </View>
 
           <View>
@@ -182,6 +180,8 @@ export default function SettingsScreen() {
             </Text>
           ) : null}
         </ScrollView>
+        <WorkspaceSwitcherSheet ref={workspaceSwitcherSheetRef} />
+        <LanguageSheet sheetRef={languageSheetRef} currentLanguage={language} />
       </Animated.View>
     </Screen>
   );

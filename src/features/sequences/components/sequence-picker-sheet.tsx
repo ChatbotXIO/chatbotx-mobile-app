@@ -1,4 +1,4 @@
-import type BottomSheet from '@gorhom/bottom-sheet';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import type { RefObject } from 'react';
 import { useState } from 'react';
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Icon } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
-import { Sheet, SheetHeader } from '@/components/ui/sheet';
+import { SheetHeader, SheetModal } from '@/components/ui/sheet';
 import { useToast } from '@/components/ui/toast';
 import { FEATURES } from '@/config/features';
 import { useEnrollContactInSequences } from '@/features/sequences/api/use-enroll-contact-in-sequences';
@@ -18,7 +18,7 @@ import { useSequences, type SequenceListItem } from '@/features/sequences/api/us
 import { useTheme } from '@/theme/use-theme';
 
 interface SequencePickerSheetProps {
-  sheetRef: RefObject<BottomSheet | null>;
+  sheetRef: RefObject<BottomSheetModal | null>;
   workspaceId: string;
   contactId: string;
   onEnrolled?: () => void;
@@ -60,7 +60,7 @@ export function SequencePickerSheet({
         showToast({ message: t('contacts.sequenceEnrolled'), tone: 'success' });
         setSelectedIds([]);
         onEnrolled?.();
-        sheetRef.current?.close();
+        sheetRef.current?.dismiss();
       },
       onError: () => {
         showToast({ message: t('contacts.sequenceEnrollFailed'), tone: 'danger' });
@@ -69,8 +69,11 @@ export function SequencePickerSheet({
   }
 
   return (
-    <Sheet ref={sheetRef} snapPoints={['60%', '90%']}>
-      <SheetHeader title={t('contacts.addToSequence')} onClose={() => sheetRef.current?.close()} />
+    <SheetModal ref={sheetRef} snapPoints={['60%', '90%']}>
+      <SheetHeader
+        title={t('contacts.addToSequence')}
+        onClose={() => sheetRef.current?.dismiss()}
+      />
       {!FEATURES.sendSequence ? (
         <View style={{ paddingHorizontal: spacing.md, paddingBottom: spacing.sm }}>
           <Badge tone="warning">{t('common.comingSoon')}</Badge>
@@ -80,9 +83,7 @@ export function SequencePickerSheet({
         data={activeSequences}
         keyExtractor={(sequence) => sequence.id}
         ListEmptyComponent={
-          !isLoading ? (
-            <EmptyState icon="git-network-outline" title={t('contacts.noActiveSequences')} />
-          ) : null
+          !isLoading ? <EmptyState icon="layers-2" title={t('contacts.noActiveSequences')} /> : null
         }
         renderItem={({ item }: { item: SequenceListItem }) => {
           const selected = selectedIds.includes(item.id);
@@ -93,7 +94,7 @@ export function SequencePickerSheet({
               disabled={!FEATURES.sendSequence}
               leading={
                 <Icon
-                  name={selected ? 'checkbox' : 'square-outline'}
+                  name={selected ? 'square-check' : 'square'}
                   size={22}
                   color={selected ? colors.brand : colors.textSecondary}
                 />
@@ -123,7 +124,7 @@ export function SequencePickerSheet({
           fullWidth
         />
       </View>
-    </Sheet>
+    </SheetModal>
   );
 }
 

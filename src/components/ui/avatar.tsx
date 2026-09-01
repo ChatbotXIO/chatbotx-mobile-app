@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { withAlpha } from '@/theme/color-utils';
@@ -39,6 +40,7 @@ function hashString(value: string): number {
 
 export function Avatar({ uri, name, size = 40, badge, ring = 'none' }: AvatarProps) {
   const { colors } = useTheme();
+  const [failedUri, setFailedUri] = useState<string | null>(null);
   const dimensionStyle = { width: size, height: size, borderRadius: size / 2 };
   const ringColor =
     ring === 'online' ? colors.success : ring === 'bot' ? colors.bubbleBotAccent : undefined;
@@ -47,12 +49,16 @@ export function Avatar({ uri, name, size = 40, badge, ring = 'none' }: AvatarPro
   const paletteIndex = hashString(name) % colors.avatarPalette.length;
   const fallbackColor = colors.avatarPalette[paletteIndex]!;
 
-  const core = uri ? (
+  const showImage = !!uri && uri !== failedUri;
+
+  const core = showImage ? (
     <Image
+      testID="avatar-image"
       source={{ uri }}
       style={[dimensionStyle, { backgroundColor: withAlpha(colors.textPrimary, 0.06) }]}
-      contentFit="cover"
+      contentFit="contain"
       transition={150}
+      onError={() => setFailedUri(uri)}
     />
   ) : (
     <View style={[styles.fallback, dimensionStyle, { backgroundColor: fallbackColor }]}>

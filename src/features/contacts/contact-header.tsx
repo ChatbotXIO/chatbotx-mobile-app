@@ -3,8 +3,9 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Avatar } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
+import { IconButton } from '@/components/ui/icon-button';
 import { Text } from '@/components/ui/text';
 import { ChannelBadge } from '@/features/conversations/components/channel-badge';
 import type { ContactDetail } from '@/features/contacts/api/use-contact-detail';
@@ -31,14 +32,15 @@ interface ContactHeaderProps {
    * when this is null/undefined. */
   conversationId?: string | null;
   onAssign?: () => void;
+  /** Opens `ContactActionsSheet` — omitted when the caller has no workspaceId (mirrors
+   * `onAssign`'s own gating). */
+  onOpenActions?: () => void;
 }
 
 /**
- * No block/unblock action here: `contactsAPIs.blockContactAuthenticatedAPI` doesn't exist in the
- * generated schema — only `blockContactWorkspaceTokenAPI`/`unblockContactWorkspaceTokenAPI` do,
- * which require workspace-token auth, not the bearer/session auth this app uses throughout. The
- * header shows the current blocked state (read from `blockedAt`, kept live via the realtime
- * contactBlocked/contactUnblocked appliers) but can't toggle it from mobile.
+ * Block/unblock/delete now surface through `ContactActionsSheet` (see `onOpenActions`) rather
+ * than being absent — they're flag-gated with a "Coming soon" badge there until the session-auth
+ * backend routes ship (see use-contact-block.ts / use-delete-contact.ts).
  */
 export function ContactHeader({
   contact,
@@ -46,6 +48,7 @@ export function ContactHeader({
   channels = [],
   conversationId = null,
   onAssign,
+  onOpenActions,
 }: ContactHeaderProps) {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
@@ -65,6 +68,17 @@ export function ContactHeader({
 
   return (
     <View style={[styles.container, { padding: spacing.lg, gap: spacing.sm }]}>
+      {onOpenActions ? (
+        <View style={styles.actionsAnchor}>
+          <IconButton
+            accessibilityLabel={t('contacts.actions')}
+            icon="ellipsis-vertical"
+            variant="ghost"
+            onPress={onOpenActions}
+          />
+        </View>
+      ) : null}
+
       <Avatar uri={contact.avatar} name={name} size={AVATAR_SIZE} />
       <Text variant="heading" style={styles.centered}>
         {name}
@@ -75,7 +89,14 @@ export function ContactHeader({
           {uniqueChannels.map((channel) => (
             <ChannelBadge key={channel} channel={channel} size={16} />
           ))}
-          {contact.blockedAt ? <Badge tone="danger">{t('contacts.blocked')}</Badge> : null}
+          {contact.blockedAt ? (
+            <View style={[styles.blockedRow, { gap: spacing.xxs }]}>
+              <Icon name="user-lock" size={14} color={colors.danger} />
+              <Text variant="caption" style={{ color: colors.danger, fontWeight: '600' }}>
+                {t('contacts.blocked')}
+              </Text>
+            </View>
+          ) : null}
         </View>
       ) : null}
 
@@ -93,8 +114,8 @@ export function ContactHeader({
       <View style={[styles.ctaRow, { gap: spacing.sm, marginTop: spacing.xs }]}>
         <Button
           label={t('contacts.message')}
-          variant="tonal"
-          icon="chatbubble-outline"
+          variant="primary"
+          icon="message-circle"
           disabled={!hasConversation}
           onPress={handleMessage}
         />
@@ -102,7 +123,7 @@ export function ContactHeader({
           <Button
             label={t('contacts.assign')}
             variant="tonal"
-            icon="person-add-outline"
+            icon="user-plus"
             onPress={onAssign}
           />
         ) : null}
@@ -117,6 +138,9 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
   },
+  actionsAnchor: {
+    alignSelf: 'flex-end',
+  },
   centered: {
     textAlign: 'center',
   },
@@ -125,6 +149,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexWrap: 'wrap',
     justifyContent: 'center',
+  },
+  blockedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   ctaRow: {
     flexDirection: 'row',

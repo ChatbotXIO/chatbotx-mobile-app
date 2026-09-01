@@ -20,9 +20,7 @@ export function WorkspaceRow({ workspace, onPress, selected = false }: Workspace
     <ListItem
       title={workspace.name}
       leading={<Avatar uri={workspace.logo} name={workspace.name} size={44} />}
-      trailing={
-        selected ? <Icon name="checkmark-circle" size={22} color={colors.brand} /> : undefined
-      }
+      trailing={selected ? <Icon name="circle-check" size={22} color={colors.brand} /> : undefined}
       onPress={() => onPress(workspace)}
       showChevron={!selected}
       accessibilityState={{ selected }}

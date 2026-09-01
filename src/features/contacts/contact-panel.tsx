@@ -1,4 +1,5 @@
 import type BottomSheet from '@gorhom/bottom-sheet';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +15,7 @@ import { normalizeApiError } from '@/api/errors';
 import { describeApiError } from '@/lib/describe-api-error';
 import { AssignmentSheet } from '@/features/conversations/components/assignment-sheet';
 import { useAssignConversations } from '@/features/conversations/api/use-conversation-actions';
+import { ContactActionsSheet } from '@/features/contacts/components/contact-actions-sheet';
 import { useContactDetail } from '@/features/contacts/api/use-contact-detail';
 import { ContactHeader, type ContactPanelOrigin } from '@/features/contacts/contact-header';
 import { findContactInListCache } from '@/features/contacts/lib/find-contact-in-cache';
@@ -60,7 +62,8 @@ export function ContactPanel({
   const { spacing } = useTheme();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>('info');
-  const assignmentSheetRef = useRef<BottomSheet>(null);
+  const assignmentSheetRef = useRef<BottomSheetModal>(null);
+  const actionsSheetRef = useRef<BottomSheet>(null);
   const {
     data: contact,
     isLoading,
@@ -122,7 +125,7 @@ export function ContactPanel({
   function handleAssign(userId: string | null) {
     if (!contact) return;
     assignMutation.mutate({ contactIds: [contact.id], assignedId: userId });
-    assignmentSheetRef.current?.close();
+    assignmentSheetRef.current?.dismiss();
   }
 
   return (
@@ -135,7 +138,8 @@ export function ContactPanel({
           origin={origin}
           channels={channels}
           conversationId={conversationId}
-          onAssign={workspaceId ? () => assignmentSheetRef.current?.expand() : undefined}
+          onAssign={workspaceId ? () => assignmentSheetRef.current?.present() : undefined}
+          onOpenActions={workspaceId ? () => actionsSheetRef.current?.expand() : undefined}
         />
         <View style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.sm }}>
           <SegmentedTabs<Tab>
@@ -157,11 +161,20 @@ export function ContactPanel({
         {tab === 'sequences' ? <SequencesTab contact={contact} workspaceId={workspaceId} /> : null}
       </ScrollView>
       {workspaceId ? (
-        <AssignmentSheet
-          sheetRef={assignmentSheetRef}
-          workspaceId={workspaceId}
-          onAssign={handleAssign}
-        />
+        <>
+          <AssignmentSheet
+            sheetRef={assignmentSheetRef}
+            workspaceId={workspaceId}
+            onAssign={handleAssign}
+          />
+          <ContactActionsSheet
+            ref={actionsSheetRef}
+            workspaceId={workspaceId}
+            contact={contact}
+            conversationId={conversationId}
+            onClose={() => actionsSheetRef.current?.close()}
+          />
+        </>
       ) : null}
     </Screen>
   );

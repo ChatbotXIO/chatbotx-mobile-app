@@ -58,7 +58,7 @@ export const WorkspaceSwitcherSheet = forwardRef<BottomSheet>(
         <BottomSheetFlatList
           data={isPending ? [] : (workspaces ?? [])}
           keyExtractor={(item) => item.id}
-          ListEmptyComponent={<EmptyState icon="business-outline" title={t('workspaces.empty')} />}
+          ListEmptyComponent={<EmptyState icon="building-2" title={t('workspaces.empty')} />}
           renderItem={({ item }) => (
             <WorkspaceRow
               workspace={item}

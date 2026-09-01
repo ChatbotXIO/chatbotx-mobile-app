@@ -44,11 +44,7 @@ export function ErrorBanner({ message, actionLabel, onAction, tone = 'danger' }:
         },
       ]}
     >
-      <Icon
-        name={tone === 'info' ? 'information-circle' : 'alert-circle'}
-        size={18}
-        color={toneTokens.tint}
-      />
+      <Icon name={tone === 'info' ? 'info' : 'circle-alert'} size={18} color={toneTokens.tint} />
       <Text variant="caption" style={styles.message}>
         {message}
       </Text>

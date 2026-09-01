@@ -104,7 +104,10 @@
     "assign": "Assign",
     "unarchive": "Unarchive",
     "archiveConfirm": "Archive this conversation? You can find it again later in archived conversations.",
-    "unarchiveConfirm": "Restore this conversation from the archive?"
+    "unarchiveConfirm": "Restore this conversation from the archive?",
+    "disableBotHint": "Pauses bot for 24h",
+    "botResumesAt": "Bot resumes at {{time}}",
+    "openActions": "Open conversation actions"
   },
   "chat": {
     "typeAMessage": "Digite uma mensagem",
@@ -193,7 +196,22 @@
     "sequenceSubscribers_other": "{{count}} subscribers",
     "enrollSelected": "Add ({{count}})",
     "sequenceEnrolled": "Contact enrolled in sequence",
-    "sequenceEnrollFailed": "Couldn't enroll contact in sequence"
+    "sequenceEnrollFailed": "Couldn't enroll contact in sequence",
+    "block": "Block contact",
+    "unblock": "Unblock contact",
+    "blockConfirm": "Block this contact? They won't be able to message this workspace.",
+    "unblockConfirm": "Unblock this contact?",
+    "blockedSuccess": "Contact blocked",
+    "unblockedSuccess": "Contact unblocked",
+    "deleteContact": "Delete contact",
+    "deleteConfirm": "Delete this contact? This cannot be undone.",
+    "deleted": "Contact deleted",
+    "setTags": "Set tags",
+    "setCustomField": "Set custom field",
+    "actions": "Contact actions",
+    "inSequence": "In an active sequence",
+    "tagsCount": "{{count}} tag",
+    "tagsCount_other": "{{count}} tags"
   },
   "flows": {
     "title": "Fluxos",

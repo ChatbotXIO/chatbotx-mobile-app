@@ -18,6 +18,18 @@ export function isBotActive(
   return new Date(botResumeAt).getTime() < now;
 }
 
+/** Tri-state bot indicator for row/header display: 'paused' (a `botResumeAt` still in the future —
+ * `isBotActive` already reports this as inactive, but it's a distinct UI state from a plain
+ * 'off') takes priority over the plain `isBotActive` on/off split. */
+export function botState(
+  botEnabled: boolean,
+  botResumeAt: string | null,
+  now: number = Date.now(),
+): 'on' | 'paused' | 'off' {
+  if (botResumeAt && new Date(botResumeAt).getTime() >= now) return 'paused';
+  return isBotActive(botEnabled, botResumeAt, now) ? 'on' : 'off';
+}
+
 /** Unread = the contact's last incoming activity is newer than the agent's last read timestamp.
  * There's no direct `unreadCount` field on the schema — this derives a boolean from the two
  * timestamps the response does carry (`lastActivityAt`, `agentLastReadAt`). Extracted verbatim

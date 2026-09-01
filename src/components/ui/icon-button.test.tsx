@@ -11,7 +11,7 @@ beforeAll(() => {
 describe('IconButton', () => {
   it('exposes the required accessibilityLabel and button role', async () => {
     await render(
-      <IconButton accessibilityLabel="Close conversation" icon="close" onPress={() => {}} />,
+      <IconButton accessibilityLabel="Close conversation" icon="x" onPress={() => {}} />,
     );
 
     const button = screen.getByRole('button', { name: 'Close conversation' });
@@ -20,9 +20,7 @@ describe('IconButton', () => {
 
   it('calls onPress when pressed', async () => {
     const onPress = jest.fn();
-    await render(
-      <IconButton accessibilityLabel="Archive" icon="archive-outline" onPress={onPress} />,
-    );
+    await render(<IconButton accessibilityLabel="Archive" icon="archive" onPress={onPress} />);
 
     fireEvent.press(screen.getByRole('button', { name: 'Archive' }));
 
@@ -30,7 +28,9 @@ describe('IconButton', () => {
   });
 
   it('marks itself disabled via accessibilityState when loading', async () => {
-    await render(<IconButton accessibilityLabel="Send" icon="send" loading onPress={() => {}} />);
+    await render(
+      <IconButton accessibilityLabel="Send" icon="send-horizontal" loading onPress={() => {}} />,
+    );
 
     const button = screen.getByRole('button', { name: 'Send' });
     expect(button.props.accessibilityState).toMatchObject({ disabled: true, busy: true });
@@ -39,7 +39,7 @@ describe('IconButton', () => {
   it('does not call onPress when disabled', async () => {
     const onPress = jest.fn();
     await render(
-      <IconButton accessibilityLabel="Delete" icon="trash-outline" disabled onPress={onPress} />,
+      <IconButton accessibilityLabel="Delete" icon="user-round-x" disabled onPress={onPress} />,
     );
 
     fireEvent.press(screen.getByRole('button', { name: 'Delete' }));

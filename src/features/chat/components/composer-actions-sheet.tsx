@@ -1,9 +1,9 @@
-import type BottomSheet from '@gorhom/bottom-sheet';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ListItem } from '@/components/ui/list-item';
-import { Sheet, SheetHeader } from '@/components/ui/sheet';
+import { SheetHeader, SheetModal } from '@/components/ui/sheet';
 import { Icon } from '@/components/ui/icon';
 import { useTheme } from '@/theme/use-theme';
 
@@ -21,7 +21,7 @@ interface ComposerActionsSheetProps {
 
 /** "[+]" composer action sheet: camera, photo library (multi-select), document, send flow, send
  * sequence (feature-gated — see composer.tsx), saved replies. */
-export const ComposerActionsSheet = forwardRef<BottomSheet, ComposerActionsSheetProps>(
+export const ComposerActionsSheet = forwardRef<BottomSheetModal, ComposerActionsSheetProps>(
   function ComposerActionsSheet(
     { onClose, onCamera, onPhotoLibrary, onDocument, onSendFlow, onSavedReplies, onSendSequence },
     ref,
@@ -30,7 +30,7 @@ export const ComposerActionsSheet = forwardRef<BottomSheet, ComposerActionsSheet
     const { colors } = useTheme();
 
     return (
-      <Sheet ref={ref} snapPoints={['50%']} onDismiss={onClose}>
+      <SheetModal ref={ref} snapPoints={['50%']} onDismiss={onClose}>
         <SheetHeader title={t('chat.attach')} onClose={onClose} />
         <ListItem
           title={t('chat.camera')}
@@ -44,27 +44,27 @@ export const ComposerActionsSheet = forwardRef<BottomSheet, ComposerActionsSheet
         />
         <ListItem
           title={t('chat.document')}
-          leading={<Icon name="document-attach" size={22} color={colors.textSecondary} />}
+          leading={<Icon name="paperclip" size={22} color={colors.textSecondary} />}
           onPress={onDocument}
         />
         <ListItem
           title={t('chat.sendFlow')}
-          leading={<Icon name="git-branch" size={22} color={colors.textSecondary} />}
+          leading={<Icon name="workflow" size={22} color={colors.textSecondary} />}
           onPress={onSendFlow}
         />
         {onSendSequence ? (
           <ListItem
             title={t('chat.sendSequence')}
-            leading={<Icon name="layers" size={22} color={colors.textSecondary} />}
+            leading={<Icon name="layers-2" size={22} color={colors.textSecondary} />}
             onPress={onSendSequence}
           />
         ) : null}
         <ListItem
           title={t('chat.savedReplies')}
-          leading={<Icon name="flash" size={22} color={colors.textSecondary} />}
+          leading={<Icon name="message-square-more" size={22} color={colors.textSecondary} />}
           onPress={onSavedReplies}
         />
-      </Sheet>
+      </SheetModal>
     );
   },
 );

@@ -195,11 +195,11 @@ function MessageBubbleImpl({
         {isGroupEnd ? (
           <View style={[styles.metaRow, { gap: spacing.xxs }]}>
             {optimistic?.status === 'failed' ? (
-              <Icon name="alert-circle" size={12} color={colors.danger} />
+              <Icon name="circle-alert" size={12} color={colors.danger} />
             ) : optimistic?.status === 'pending' ? (
-              <Icon name="time-outline" size={12} color={textColor} />
+              <Icon name="clock" size={12} color={textColor} />
             ) : outbound ? (
-              <Icon name="checkmark" size={12} color={textColor} />
+              <Icon name="check" size={12} color={textColor} />
             ) : null}
             <Text variant="micro" numeric style={{ color: textColor, opacity: 0.75 }}>
               {timeLabel}

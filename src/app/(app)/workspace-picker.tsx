@@ -66,7 +66,7 @@ export default function WorkspacePickerScreen() {
           }
         />
       ) : (
-        <EmptyState icon="business-outline" title={t('workspaces.empty')} />
+        <EmptyState icon="building-2" title={t('workspaces.empty')} />
       )}
     </Screen>
   );

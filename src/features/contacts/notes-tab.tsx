@@ -30,7 +30,7 @@ export function NotesTab({ contact, workspaceId }: NotesTabProps) {
   }
 
   if (contact.contactNotes.length === 0) {
-    return <EmptyState icon="document-text-outline" title={t('contacts.noNotes')} />;
+    return <EmptyState icon="file-text" title={t('contacts.noNotes')} />;
   }
 
   const sortedNotes = [...contact.contactNotes].sort(

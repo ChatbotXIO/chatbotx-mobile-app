@@ -66,7 +66,10 @@ export function useConversationsInfinite(workspaceId: string | null) {
           botCategory: effectiveFilters.botCategory,
           assignedId: effectiveFilters.assignedId,
           channel: effectiveFilters.channel,
-          status: effectiveFilters.status,
+          // The request schema accepts both `status` and `tags` (same enum), but the backend's
+          // where-builder only honors `tags` — sending `status` silently returns the unfiltered
+          // list (the archived view in particular never worked through `status`).
+          tags: effectiveFilters.status,
           keyword: effectiveFilters.keyword || undefined,
           botEnabled: effectiveFilters.botEnabled,
           cursor: pageParam,

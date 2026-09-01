@@ -150,10 +150,10 @@ export function ToastProvider({ children }: PropsWithChildren) {
               <Icon
                 name={
                   current.tone === 'success'
-                    ? 'checkmark-circle'
+                    ? 'circle-check'
                     : current.tone === 'danger'
-                      ? 'alert-circle'
-                      : 'information-circle'
+                      ? 'circle-alert'
+                      : 'info'
                 }
                 size={18}
                 color={toneColor[current.tone]}

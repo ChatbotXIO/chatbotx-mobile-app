@@ -43,7 +43,7 @@ export function SearchBar({ value, onChangeText, placeholder }: SearchBarProps) 
       {value.length > 0 ? (
         <IconButton
           accessibilityLabel={t('common.clear')}
-          icon="close-circle"
+          icon="circle-x"
           size="sm"
           variant="ghost"
           tint={colors.textSecondary}

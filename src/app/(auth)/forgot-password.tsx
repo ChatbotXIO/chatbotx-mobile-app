@@ -38,7 +38,7 @@ export default function ForgotPasswordScreen() {
     return (
       <Screen padded>
         <EmptyState
-          icon="checkmark-circle"
+          icon="circle-check"
           title={t('auth.forgotPassword')}
           description={t('auth.resetLinkSent')}
           action={{ label: t('auth.backToSignIn'), onPress: () => router.back() }}
