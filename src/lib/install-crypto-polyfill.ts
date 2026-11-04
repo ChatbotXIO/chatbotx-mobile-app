@@ -5,19 +5,12 @@ import * as ExpoCrypto from 'expo-crypto';
  *
  * Why this exists: neither Expo SDK 57's winter runtime (`expo/src/winter`, which installs
  * `fetch`/`FormData`/`TextDecoder`/`URL`/`AbortSignal`/`structuredClone`) nor React Native 0.86
- * core defines a global `crypto`. `partysocket` (used by src/realtime/realtime-provider.tsx)
- * reads it unconditionally in its `generateUUID()` helper:
- *
- *   if (crypto?.randomUUID) { return crypto.randomUUID(); }
- *
- * Optional chaining only guards a `null`/`undefined` *value* — it does not guard an undeclared
- * *binding*. On Hermes, the bare `crypto` identifier lookup throws
- * `ReferenceError: Property 'crypto' doesn't exist` before `?.` can short-circuit, so partysocket's
- * own `Math.random()` fallback is never reached. This module makes the global exist so that read
- * succeeds, and fixes the same gap for anything else that expects a standard `crypto`.
+ * core defines a global `crypto`. `src/api/auth-device.ts` uses `crypto.randomUUID()` to create a
+ * persistent mobile device identifier, so this module makes that standard global available on
+ * Hermes.
  *
  * Imported for its side effect only — see the first import in src/app/_layout.tsx.
- *
+
  * This only shapes `randomUUID` and `getRandomValues` — `crypto.subtle` is deliberately not
  * implemented. Anything needing real hashing/HMAC (e.g. SHA-256) should call `expo-crypto`'s
  * `digest`/`digestStringAsync` directly rather than expecting it on this global. See AGENTS.md.
@@ -29,9 +22,7 @@ function installCryptoPolyfill(): void {
 
   // expo-crypto's `getRandomValues` is generic over int/uint TypedArrays specifically, narrower
   // than DOM's `Crypto.getRandomValues<T extends ArrayBufferView | null>`. Cast once at this
-  // boundary rather than assigned directly, so callers still get the standard DOM signature; the
-  // cast is safe because every concrete TypedArray callers pass (partysocket, any future caller)
-  // satisfies expo-crypto's constraint at runtime.
+  // boundary rather than assigning directly so callers retain the standard DOM signature.
   const getRandomValues = ExpoCrypto.getRandomValues as unknown as Crypto['getRandomValues'];
 
   const cryptoPolyfill: Pick<Crypto, 'randomUUID' | 'getRandomValues'> = {

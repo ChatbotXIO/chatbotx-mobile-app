@@ -216,16 +216,6 @@ export function useRealtimeHandlers(queryClient: QueryClient, workspaceId: strin
           break;
         }
 
-        case RealtimeEventType.conversationCreated: {
-          // Untyped payload — invalidate rather than splice (see apply-conversation-events.ts).
-          queryClient.invalidateQueries({ queryKey: ['ws', workspaceId, 'conversations', 'list'] });
-          break;
-        }
-
-        case RealtimeEventType.notifyExportResult:
-          // No UI surface for export jobs on mobile yet — intentionally ignored.
-          break;
-
         default:
           break;
       }

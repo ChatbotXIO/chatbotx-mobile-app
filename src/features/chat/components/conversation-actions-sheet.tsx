@@ -113,8 +113,7 @@ export const ConversationActionsSheet = forwardRef<BottomSheetModal, Conversatio
     }
 
     function handleUnassign() {
-      if (!conversation?.contactId) return;
-      assignConversations.mutate({ contactIds: [conversation.contactId], assignedId: null });
+      assignConversations.mutate({ conversationIds: [conversationId], assignedId: null });
       onClose();
     }
 
@@ -297,12 +296,7 @@ export const ConversationActionsSheet = forwardRef<BottomSheetModal, Conversatio
             sheetRef={assignmentSheetRef}
             workspaceId={workspaceId}
             onAssign={(userId) => {
-              if (conversation?.contactId) {
-                assignConversations.mutate({
-                  contactIds: [conversation.contactId],
-                  assignedId: userId,
-                });
-              }
+              assignConversations.mutate({ conversationIds: [conversationId], assignedId: userId });
             }}
           />
         ) : null}

@@ -28,8 +28,14 @@ export function describeApiError(error: unknown, t: TFunction): string {
       if (normalized.reason === 'mac') return t('errors.workspaceBlockedMac');
       if (normalized.reason === 'trialExpired') return t('errors.workspaceBlockedTrialExpired');
       return normalized.message || t('errors.workspaceBlocked');
+    case 'tooManyRequests':
+    case 'invalidRequestData':
+    case 'imagesNotSupportedOnChannel':
     case 'unknown':
       return normalized.message || t('errors.unknown');
+    case 'invalidCursor':
+    case 'workspaceSelectionRequired':
+      return t('errors.unknown');
     default:
       return exhaustiveFallback(normalized, t);
   }

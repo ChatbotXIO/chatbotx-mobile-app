@@ -19,8 +19,8 @@ For EAS builds, upload it as a
 [file-type secret](https://docs.expo.dev/eas/environment-variables/#file-environment-variables)
 via `eas env:create` (or the EAS dashboard) referencing the path `./google-services.json`, rather
 than committing it — see [deploy.md](deploy.md#eas-environment-variables-per-brand-per-environment).
-It's scoped per brand's EAS project, same as `API_BASE_URL`/`WS_URL`; a white-label customer needs
-their own Firebase project registered with their own (brand-specific) package name — see
+It's scoped per brand's EAS project, alongside `API_BASE_URL`; a white-label customer needs their
+own Firebase project registered with their own (brand-specific) package name — see
 [white-label.md](white-label.md).
 
 iOS push doesn't need an equivalent file here: Expo push notifications route through APNs using

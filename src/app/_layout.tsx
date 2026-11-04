@@ -1,5 +1,4 @@
 import '@/lib/install-crypto-polyfill';
-import '@/lib/install-message-event-polyfill';
 
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -18,8 +17,8 @@ import { I18nManager } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTranslation } from 'react-i18next';
 
-import { getSession } from '@/api/auth-endpoints';
-import { clearAuthToken, getAuthToken } from '@/api/auth-token';
+import { getCurrentUser } from '@/api/auth-endpoints';
+import { clearAuthToken, getAuthTokens } from '@/api/auth-token';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ToastProvider } from '@/components/ui/toast';
 import { initI18n } from '@/i18n';
@@ -85,12 +84,12 @@ function useLanguageBootstrap(): boolean {
 }
 
 /**
- * Bootstrap gate: resolves the auth store's 'pending' status to 'signed-in'/'signed-out' by
- * checking for a stored token and validating it against `getSession`, then hides the splash
- * screen. Also waits for the persisted workspace-store snapshot to hydrate, so a cold start never
- * reads `currentWorkspaceId === null` before the real (persisted) value has loaded and bounces an
- * already-workspace-selected user to the picker. Runs once at root-layout mount — every route's
- * own guard reads `status` off the store rather than re-checking the session itself.
+ * Bootstrap gate: resolves the auth store's `pending` status to `signed-in` or
+ * `signed-out` by checking stored mobile credentials and validating them with
+ * `GET /v1/me`, then hides the splash screen. It also waits for the persisted
+ * workspace-store snapshot so a cold start never reads `currentWorkspaceId ===
+ * null` before the real value has loaded and bounces an already-selected
+ * workspace to the picker.
  */
 function useAuthBootstrap(): boolean {
   const [ready, setReady] = useState(false);
@@ -103,14 +102,14 @@ function useAuthBootstrap(): boolean {
     async function bootstrap() {
       await waitForWorkspaceHydration();
 
-      const token = await getAuthToken();
-      if (!token) {
+      const tokens = await getAuthTokens();
+      if (!tokens) {
         if (!cancelled) setSignedOut();
         return;
       }
 
       try {
-        const user = await getSession(token);
+        const user = await getCurrentUser();
         if (cancelled) return;
 
         if (user) {

@@ -11,20 +11,28 @@ import {
   type ConversationListSnapshot,
 } from '@/features/conversations/lib/patch-conversation-list-cache';
 
+/** Thrown when a multi-conversation action fails for some or all ids. `failedIds` lets callers
+ * roll back and report only what actually failed. */
+export class BatchActionError extends Error {
+  constructor(
+    readonly failedIds: string[],
+    readonly total: number,
+    readonly cause?: unknown,
+  ) {
+    super(`${failedIds.length} of ${total} conversation actions failed`);
+    this.name = 'BatchActionError';
+  }
+}
+
 /**
- * Conversation action mutations, exactly matching the request shapes read from
- * `conversationsAPI.{assignConversations,archiveConversations,unarchiveConversations,enableBot,
- * disableBot,readConversation,unreadConversation,followConversation,unfollowConversation}
- * AuthenticatedAPI` in src/api/generated/schema.ts:
+ * Conversation action mutations against the `/v1/conversations/{id}/{action}` operations:
  *
- * - assign: POST /conversations/assign body `{ contactIds: string[], assignedId: string | null }`
- *   — keyed by CONTACT id, not conversation id (per the real schema).
- * - archive/unarchive/enableBot/disableBot: POST .../{action} body `{ ids: string[] }` — batch,
- *   conversation ids.
- * - read/unread/follow/unfollow: POST .../{id}/{action}, path param, no body, single conversation.
+ * - assign: PUT-style POST body `{ assignedId: 'u_<userId>' | 't_<teamId>' | null }`, per conversation.
+ * - archive/unarchive/enableBot/disableBot/read/unread/follow/unfollow: no body, per conversation.
  *
- * All apply an optimistic patch across every cached infinite-query page for the conversations
- * list (any filter combination), rolling back on error via the snapshot each mutation captures.
+ * The API has no batch variants, so multi-id actions run one request per id and report partial
+ * failure via `BatchActionError`. All apply an optimistic patch across every cached infinite-query
+ * page for the conversations list (any filter combination), rolling back the failed ids on error.
  */
 
 /** Patches `patch` onto the cached conversation-list row matching `conversationId`, across every
@@ -124,8 +132,8 @@ export function useMarkConversationRead(workspaceId: string) {
 
   return useMutation({
     mutationFn: async (conversationId: string) => {
-      const { error } = await apiClient.POST('/workspaces/{workspaceId}/conversations/{id}/read', {
-        params: { path: { workspaceId, id: conversationId } },
+      const { error } = await apiClient.POST('/v1/conversations/{id}/read', {
+        params: { path: { id: conversationId } },
       });
       if (error) throw new ApiError(error);
     },
@@ -144,12 +152,9 @@ export function useMarkConversationUnread(workspaceId: string) {
 
   return useMutation({
     mutationFn: async (conversationId: string) => {
-      const { error } = await apiClient.POST(
-        '/workspaces/{workspaceId}/conversations/{id}/unread',
-        {
-          params: { path: { workspaceId, id: conversationId } },
-        },
-      );
+      const { error } = await apiClient.POST('/v1/conversations/{id}/unread', {
+        params: { path: { id: conversationId } },
+      });
       if (error) throw new ApiError(error);
     },
     onMutate: async (conversationId) => {
@@ -167,12 +172,9 @@ export function useFollowConversation(workspaceId: string) {
 
   return useMutation({
     mutationFn: async (conversationId: string) => {
-      const { error } = await apiClient.POST(
-        '/workspaces/{workspaceId}/conversations/{id}/follow',
-        {
-          params: { path: { workspaceId, id: conversationId } },
-        },
-      );
+      const { error } = await apiClient.POST('/v1/conversations/{id}/follow', {
+        params: { path: { id: conversationId } },
+      });
       if (error) throw new ApiError(error);
     },
     onMutate: async (conversationId) => {
@@ -188,12 +190,9 @@ export function useUnfollowConversation(workspaceId: string) {
 
   return useMutation({
     mutationFn: async (conversationId: string) => {
-      const { error } = await apiClient.POST(
-        '/workspaces/{workspaceId}/conversations/{id}/unfollow',
-        {
-          params: { path: { workspaceId, id: conversationId } },
-        },
-      );
+      const { error } = await apiClient.POST('/v1/conversations/{id}/unfollow', {
+        params: { path: { id: conversationId } },
+      });
       if (error) throw new ApiError(error);
     },
     onMutate: async (conversationId) => {
@@ -215,11 +214,7 @@ export function useUnfollowConversation(workspaceId: string) {
  * arrives). */
 function useBatchConversationAction(
   workspaceId: string,
-  path:
-    | '/workspaces/{workspaceId}/conversations/archive'
-    | '/workspaces/{workspaceId}/conversations/unarchive'
-    | '/workspaces/{workspaceId}/conversations/enable-bot'
-    | '/workspaces/{workspaceId}/conversations/disable-bot',
+  action: 'archive' | 'unarchive' | 'enable-bot' | 'disable-bot',
   buildPatch: () => Partial<ConversationListItem>,
   onSuccessIds?: (queryClient: ReturnType<typeof useQueryClient>, ids: string[]) => void,
 ) {
@@ -227,19 +222,39 @@ function useBatchConversationAction(
 
   return useMutation({
     mutationFn: async (ids: string[]) => {
-      const { error } = await apiClient.POST(path, {
-        params: { path: { workspaceId } },
-        body: { ids },
-      });
-      if (error) throw new ApiError(error);
+      const results = await Promise.allSettled(
+        ids.map(async (id) => {
+          const { error } = await apiClient.POST(`/v1/conversations/{id}/${action}`, {
+            params: { path: { id } },
+          });
+          if (error) throw new ApiError(error);
+        }),
+      );
+      const failedIds = ids.filter((_, index) => results[index]?.status === 'rejected');
+      if (failedIds.length > 0) {
+        const firstRejection = results.find(
+          (result): result is PromiseRejectedResult => result.status === 'rejected',
+        );
+        throw new BatchActionError(failedIds, ids.length, firstRejection?.reason);
+      }
     },
     onMutate: async (ids: string[]) => {
       await cancelConversationQueries(queryClient, workspaceId);
       const patch = buildPatch();
-      return ids.map((id) => patchSingleConversation(queryClient, workspaceId, id, patch));
+      return ids.map((id) => ({
+        id,
+        snapshot: patchSingleConversation(queryClient, workspaceId, id, patch),
+      }));
     },
-    onError: (_err, _vars, snapshots) => {
-      snapshots?.forEach((snapshot) => rollbackSingle(queryClient, snapshot));
+    onError: (err, ids, snapshots) => {
+      // Only ids that actually failed are rolled back; the ones that succeeded keep their patch.
+      const failed = err instanceof BatchActionError ? new Set(err.failedIds) : new Set(ids);
+      snapshots?.forEach(({ id, snapshot }) => {
+        if (failed.has(id)) rollbackSingle(queryClient, snapshot);
+      });
+      if (err instanceof BatchActionError && err.failedIds.length < ids.length) {
+        invalidateConversationLists(queryClient, workspaceId);
+      }
     },
     onSuccess: (_data, ids) => onSuccessIds?.(queryClient, ids),
   });
@@ -252,7 +267,7 @@ function useBatchConversationAction(
 export function useArchiveConversations(workspaceId: string) {
   return useBatchConversationAction(
     workspaceId,
-    '/workspaces/{workspaceId}/conversations/archive',
+    'archive',
     () => ({ archivedAt: new Date().toISOString() }),
     (queryClient) => invalidateConversationLists(queryClient, workspaceId),
   );
@@ -261,18 +276,14 @@ export function useArchiveConversations(workspaceId: string) {
 export function useUnarchiveConversations(workspaceId: string) {
   return useBatchConversationAction(
     workspaceId,
-    '/workspaces/{workspaceId}/conversations/unarchive',
+    'unarchive',
     () => ({ archivedAt: null }),
     (queryClient) => invalidateConversationLists(queryClient, workspaceId),
   );
 }
 
 export function useEnableBot(workspaceId: string) {
-  return useBatchConversationAction(
-    workspaceId,
-    '/workspaces/{workspaceId}/conversations/enable-bot',
-    () => ({ botEnabled: true }),
-  );
+  return useBatchConversationAction(workspaceId, 'enable-bot', () => ({ botEnabled: true }));
 }
 
 /** Disabling the bot triggers a 24h server-side pause (`botResumeAt`) — the optimistic patch above
@@ -285,7 +296,7 @@ export function useEnableBot(workspaceId: string) {
 export function useDisableBot(workspaceId: string) {
   return useBatchConversationAction(
     workspaceId,
-    '/workspaces/{workspaceId}/conversations/disable-bot',
+    'disable-bot',
     () => ({ botEnabled: false }),
     (queryClient, ids) => {
       ids.forEach((id) => {
@@ -297,46 +308,54 @@ export function useDisableBot(workspaceId: string) {
   );
 }
 
-/** Patches `assignedUserId` on every cached conversation row whose `contactId` is in the given
- * set — assign is keyed by contact, not conversation, so a contact can back multiple
- * conversations (e.g. across channels) that all need the same optimistic update. */
-function patchAssignedUserByContact(
+/** Patches `assignedUserId` on every cached conversation row in the given set of conversation ids. */
+function patchAssignedUserByConversation(
   queryClient: ReturnType<typeof useQueryClient>,
   workspaceId: string,
-  contactIds: string[],
+  conversationIds: string[],
   assignedId: string | null,
 ): ConversationListSnapshot {
-  const contactIdSet = new Set(contactIds);
+  const idSet = new Set(conversationIds);
 
   return patchConversationListCache(queryClient, workspaceId, (data) =>
-    data.map((item) =>
-      contactIdSet.has(item.contactId) ? { ...item, assignedUserId: assignedId } : item,
-    ),
+    data.map((item) => (idSet.has(item.id) ? { ...item, assignedUserId: assignedId } : item)),
   );
 }
 
-/** Assign is keyed by CONTACT id (not conversation id) per the real schema — pass the
- * conversation's `contactId` field, and `assignedId: null` to unassign. */
+/** Assign is keyed by CONVERSATION id. `assignedId` is a plain user id (or `null` to unassign); the
+ * API's `u_<userId>` wire format is applied here so callers and the optimistic patch keep working
+ * with raw user ids. */
 export function useAssignConversations(workspaceId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      contactIds,
+      conversationIds,
       assignedId,
     }: {
-      contactIds: string[];
+      conversationIds: string[];
       assignedId: string | null;
     }) => {
-      const { error } = await apiClient.POST('/workspaces/{workspaceId}/conversations/assign', {
-        params: { path: { workspaceId } },
-        body: { contactIds, assignedId },
-      });
-      if (error) throw new ApiError(error);
+      const results = await Promise.allSettled(
+        conversationIds.map(async (id) => {
+          const { error } = await apiClient.POST('/v1/conversations/{id}/assign', {
+            params: { path: { id } },
+            body: { assignedId: assignedId === null ? null : `u_${assignedId}` },
+          });
+          if (error) throw new ApiError(error);
+        }),
+      );
+      const failedIds = conversationIds.filter((_, index) => results[index]?.status === 'rejected');
+      if (failedIds.length > 0) {
+        const firstRejection = results.find(
+          (result): result is PromiseRejectedResult => result.status === 'rejected',
+        );
+        throw new BatchActionError(failedIds, conversationIds.length, firstRejection?.reason);
+      }
     },
-    onMutate: async ({ contactIds, assignedId }) => {
+    onMutate: async ({ conversationIds, assignedId }) => {
       await cancelConversationQueries(queryClient, workspaceId);
-      return patchAssignedUserByContact(queryClient, workspaceId, contactIds, assignedId);
+      return patchAssignedUserByConversation(queryClient, workspaceId, conversationIds, assignedId);
     },
     onError: (_err, _vars, snapshot) => snapshot && rollback(queryClient, snapshot),
   });

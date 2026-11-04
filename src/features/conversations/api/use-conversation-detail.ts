@@ -14,7 +14,7 @@ interface UseConversationDetailOptions {
   placeholderData?: () => ConversationListItem | undefined;
 }
 
-/** `conversationsAPI.findConversationAuthenticatedAPI` — `GET /workspaces/{workspaceId}/conversations/{id}`.
+/** `conversations.get` — `GET /v1/conversations/{id}`.
  * Used by the conversation-nested contact route to resolve `contactId` before rendering the shared
  * ContactPanel (that route is keyed by conversationId, not contactId), and by the chat header to
  * render conversation identity (name/channel/assignee/bot state) with an optional list-cache
@@ -24,16 +24,16 @@ export function useConversationDetail(
   conversationId: string | null,
   options: UseConversationDetailOptions = {},
 ) {
-  return useQuery({
+  return useQuery<ConversationListItem>({
     queryKey: queryKeys.ws.conversations.detail(workspaceId ?? '', conversationId ?? ''),
     enabled: workspaceId !== null && conversationId !== null,
     placeholderData: options.placeholderData,
     queryFn: async () => {
-      const { data, error } = await apiClient.GET('/workspaces/{workspaceId}/conversations/{id}', {
-        params: { path: { workspaceId: workspaceId!, id: conversationId! } },
+      const { data, error } = await apiClient.GET('/v1/conversations/{id}', {
+        params: { path: { id: conversationId! } },
       });
       if (error) throw new ApiError(error);
-      return data.data;
+      return data.data as ConversationListItem;
     },
   });
 }

@@ -35,7 +35,7 @@ export const FlowPickerSheet = forwardRef<BottomSheetModal, FlowPickerSheetProps
         <BottomSheetFlatList
           data={flows}
           keyExtractor={(flow) => flow.id}
-          ListEmptyComponent={!isLoading ? <EmptyState title={t('flows.empty')} /> : null}
+          ListEmptyComponent={!isLoading ? <EmptyState title={t('flows.empty')} /> : undefined}
           renderItem={({ item }) => (
             <ListItem title={item.name} showChevron onPress={() => onSelect(item)} />
           )}

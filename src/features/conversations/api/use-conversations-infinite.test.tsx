@@ -9,7 +9,7 @@ import { usePermissions } from '@/features/permissions/use-permissions';
 
 jest.mock('@/api/client', () => ({
   apiClient: {
-    POST: jest.fn(),
+    GET: jest.fn(),
   },
 }));
 
@@ -17,11 +17,11 @@ jest.mock('@/features/permissions/use-permissions', () => ({
   usePermissions: jest.fn(),
 }));
 
-const mockedPost = apiClient.POST as jest.Mock;
+const mockedGet = apiClient.GET as jest.Mock;
 const mockedUsePermissions = usePermissions as jest.Mock;
 
 afterEach(() => {
-  mockedPost.mockReset();
+  mockedGet.mockReset();
   mockedUsePermissions.mockReset();
   useConversationFilters.getState().reset();
 });
@@ -35,25 +35,28 @@ function wrapper(queryClient: QueryClient) {
 describe('useConversationsInfinite', () => {
   it('sends the active status filter under `tags`, not `status`, in the list request body', async () => {
     mockedUsePermissions.mockReturnValue({ onlyAssignedContacts: false, isLoading: false });
-    mockedPost.mockResolvedValue({ data: { data: [], nextCursor: null }, error: undefined });
+    mockedGet.mockResolvedValue({ data: { data: [], nextCursor: null }, error: undefined });
     useConversationFilters.getState().setStatus(['archived']);
 
     const queryClient = new QueryClient();
-    const { result } = await renderHook(() => useConversationsInfinite('ws-1'), {
+    const { result, unmount } = await renderHook(() => useConversationsInfinite('ws-1'), {
       wrapper: wrapper(queryClient),
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockedPost).toHaveBeenCalledWith(
-      '/workspaces/{workspaceId}/conversations/list',
+    expect(mockedGet).toHaveBeenCalledWith(
+      '/v1/conversations',
       expect.objectContaining({
-        body: expect.objectContaining({ tags: ['archived'] }),
+        params: {
+          query: expect.objectContaining({ tags: ['archived'], view: 'full' }),
+        },
       }),
     );
-    const [, options] = mockedPost.mock.calls[0];
-    expect(options.body).not.toHaveProperty('status');
+    const [, options] = mockedGet.mock.calls[0];
+    expect(options.params.query).not.toHaveProperty('status');
 
+    await unmount();
     queryClient.clear();
     queryClient.unmount();
   });

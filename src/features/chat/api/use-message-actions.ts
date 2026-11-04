@@ -7,12 +7,11 @@ import type { ListMessagesResponse, Message } from './use-messages-infinite';
 
 /**
  * Message edit/delete/like/hide, matching the exact request shapes read from
- * `messagesAPI.{editMessage,deleteMessage,changeMessageAttributes}AuthenticatedAPI` in
- * src/api/generated/schema.ts:
- * - edit: PATCH .../messages/{messageId} body `{ createdAt, newText, newAttachmentPath?,
+ * `messages.{update,delete,changeAttributes}` in src/api/generated/schema.ts:
+ * - edit: PUT /v1/conversations/{conversationId}/messages/{messageId} body `{ createdAt, newText, newAttachmentPath?,
  *   newAttachmentPublicUrl?, newAttachmentMimeType?, newAttachmentName?, newAttachmentSize?,
  *   removeAttachment? }` — text-only edit here, attachment-replace is out of scope for this phase.
- * - delete: DELETE .../messages/{id} body `{ createdAt }`.
+ * - delete: DELETE .../messages/{messageId} body `{ createdAt }`.
  * - like/hide: POST .../messages/{messageId}/attributes body `{ createdAt, liked?, hidden? }` —
  *   this endpoint IS the like/hide mechanism (no separate dedicated endpoints exist).
  *
@@ -62,10 +61,10 @@ export function useEditMessage(workspaceId: string, conversationId: string) {
 
   return useMutation({
     mutationFn: async (params: { messageId: string; createdAt: string; newText: string }) => {
-      const { error } = await apiClient.PATCH(
-        '/workspaces/{workspaceId}/conversations/{conversationId}/messages/{messageId}',
+      const { error } = await apiClient.PUT(
+        '/v1/conversations/{conversationId}/messages/{messageId}',
         {
-          params: { path: { workspaceId, conversationId, messageId: params.messageId } },
+          params: { path: { conversationId, messageId: params.messageId } },
           body: { createdAt: params.createdAt, newText: params.newText },
         },
       );
@@ -94,9 +93,9 @@ export function useDeleteMessage(workspaceId: string, conversationId: string) {
   return useMutation({
     mutationFn: async (params: { messageId: string; createdAt: string }) => {
       const { error } = await apiClient.DELETE(
-        '/workspaces/{workspaceId}/conversations/{conversationId}/messages/{id}',
+        '/v1/conversations/{conversationId}/messages/{messageId}',
         {
-          params: { path: { workspaceId, conversationId, id: params.messageId } },
+          params: { path: { conversationId, messageId: params.messageId } },
           body: { createdAt: params.createdAt },
         },
       );
@@ -137,9 +136,9 @@ export function useSetMessageAttributes(workspaceId: string, conversationId: str
       hidden?: boolean;
     }) => {
       const { error } = await apiClient.POST(
-        '/workspaces/{workspaceId}/conversations/{conversationId}/messages/{messageId}/attributes',
+        '/v1/conversations/{conversationId}/messages/{messageId}/attributes',
         {
-          params: { path: { workspaceId, conversationId, messageId: params.messageId } },
+          params: { path: { conversationId, messageId: params.messageId } },
           body: { createdAt: params.createdAt, liked: params.liked, hidden: params.hidden },
         },
       );

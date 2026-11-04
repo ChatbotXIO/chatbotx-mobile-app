@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { PropsWithChildren } from 'react';
 
@@ -55,21 +55,31 @@ global.fetch = mockFetch as unknown as typeof fetch;
 // through `@gorhom/portal`'s `PortalProvider`, which this RNTL setup can't resolve — nothing in
 // this file exercises that editor modal, so stub it to a no-op that renders nothing.
 jest.mock('@gorhom/bottom-sheet', () => {
-  const actual = jest.requireActual('@gorhom/bottom-sheet');
-  // jest.mock factories cannot reference out-of-scope imports; requiring inline is the standard
-  // Jest pattern.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { FlatList } = require('react-native');
+  const { FlatList, TextInput, View } = require('react-native');
   return {
     __esModule: true,
-    ...actual,
+    default: View,
+    BottomSheetBackdrop: View,
     BottomSheetFlatList: FlatList,
     BottomSheetModal: () => null,
+    BottomSheetTextInput: TextInput,
+    BottomSheetView: View,
   };
 });
 
 const mockedPost = apiClient.POST as jest.Mock;
 const mockedGet = apiClient.GET as jest.Mock;
+
+const activeQueryClients: QueryClient[] = [];
+
+function createTestQueryClient(): QueryClient {
+  const queryClient = new QueryClient({
+    defaultOptions: { mutations: { gcTime: Infinity }, queries: { retry: false } },
+  });
+  activeQueryClients.push(queryClient);
+  return queryClient;
+}
 
 beforeAll(() => {
   initI18n();
@@ -85,6 +95,11 @@ afterEach(() => {
   mockedPost.mockReset();
   mockedGet.mockReset();
   mockFetch.mockReset();
+  while (activeQueryClients.length > 0) {
+    const queryClient = activeQueryClients.pop()!;
+    queryClient.clear();
+    queryClient.unmount();
+  }
 });
 
 function fakeContact(overrides: Partial<ContactDetail> = {}): ContactDetail {
@@ -115,7 +130,7 @@ function wrapper(queryClient: QueryClient) {
 
 describe('ContactActionsSheet', () => {
   it('omits the Message row when no conversationId is passed', async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const queryClient = createTestQueryClient();
     await render(
       <ContactActionsSheet workspaceId="ws-1" contact={fakeContact()} onClose={() => {}} />,
       { wrapper: wrapper(queryClient) },
@@ -125,7 +140,7 @@ describe('ContactActionsSheet', () => {
   });
 
   it('renders the Message row when a conversationId is passed', async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const queryClient = createTestQueryClient();
     await render(
       <ContactActionsSheet
         workspaceId="ws-1"
@@ -139,24 +154,15 @@ describe('ContactActionsSheet', () => {
     expect(screen.getByText('Message')).toBeTruthy();
   });
 
-  it('disables block/delete and shows Coming soon while their feature flags are off', async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  it('offers block and delete without a Coming soon badge', async () => {
+    const queryClient = createTestQueryClient();
     await render(
       <ContactActionsSheet workspaceId="ws-1" contact={fakeContact()} onClose={() => {}} />,
       { wrapper: wrapper(queryClient) },
     );
 
-    expect(screen.getAllByText('Coming soon')).toHaveLength(2);
-  });
-
-  it('does not call the block endpoint while FEATURES.blockContact is off', async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    await render(
-      <ContactActionsSheet workspaceId="ws-1" contact={fakeContact()} onClose={() => {}} />,
-      { wrapper: wrapper(queryClient) },
-    );
-
-    fireEvent.press(screen.getByText('Block contact'));
-    await waitFor(() => expect(mockFetch).not.toHaveBeenCalled());
+    expect(screen.queryByText('Coming soon')).toBeNull();
+    expect(screen.getByText('Block contact')).toBeTruthy();
+    expect(screen.getByText('Delete contact')).toBeTruthy();
   });
 });

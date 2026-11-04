@@ -44,15 +44,13 @@ setup; `updates` and `extra.eas` are simply omitted from the resolved config.
 
 ### EAS Environment Variables (per brand, per environment)
 
-`API_BASE_URL`, `WS_URL`, and the Android `google-services.json` file are **not** committed —
-they're set as [EAS Environment Variables](https://docs.expo.dev/eas/environment-variables/),
-scoped to the brand's EAS project and to `preview`/`production` separately:
+`API_BASE_URL` and the Android `google-services.json` file are **not** committed — they're set as
+[EAS Environment Variables](https://docs.expo.dev/eas/environment-variables/), scoped to the
+brand's EAS project and to `preview`/`production` separately:
 
 ```bash
 eas env:create --environment preview    --name API_BASE_URL --value https://preview.example.com
-eas env:create --environment preview    --name WS_URL       --value https://preview-realtime.example.com
 eas env:create --environment production --name API_BASE_URL --value https://api.example.com
-eas env:create --environment production --name WS_URL       --value https://realtime.example.com
 
 # File-type secret — see docs/push-notifications.md for what this file is
 eas env:create --environment preview    --name GOOGLE_SERVICES_JSON --type file --value ./google-services.json

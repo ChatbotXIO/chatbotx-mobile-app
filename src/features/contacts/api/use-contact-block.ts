@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { apiClient } from '@/api/client';
+import { ApiError } from '@/api/errors';
 import { queryKeys } from '@/api/query-keys';
-import { env } from '@/config/env';
-import { FEATURES } from '@/config/features';
-import { authorizedFetch } from '@/features/contacts/api/contact-fetch';
+import { toContactIdentifier } from '@/features/contacts/lib/contact-identifier';
 import type { ContactDetail } from '@/features/contacts/api/use-contact-detail';
 import {
   conversationListPredicate,
@@ -11,24 +11,13 @@ import {
   rollbackConversationListCache,
 } from '@/features/conversations/lib/patch-conversation-list-cache';
 
-/**
- * Hand-rolled fetch — no generated-client route exists yet for session/bearer-auth block/unblock
- * (only `contactsAPIs.blockContactWorkspaceTokenAPI`/`unblockContactWorkspaceTokenAPI`, which
- * require workspace-token auth, exist in the schema). Replace with the generated client + delete
- * this hand-rolled fetch once `POST /workspaces/{workspaceId}/contacts/{contactId}/block|unblock`
- * ships under bearer/session auth and `pnpm generate:api` has been re-run.
- */
-class FeatureUnavailableError extends Error {}
-
-async function postBlockContact(
-  workspaceId: string,
-  contactId: string,
-  action: 'block' | 'unblock',
-): Promise<void> {
-  await authorizedFetch(
-    `${env.apiBaseUrl}/api/workspaces/${workspaceId}/contacts/${contactId}/${action}`,
-    { method: 'POST', headers: { 'Content-Type': 'application/json' } },
-  );
+async function postBlockContact(contactId: string, action: 'block' | 'unblock'): Promise<void> {
+  const params = { path: { identifier: toContactIdentifier(contactId) } };
+  const { error } =
+    action === 'block'
+      ? await apiClient.POST('/v1/contacts/{identifier}/block', { params })
+      : await apiClient.POST('/v1/contacts/{identifier}/unblock', { params });
+  if (error) throw new ApiError(error);
 }
 
 /** Patches `contact.blockedAt` on every cached conversation row for this contact — mirrors
@@ -61,12 +50,7 @@ function useToggleContactBlock(workspaceId: string, action: 'block' | 'unblock')
 
   return useMutation({
     mutationFn: async (contactId: string) => {
-      if (!FEATURES.blockContact) {
-        throw new FeatureUnavailableError(
-          'Block/unblock is not yet available — the backend session-auth endpoint has not shipped.',
-        );
-      }
-      await postBlockContact(workspaceId, contactId, action);
+      await postBlockContact(contactId, action);
     },
     onMutate: async (contactId: string) => {
       const detailKey = queryKeys.ws.contacts.detail(workspaceId, contactId);

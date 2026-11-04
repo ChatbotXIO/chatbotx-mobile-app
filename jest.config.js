@@ -9,13 +9,12 @@ module.exports = {
     // throws. Its CJS build is real CommonJS and needs no transform, so map straight to it.
     '^lucide-react-native$':
       '<rootDir>/node_modules/lucide-react-native/dist/cjs/lucide-react-native.js',
+    // Reanimated 4 and Worklets 0.13 initialize native/browser runtimes that do not exist in
+    // Jest's React Native environment. Component tests use deterministic substitutes.
+    '^react-native-reanimated$': '<rootDir>/test-mocks/react-native-reanimated.js',
+    '^react-native-worklets$': '<rootDir>/test-mocks/react-native-worklets.js',
+    '^react-native-gesture-handler/ReanimatedSwipeable$':
+      '<rootDir>/test-mocks/reanimated-swipeable.js',
   },
-  // react-native-worklets (reanimated 4's underlying worklets runtime) ships a real native
-  // module with no Jest mock; its own package provides this resolver, which steers Jest away
-  // from the `.native.ts` entrypoints (which throw under Jest — see react-native-worklets'
-  // NativeWorklets.native.ts) toward its JS-only fallback path instead. Without this, importing
-  // anything that pulls in `react-native-reanimated` (e.g. any UI primitive built on
-  // PressableScale) crashes at import time under Jest.
-  resolver: 'react-native-worklets/jest/resolver.js',
   collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/api/generated/**', '!src/**/*.d.ts'],
 };

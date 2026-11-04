@@ -42,25 +42,15 @@ export function SequencesTab({ contact, workspaceId }: SequencesTabProps) {
         />
       </View>
 
-      {contact.contactsOnSequences.length === 0 ? (
+      {contact.sequences.length === 0 ? (
         <EmptyState icon="layers-2" title={t('contacts.noSequences')} />
       ) : (
-        contact.contactsOnSequences.map((enrollment) => (
-          <View key={enrollment.sequenceId}>
-            <ListItem
-              title={enrollment.sequence.name}
-              subtitle={t('contacts.sequenceStep', { step: enrollment.currentStep })}
-              leading={<Icon name="layers-2" size={20} color={colors.textSecondary} />}
-              trailing={
-                <Badge color={enrollment.completedAt ? colors.success : colors.surface2}>
-                  {enrollment.completedAt
-                    ? t('contacts.completed')
-                    : (enrollment.status ?? t('contacts.active'))}
-                </Badge>
-              }
-            />
-            <RelativeTime date={enrollment.enrolledAt} />
-          </View>
+        contact.sequences.map((enrollment) => (
+          <ListItem
+            key={enrollment.sequenceId}
+            title={enrollment.sequenceName}
+            leading={<Icon name="layers-2" size={20} color={colors.textSecondary} />}
+          />
         ))
       )}
 

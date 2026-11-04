@@ -190,6 +190,7 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     'expo-font',
+    'expo-status-bar',
     [
       'expo-splash-screen',
       {
@@ -257,11 +258,6 @@ const config: ExpoConfig = {
     // (e.g. in `.env`, loaded by `expo start` through the standard EXPO_PUBLIC_ / dotenv support,
     // or exported in the shell before running Expo CLI commands).
     apiBaseUrl: process.env.API_BASE_URL ?? 'http://localhost:3123',
-    // Realtime PartyKit server. Web reads this from tenant settings; for mobile dev we default to
-    // the local partykit dev port until tenant-settings discovery is wired up.
-    wsUrl: process.env.WS_URL ?? 'http://localhost:1999',
-    // Mirrors the expo-localization plugin's supportsRTL above for Expo Go, which can't read the
-    // native Info.plist/strings.xml values the plugin writes at build time.
     supportsRTL: true,
     brandId: brand.id,
     brandScheme: brand.scheme,

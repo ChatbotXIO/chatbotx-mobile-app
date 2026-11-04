@@ -8,11 +8,9 @@ import type { operations } from '@/api/generated/schema';
 
 /**
  * Types derived directly from the generated schema's `operations` map for
- * `messagesAPI.listMessagesAuthenticatedAPI` — `GET /workspaces/{workspaceId}/messages` with
- * `conversationId` as a QUERY param (not path-nested, unlike message create/edit/delete). Response
- * shape matches api/pagination.ts's `CursorPage<T>` (`{ data, nextCursor, prevCursor }`).
+ * `messages.list` — `GET /v1/conversations/{conversationId}/messages`. Response shape matches api/pagination.ts's `CursorPage<T>` (`{ data, nextCursor, prevCursor }`).
  */
-type ListMessagesOperation = operations['messagesAPI.listMessagesAuthenticatedAPI'];
+type ListMessagesOperation = operations['messages.list'];
 export type ListMessagesResponse =
   ListMessagesOperation['responses'][200]['content']['application/json'];
 export type Message = ListMessagesResponse['data'][number];
@@ -28,10 +26,10 @@ export function useMessagesInfinite(workspaceId: string | null, conversationId: 
     enabled: workspaceId !== null && conversationId !== null,
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam }): Promise<ListMessagesResponse> => {
-      const { data, error } = await apiClient.GET('/workspaces/{workspaceId}/messages', {
+      const { data, error } = await apiClient.GET('/v1/conversations/{conversationId}/messages', {
         params: {
-          path: { workspaceId: workspaceId! },
-          query: { conversationId: conversationId!, cursor: pageParam, perPage: PER_PAGE },
+          path: { conversationId: conversationId! },
+          query: { cursor: pageParam, perPage: PER_PAGE },
         },
       });
       if (error) {

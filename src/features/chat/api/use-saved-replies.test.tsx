@@ -42,7 +42,7 @@ function wrapper(queryClient: QueryClient) {
 describe('useSavedReplies', () => {
   it('fetches the flat saved-replies list for the workspace', async () => {
     const replies = [{ id: 'r1', shortcut: '/hi', text: 'Hello there' }];
-    mockedGet.mockResolvedValue({ data: { data: replies }, error: undefined });
+    mockedGet.mockResolvedValue({ data: { data: replies, pageCount: 1 }, error: undefined });
 
     const { result } = await renderHook(() => useSavedReplies('ws-1'), {
       wrapper: wrapper(createTestQueryClient()),
@@ -51,8 +51,8 @@ describe('useSavedReplies', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(replies);
     expect(mockedGet).toHaveBeenCalledWith(
-      '/workspaces/{workspaceId}/saved-replies',
-      expect.objectContaining({ params: { path: { workspaceId: 'ws-1' } } }),
+      '/v1/saved-replies',
+      expect.objectContaining({ params: { query: { page: 1, perPage: 50 } } }),
     );
   });
 

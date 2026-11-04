@@ -1,30 +1,18 @@
-import { getAuthToken } from '@/api/auth-token';
+import { apiClient } from '@/api/client';
 import { ApiError } from '@/api/errors';
-import { env } from '@/config/env';
 
 /**
- * Chat message attachments go through the SAME message-create endpoint as text
- * (`POST /workspaces/{workspaceId}/conversations/{conversationId}/messages`), but the generated
- * TS types are wrong for this case: the backend's real Zod schema types `files` as
- * `z.array(z.instanceof(File)).min(1)`, which openapi-typescript cannot express — it collapsed to
- * `files?: unknown[]` under `application/json`. The real wire format for a request WITH files is
- * `multipart/form-data` (the backend's `createMessage` handler calls `uploadMultipleFiles` on
- * genuine binary uploads), not JSON. The typed `apiClient` assumes JSON everywhere, so attachment
- * sends bypass it entirely and use a hand-rolled request here (same pattern as api/auth-endpoints.ts
- * for other non-JSON-typed routes), building RN's standard FormData-with-file shape
- * (`{ uri, type, name }`) which works directly with expo-image-picker/expo-camera result URIs.
+ * Sends a chat message with attachments. The public API has no multipart message route, so each
+ * file goes through the media library first, then the message references the registered files:
  *
- * UNVERIFIED: this multipart send has not been exercised against a live signed-in session with a
- * real conversation — the request shape is inferred from the backend's Zod schema and RN's FormData
- * convention, not observed on the wire. Worth a real-device check before shipping.
+ * 1. `mediaLibrary.createUploadUrl` → `{ path, uploadUrl }`
+ * 2. `PUT` the file bytes to `uploadUrl` (object storage — NO Authorization header, the URL is
+ *    already signed, and a stray Bearer token would both leak the JWT and break the signature)
+ * 3. `mediaLibrary.createFile` → registered file `id`
+ * 4. `messages.create` with `mediaFileIds`
  *
- * Built on XMLHttpRequest rather than `fetch` specifically so upload progress is observable:
- * `fetch`'s ReadableStream request body isn't supported for uploads in RN's fetch polyfill, and
- * even where it is, there's no cross-platform equivalent of `xhr.upload.onprogress`. RN's XHR
- * implementation does implement `upload.onprogress` (backed by the native networking layer), so
- * this is the only way to surface a progress ratio to the composer/attachment UI. The success/error
- * contract (return value, thrown error types) is kept IDENTICAL to the previous fetch-based
- * implementation so use-send-message.ts needs no changes beyond passing through `onProgress`.
+ * Step 2 uses XMLHttpRequest rather than `fetch` so upload progress is observable:
+ * `fetch` has no cross-platform equivalent of `xhr.upload.onprogress` in React Native.
  */
 export interface MultipartAttachment {
   uri: string;
@@ -41,92 +29,102 @@ export interface SendMultipartMessageParams {
   inboxId?: string | null;
   replyToMessageId?: string;
   replyToMessageCreatedAt?: string;
-  /** Called with a 0-1 ratio as the upload progresses. Best-effort — some environments never
-   * report `lengthComputable`, in which case this simply never fires. */
+  /** Called with a 0-1 ratio covering all attachments as the upload progresses. Best-effort —
+   * some environments never report `lengthComputable`, in which case this simply stays quiet. */
   onProgress?: (ratio: number) => void;
 }
 
-function parseResponseBody(rawBody: string): unknown {
-  if (!rawBody) return null;
-  try {
-    return JSON.parse(rawBody);
-  } catch {
-    // Non-JSON response — leave body null, fall back to statusText below.
-    return null;
-  }
+function toNetworkError(message: string): ApiError {
+  return new ApiError({ status: 0, message });
 }
 
-/** Builds an `ApiError` from a raw XHR response body, matching the shape
- * `normalizeApiError`/`ApiError` expect from the typed `apiClient` path (`{ code, status,
- * message }`) — so a 402/401/etc. from an attachment send is classified identically to a
- * JSON-body send instead of silently falling through as an unrecognized error type. */
-function toApiError(status: number, body: unknown, fallbackMessage: string): ApiError {
-  const parsedBody = body && typeof body === 'object' ? (body as Record<string, unknown>) : {};
-  const code = typeof parsedBody.code === 'string' ? parsedBody.code : undefined;
-  const message = typeof parsedBody.message === 'string' ? parsedBody.message : fallbackMessage;
-  const data =
-    parsedBody.data && typeof parsedBody.data === 'object'
-      ? (parsedBody.data as { reason?: string })
-      : undefined;
-
-  return new ApiError({ code, status, message, data });
-}
-
-export async function sendMultipartMessage(params: SendMultipartMessageParams): Promise<unknown> {
-  const token = await getAuthToken();
-  const url = `${env.apiBaseUrl}/api/workspaces/${params.workspaceId}/conversations/${params.conversationId}/messages`;
-
-  const form = new FormData();
-  if (params.text) form.append('text', params.text);
-  form.append('clientId', params.clientId);
-  if (params.inboxId) form.append('inboxId', params.inboxId);
-  if (params.replyToMessageId) form.append('replyToMessageId', params.replyToMessageId);
-  if (params.replyToMessageCreatedAt) {
-    form.append('replyToMessageCreatedAt', params.replyToMessageCreatedAt);
-  }
-  for (const attachment of params.attachments) {
-    // React Native's XHR/FormData accepts this `{ uri, type, name }` object in place of a real
-    // Blob for file parts — the standard RN convention, distinct from web File/Blob uploads.
-    form.append('files', {
-      uri: attachment.uri,
-      type: attachment.mimeType,
-      name: attachment.fileName,
-    } as unknown as Blob);
-  }
-
-  return new Promise<unknown>((resolve, reject) => {
+/** PUTs `blob` to a pre-signed URL, reporting 0-1 progress for this single file. */
+function putToSignedUrl(
+  uploadUrl: string,
+  blob: Blob,
+  mimeType: string,
+  onProgress: (ratio: number) => void,
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', url, true);
-    if (token) {
-      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-    }
+    xhr.open('PUT', uploadUrl, true);
+    xhr.setRequestHeader('Content-Type', mimeType);
 
-    if (xhr.upload && params.onProgress) {
+    if (xhr.upload) {
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable && event.total > 0) {
-          params.onProgress?.(event.loaded / event.total);
+          onProgress(event.loaded / event.total);
         }
       };
     }
 
     xhr.onload = () => {
-      const body = parseResponseBody(xhr.responseText);
-      const ok = xhr.status >= 200 && xhr.status < 300;
-      if (!ok) {
-        reject(toApiError(xhr.status, body, xhr.statusText));
+      if (xhr.status >= 200 && xhr.status < 300) {
+        onProgress(1);
+        resolve();
         return;
       }
-      resolve(body);
+      reject(new ApiError({ status: xhr.status, message: xhr.statusText || 'Upload failed' }));
     };
+    xhr.onerror = () => reject(toNetworkError('Network request failed'));
+    xhr.onabort = () => reject(toNetworkError('Upload aborted'));
 
-    xhr.onerror = () => {
-      reject(toApiError(0, null, 'Network request failed'));
-    };
-
-    xhr.onabort = () => {
-      reject(toApiError(0, null, 'Upload aborted'));
-    };
-
-    xhr.send(form);
+    xhr.send(blob);
   });
+}
+
+/** Uploads one local file through steps 1-3 and returns the registered media-library file id. */
+async function uploadAttachment(
+  attachment: MultipartAttachment,
+  onProgress: (ratio: number) => void,
+): Promise<string> {
+  const { data: slot, error: slotError } = await apiClient.POST(
+    '/v1/media-library/files/upload-url',
+    { body: { fileName: attachment.fileName, mimeType: attachment.mimeType } },
+  );
+  if (slotError) throw new ApiError(slotError);
+
+  const localResponse = await fetch(attachment.uri);
+  const blob = await localResponse.blob();
+
+  await putToSignedUrl(slot.uploadUrl, blob, attachment.mimeType, onProgress);
+
+  const { data: file, error: fileError } = await apiClient.POST('/v1/media-library/files', {
+    body: {
+      name: attachment.fileName,
+      path: slot.path,
+      mimeType: attachment.mimeType,
+      size: blob.size,
+    },
+  });
+  if (fileError) throw new ApiError(fileError);
+
+  return file.id;
+}
+
+export async function sendMultipartMessage(params: SendMultipartMessageParams): Promise<unknown> {
+  const total = params.attachments.length;
+  const mediaFileIds: string[] = [];
+
+  for (const [index, attachment] of params.attachments.entries()) {
+    const id = await uploadAttachment(attachment, (ratio) =>
+      params.onProgress?.((index + ratio) / total),
+    );
+    mediaFileIds.push(id);
+  }
+
+  const { data, error } = await apiClient.POST('/v1/conversations/{conversationId}/messages', {
+    params: { path: { conversationId: params.conversationId } },
+    body: {
+      text: params.text || undefined,
+      clientId: params.clientId,
+      inboxId: params.inboxId ?? undefined,
+      mediaFileIds,
+      replyToMessageId: params.replyToMessageId,
+      replyToMessageCreatedAt: params.replyToMessageCreatedAt,
+    },
+  });
+  if (error) throw new ApiError(error);
+
+  return data;
 }

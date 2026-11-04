@@ -11,15 +11,8 @@ export interface ApiErrorBody {
   status?: number;
   message?: string;
   defined?: boolean;
-  /**
-   * Machine-readable payload some business-rule errors may attach. `data.reason` is a forward-
-   * compatible hook for the 402 `workspaceBlocked` error: the backend does not send it today (as
-   * of this writing `classifyWorkspaceBlockedReason` below is the only source of truth, matched
-   * by English substring against `message`), but once it does, this field is read first and the
-   * substring match becomes pure fallback. No schema for `data` exists
-   * yet in `src/api/generated/schema.ts`, so this stays loosely typed until the backend ships it.
-   */
-  data?: { reason?: string };
+  /** Backend error payloads are resource-specific and may be absent. */
+  data?: unknown;
 }
 
 export type NormalizedApiError =
@@ -27,6 +20,11 @@ export type NormalizedApiError =
   | { kind: 'mustChangePassword' }
   | { kind: 'workspaceBlocked'; reason: 'mac' | 'trialExpired' | 'unknown'; message: string }
   | { kind: 'notFound' }
+  | { kind: 'tooManyRequests'; message: string }
+  | { kind: 'invalidRequestData'; message: string }
+  | { kind: 'invalidCursor' }
+  | { kind: 'workspaceSelectionRequired' }
+  | { kind: 'imagesNotSupportedOnChannel'; message: string }
   | { kind: 'unknown'; message: string };
 
 const MUST_CHANGE_PASSWORD_MESSAGE = 'Password change required';
@@ -43,17 +41,16 @@ export class ApiError extends Error {
   }
 }
 
-/** Machine-readable reason codes the backend may eventually send in `data.reason`. Any other
- * string value falls through to the substring-matching fallback below rather than being trusted
- * blindly, in case the backend ships a value this app doesn't recognize yet. */
-const KNOWN_REASON_CODES = new Set(['mac', 'trialExpired']);
-
 function classifyWorkspaceBlockedReason(
   message: string,
-  dataReason: string | undefined,
+  data: unknown,
 ): 'mac' | 'trialExpired' | 'unknown' {
-  if (dataReason && KNOWN_REASON_CODES.has(dataReason)) {
-    return dataReason as 'mac' | 'trialExpired';
+  let dataReason: unknown;
+  if (typeof data === 'object' && data !== null && 'reason' in data) {
+    dataReason = data.reason;
+  }
+  if (dataReason === 'mac' || dataReason === 'trialExpired') {
+    return dataReason;
   }
 
   const lowered = message.toLowerCase();
@@ -72,19 +69,50 @@ export function normalizeApiError(error: unknown): NormalizedApiError {
   if (body.code === 'FORBIDDEN' && body.message === MUST_CHANGE_PASSWORD_MESSAGE) {
     return { kind: 'mustChangePassword' };
   }
-  if (body.code === 'UNAUTHORIZED' || body.status === 401) {
+  if (
+    body.code === 'UNAUTHORIZED' ||
+    body.code === 'INVALID_CHATBOT_TOKEN' ||
+    body.status === 401
+  ) {
     return { kind: 'unauthorized' };
+  }
+  // The public API signals a blocked workspace with a 403 carrying `trialExpired` or
+  // `macLimitReached`; the legacy 402 `workspaceBlocked` shape is still recognized.
+  if (body.code === 'trialExpired' || body.code === 'macLimitReached') {
+    return {
+      kind: 'workspaceBlocked',
+      reason: body.code === 'macLimitReached' ? 'mac' : 'trialExpired',
+      message: body.message ?? 'This workspace is currently unavailable.',
+    };
   }
   if (body.code === 'workspaceBlocked' || body.status === 402) {
     const message = body.message ?? 'This workspace is currently unavailable.';
     return {
       kind: 'workspaceBlocked',
-      reason: classifyWorkspaceBlockedReason(message, body.data?.reason),
+      reason: classifyWorkspaceBlockedReason(message, body.data),
       message,
     };
   }
-  if (body.code === 'NOT_FOUND' || body.status === 404) {
+  if (body.code === 'NOT_FOUND' || body.code === 'notFound' || body.status === 404) {
     return { kind: 'notFound' };
+  }
+  if (body.code === 'tooManyRequests' || body.status === 429) {
+    return { kind: 'tooManyRequests', message: body.message ?? 'Too many requests' };
+  }
+  if (body.code === 'WORKSPACE_SELECTION_REQUIRED') {
+    return { kind: 'workspaceSelectionRequired' };
+  }
+  if (body.code === 'invalidCursor') {
+    return { kind: 'invalidCursor' };
+  }
+  if (body.code === 'imagesNotSupportedOnChannel') {
+    return {
+      kind: 'imagesNotSupportedOnChannel',
+      message: body.message ?? 'Images are not supported on this channel',
+    };
+  }
+  if (body.code === 'invalidRequestData' || body.code === 'validation' || body.status === 422) {
+    return { kind: 'invalidRequestData', message: body.message ?? 'Invalid request' };
   }
   return { kind: 'unknown', message: body.message ?? 'Unknown error' };
 }

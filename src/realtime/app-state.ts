@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
-import { AppState, type AppStateStatus } from 'react-native';
+import { AppState } from 'react-native';
 
 import { isWorkspaceQuery } from '@/api/query-keys';
 
@@ -10,22 +10,20 @@ interface UseRealtimeAppStateOptions {
 }
 
 /**
- * Wraps AppState so the realtime provider can close its socket on background (saves battery/data,
- * avoids a stale connection accumulating missed events indefinitely) and reconnect + refresh on
- * return to foreground. `onForeground` is expected to both reconnect the socket AND invalidate the
- * active workspace's queries (any events missed while backgrounded are caught by the resulting
- * refetch, since there's no event-replay/backfill mechanism on the wire protocol).
+ * Wraps AppState so the realtime provider can close its socket on background (saves battery/data)
+ * and resume it on foreground. `onForeground` also invalidates active-workspace queries as a
+ * defense-in-depth reconciliation step alongside v2 cursor replay.
  */
 export function useRealtimeAppState({ onBackground, onForeground }: UseRealtimeAppStateOptions) {
-  const previousState = useRef<AppStateStatus>(AppState.currentState);
+  const previousState = useRef(AppState.currentState);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState) => {
-      const wasBackground = previousState.current.match(/inactive|background/);
+      const wasBackground = previousState.current?.match(/inactive|background/);
       const isNowActive = nextState === 'active';
       const isNowBackground = nextState.match(/inactive|background/);
 
-      if (isNowBackground && !previousState.current.match(/inactive|background/)) {
+      if (isNowBackground && !previousState.current?.match(/inactive|background/)) {
         onBackground();
       } else if (isNowActive && wasBackground) {
         onForeground();

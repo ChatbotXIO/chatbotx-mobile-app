@@ -1,11 +1,10 @@
 import { create } from 'zustand';
 
 /**
- * Client-state store mirroring the PartySocket connection's lifecycle (see realtime-provider.tsx,
- * which wires `usePartySocket`'s `onOpen`/`onClose`/`onError` into this). Purely reflects socket
- * state — it does not own reconnect logic (partysocket handles retry itself). Consumed by
- * `ConnectionBanner` call sites (Inbox + chat screen) to render a real connecting/reconnecting/
- * offline indicator instead of the previous hardcoded 'online'.
+ * Client-state store mirroring the v2 realtime connection lifecycle. It reflects socket state but
+ * does not own reconnect logic; `createRealtimeConnection` handles retry and cursor recovery.
+ * ConnectionBanner call sites (Inbox + chat screen) use it to render connecting, reconnecting,
+ * and offline states instead of a hardcoded "online".
  */
 export type ConnectionStatus = 'connecting' | 'open' | 'closed';
 

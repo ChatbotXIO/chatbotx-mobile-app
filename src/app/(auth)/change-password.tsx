@@ -1,11 +1,10 @@
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { TextInput } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { changePassword } from '@/api/auth-endpoints';
-import { getAuthToken } from '@/api/auth-token';
 import { Button } from '@/components/ui/button';
 import { ErrorBanner } from '@/components/ui/error-banner';
 import { Screen } from '@/components/ui/screen';
@@ -15,10 +14,10 @@ import { useAuthStore } from '@/stores/use-auth-store';
 import { useTheme } from '@/theme/use-theme';
 
 /**
- * Forced password-change screen — reached when the session user has `mustChangePassword: true`
- * (reseller-provisioned temporary password). Every other oRPC/session-authenticated call is
- * blocked server-side until this completes, so this screen has no way out except a successful
- * change.
+ * Forced password-change screen — reached when `/v1/me` reports
+ * `mustChangePassword: true` (reseller-provisioned temporary password). Every other
+ * mobile-authenticated call is blocked server-side until this completes, so this screen has no way
+ * out except a successful change.
  */
 export default function ChangePasswordScreen() {
   const { t } = useTranslation();
@@ -32,17 +31,13 @@ export default function ChangePasswordScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const newPasswordInputRef = useRef<TextInput>(null);
+  const newPasswordInputRef = useRef<TextInputInstance>(null);
 
   const handleSubmit = async () => {
     setError(null);
     setIsSubmitting(true);
     try {
-      const token = await getAuthToken();
-      if (!token) {
-        throw new Error(t('errors.unauthorized'));
-      }
-      await changePassword(token, currentPassword, newPassword);
+      await changePassword(currentPassword, newPassword);
       setMustChangePassword(false);
       router.replace('/');
     } catch (err) {

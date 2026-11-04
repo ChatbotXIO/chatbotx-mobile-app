@@ -167,11 +167,3 @@ export function applyConversationMessageCreated(
 
   return { data: { ...current, pages }, found };
 }
-
-// `conversationCreated` carries the full new conversation row as `data: unknown` (the source
-// package deliberately keeps this untyped to avoid a database-schema dependency — see events.ts
-// comment). Splicing an unknown-shaped row into the strongly-typed `ConversationListItem[]` cache
-// risks silently corrupting it with missing fields the UI assumes exist, so there's no applier
-// function for it here — use-realtime-handlers.ts calls `queryClient.invalidateQueries` directly
-// for the active conversations-list keys instead: one extra network round-trip on a relatively
-// rare event, in exchange for never rendering a malformed row.

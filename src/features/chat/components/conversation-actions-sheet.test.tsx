@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, Ref } from 'react';
 
 import { apiClient } from '@/api/client';
 import { ToastProvider } from '@/components/ui/toast';
@@ -45,34 +45,40 @@ jest.mock('expo-router', () => ({
 // forwardRef pass-through that renders its children directly and exposes no-op present/dismiss,
 // so tests can still assert on/interact with the sheet's content.
 jest.mock('@gorhom/bottom-sheet', () => {
-  const actual = jest.requireActual('@gorhom/bottom-sheet');
-  // jest.mock factories cannot reference out-of-scope imports; requiring inline is the standard
-  // Jest pattern.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { FlatList, View } = require('react-native');
+  const { FlatList, TextInput, View } = require('react-native');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { forwardRef, useImperativeHandle } = require('react');
-  // `SheetModal` (sheet.tsx) wraps its children in `BottomSheetView`, which — like
-  // `BottomSheetFlatList` above — reads `useBottomSheetInternal()` context that only the real
-  // `BottomSheet`/`BottomSheetModal` component tree provides; stub it to a plain View too.
   const BottomSheetModal = forwardRef(function BottomSheetModal(
     { children }: PropsWithChildren,
-    ref: import('react').Ref<{ present: () => void; dismiss: () => void }>,
+    ref: Ref<{ present: () => void; dismiss: () => void }>,
   ) {
     useImperativeHandle(ref, () => ({ present: () => {}, dismiss: () => {} }));
     return children;
   });
   return {
     __esModule: true,
-    ...actual,
+    default: View,
+    BottomSheetBackdrop: View,
     BottomSheetFlatList: FlatList,
-    BottomSheetView: View,
     BottomSheetModal,
+    BottomSheetTextInput: TextInput,
+    BottomSheetView: View,
   };
 });
 
 const mockedPost = apiClient.POST as jest.Mock;
 const mockedGet = apiClient.GET as jest.Mock;
+
+const activeQueryClients: QueryClient[] = [];
+
+function createTestQueryClient(): QueryClient {
+  const queryClient = new QueryClient({
+    defaultOptions: { mutations: { gcTime: Infinity }, queries: { retry: false } },
+  });
+  activeQueryClients.push(queryClient);
+  return queryClient;
+}
 
 beforeAll(() => {
   initI18n();
@@ -86,6 +92,11 @@ beforeEach(() => {
 afterEach(() => {
   mockedPost.mockReset();
   mockedGet.mockReset();
+  while (activeQueryClients.length > 0) {
+    const queryClient = activeQueryClients.pop()!;
+    queryClient.clear();
+    queryClient.unmount();
+  }
 });
 
 function fakeConversation(overrides: Partial<ConversationListItem> = {}): ConversationListItem {
@@ -115,7 +126,7 @@ function wrapper(queryClient: QueryClient) {
 
 describe('ConversationActionsSheet', () => {
   it('calls enable-bot when the bot is off and the toggle is pressed', async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const queryClient = createTestQueryClient();
     await render(
       <ConversationActionsSheet
         workspaceId="ws-1"
@@ -130,14 +141,14 @@ describe('ConversationActionsSheet', () => {
 
     await waitFor(() =>
       expect(mockedPost).toHaveBeenCalledWith(
-        '/workspaces/{workspaceId}/conversations/enable-bot',
-        expect.objectContaining({ body: { ids: ['conv-1'] } }),
+        '/v1/conversations/{id}/enable-bot',
+        expect.objectContaining({ params: { path: { id: 'conv-1' } } }),
       ),
     );
   });
 
   it('calls disable-bot when the bot is on and the toggle is pressed', async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const queryClient = createTestQueryClient();
     await render(
       <ConversationActionsSheet
         workspaceId="ws-1"
@@ -152,14 +163,14 @@ describe('ConversationActionsSheet', () => {
 
     await waitFor(() =>
       expect(mockedPost).toHaveBeenCalledWith(
-        '/workspaces/{workspaceId}/conversations/disable-bot',
-        expect.objectContaining({ body: { ids: ['conv-1'] } }),
+        '/v1/conversations/{id}/disable-bot',
+        expect.objectContaining({ params: { path: { id: 'conv-1' } } }),
       ),
     );
   });
 
   it('omits the top-level Unassign row when the conversation has no assignee', async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const queryClient = createTestQueryClient();
     await render(
       <ConversationActionsSheet
         workspaceId="ws-1"
@@ -179,7 +190,7 @@ describe('ConversationActionsSheet', () => {
   });
 
   it('shows the top-level Unassign row when the conversation has an assignee', async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const queryClient = createTestQueryClient();
     await render(
       <ConversationActionsSheet
         workspaceId="ws-1"
@@ -197,7 +208,7 @@ describe('ConversationActionsSheet', () => {
   });
 
   it('does not fetch the members list until Assign is pressed (lazy-mounted AssignmentSheet)', async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const queryClient = createTestQueryClient();
     await render(
       <ConversationActionsSheet
         workspaceId="ws-1"
@@ -214,8 +225,8 @@ describe('ConversationActionsSheet', () => {
     await waitFor(() => expect(mockedGet).toHaveBeenCalled());
   });
 
-  it('disables block/delete and shows Coming soon while their feature flags are off', async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  it('offers block and delete without a Coming soon badge', async () => {
+    const queryClient = createTestQueryClient();
     await render(
       <ConversationActionsSheet
         workspaceId="ws-1"
@@ -226,19 +237,13 @@ describe('ConversationActionsSheet', () => {
       { wrapper: wrapper(queryClient) },
     );
 
-    const comingSoonBadges = screen.getAllByText('Coming soon');
-    expect(comingSoonBadges.length).toBe(2);
-
-    fireEvent.press(screen.getByText('Block contact'));
-    fireEvent.press(screen.getByText('Delete contact'));
-    expect(mockedPost).not.toHaveBeenCalledWith(
-      expect.stringContaining('/block'),
-      expect.anything(),
-    );
+    expect(screen.queryByText('Coming soon')).toBeNull();
+    expect(screen.getByText('Block contact')).toBeTruthy();
+    expect(screen.getByText('Delete contact')).toBeTruthy();
   });
 
   it('omits send flow and saved replies list items when their callbacks are not passed', async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const queryClient = createTestQueryClient();
     await render(
       <ConversationActionsSheet
         workspaceId="ws-1"
@@ -254,7 +259,7 @@ describe('ConversationActionsSheet', () => {
   });
 
   it('renders send flow and saved replies when their callbacks are passed', async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const queryClient = createTestQueryClient();
     await render(
       <ConversationActionsSheet
         workspaceId="ws-1"

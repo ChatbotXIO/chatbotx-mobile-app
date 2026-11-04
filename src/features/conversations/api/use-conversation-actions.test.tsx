@@ -24,7 +24,7 @@ const mockedPost = apiClient.POST as jest.Mock;
 const activeQueryClients: QueryClient[] = [];
 
 function createTestQueryClient(): QueryClient {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({ defaultOptions: { mutations: { gcTime: Infinity } } });
   activeQueryClients.push(queryClient);
   return queryClient;
 }
@@ -169,9 +169,8 @@ describe('useArchiveConversations', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockedPost).toHaveBeenCalledWith('/workspaces/{workspaceId}/conversations/archive', {
-      params: { path: { workspaceId: 'ws-1' } },
-      body: { ids: ['conv-1'] },
+    expect(mockedPost).toHaveBeenCalledWith('/v1/conversations/{id}/archive', {
+      params: { path: { id: 'conv-1' } },
     });
   });
 
@@ -263,9 +262,8 @@ describe('useUnarchiveConversations', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockedPost).toHaveBeenCalledWith('/workspaces/{workspaceId}/conversations/unarchive', {
-      params: { path: { workspaceId: 'ws-1' } },
-      body: { ids: ['conv-1'] },
+    expect(mockedPost).toHaveBeenCalledWith('/v1/conversations/{id}/unarchive', {
+      params: { path: { id: 'conv-1' } },
     });
     const data = queryClient.getQueryData<{ pages: { data: ConversationListItem[] }[] }>(listKey);
     expect(data?.pages[0].data[0].archivedAt).toBeNull();

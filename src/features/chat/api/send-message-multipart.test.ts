@@ -1,43 +1,29 @@
-import { setAuthToken } from '@/api/auth-token';
+import { apiClient } from '@/api/client';
 import { ApiError } from '@/api/errors';
 
 import { sendMultipartMessage } from './send-message-multipart';
 
-/** Minimal fake standing in for RN's FormData — RN's real polyfill (Libraries/Network/FormData.js)
- * keeps `append()`'d values verbatim in `_parts`, but Jest's test environment supplies Node's
- * built-in `FormData`, which stringifies any non-Blob/non-string value via `String(value)`. Since
- * the RN app never runs against that global, stubbing it here keeps the assertions faithful to
- * real on-device behavior instead of an artifact of the test environment. */
-class FakeFormData {
-  private parts: [string, unknown][] = [];
+jest.mock('@/api/client', () => ({
+  apiClient: { POST: jest.fn() },
+}));
 
-  append(key: string, value: unknown) {
-    this.parts.push([key, value]);
-  }
+const mockPost = apiClient.POST as jest.Mock;
 
-  getAll(key: string): unknown[] {
-    return this.parts.filter(([name]) => name === key).map(([, value]) => value);
-  }
-}
-
-/** Minimal fake standing in for RN's XMLHttpRequest — captures the constructed instance so each
- * test can drive `onload`/`onerror`/`onabort` manually, since Jest's `react-native` preset has no
- * real network layer to fire these callbacks itself. */
+/** Minimal fake of RN's XMLHttpRequest: tests drive `onload`/`onerror` and `upload.onprogress`
+ * by hand, since Jest's `react-native` preset has no network layer. */
 class FakeXHR {
   static instances: FakeXHR[] = [];
 
-  readyState = 0;
   status = 0;
   statusText = '';
-  responseText = '';
   upload: { onprogress: ((event: ProgressEvent) => void) | null } = { onprogress: null };
   onload: (() => void) | null = null;
   onerror: (() => void) | null = null;
   onabort: (() => void) | null = null;
 
-  openedMethod?: string;
-  openedUrl?: string;
-  requestHeaders: Record<string, string> = {};
+  method?: string;
+  url?: string;
+  headers: Record<string, string> = {};
   sentBody?: unknown;
 
   constructor() {
@@ -45,12 +31,12 @@ class FakeXHR {
   }
 
   open(method: string, url: string) {
-    this.openedMethod = method;
-    this.openedUrl = url;
+    this.method = method;
+    this.url = url;
   }
 
   setRequestHeader(name: string, value: string) {
-    this.requestHeaders[name] = value;
+    this.headers[name] = value;
   }
 
   send(body: unknown) {
@@ -58,189 +44,167 @@ class FakeXHR {
   }
 }
 
-/** `sendMultipartMessage` awaits `getAuthToken()` (itself async, via expo-secure-store's mock)
- * BEFORE constructing the XHR — so the fake instance only exists some microtasks after the
- * function is called, not synchronously. Polls across microtask turns rather than a fixed count,
- * since the exact number of hops through the mock is an implementation detail. */
-async function waitForXhr(): Promise<FakeXHR> {
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    const xhr = FakeXHR.instances[0];
+/** The upload starts after two awaited API calls and a local-file fetch, so the XHR appears a few
+ * microtasks later; poll across turns instead of assuming an exact hop count. */
+async function waitForXhr(index = 0): Promise<FakeXHR> {
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const xhr = FakeXHR.instances[index];
     if (xhr) return xhr;
     await Promise.resolve();
   }
-  throw new Error('Expected sendMultipartMessage to construct an XMLHttpRequest');
+  throw new Error('Expected an XMLHttpRequest to be constructed');
 }
 
-function getFormPart(form: FormData, key: string): unknown {
-  return (form as unknown as FakeFormData).getAll(key)[0];
-}
+const PHOTO = { uri: 'file:///tmp/photo.jpg', mimeType: 'image/jpeg', fileName: 'photo.jpg' };
+const DOC = { uri: 'file:///tmp/doc.pdf', mimeType: 'application/pdf', fileName: 'doc.pdf' };
 
 const BASE_PARAMS = {
   workspaceId: 'ws-1',
   conversationId: 'conv-1',
   clientId: 'client-1',
-  attachments: [{ uri: 'file:///tmp/photo.jpg', mimeType: 'image/jpeg', fileName: 'photo.jpg' }],
+  attachments: [PHOTO],
 };
+
+function mockHappyPath() {
+  let fileCounter = 0;
+  mockPost.mockImplementation(async (path: string) => {
+    if (path === '/v1/media-library/files/upload-url') {
+      fileCounter += 1;
+      return {
+        data: {
+          path: `uploads/${fileCounter}`,
+          uploadUrl: `https://storage.test/put/${fileCounter}?sig=abc`,
+          publicUrl: '',
+        },
+      };
+    }
+    if (path === '/v1/media-library/files') {
+      return { data: { id: `file-${fileCounter}` } };
+    }
+    return { data: { id: 'msg-1' } };
+  });
+}
 
 describe('sendMultipartMessage', () => {
   const originalXHR = global.XMLHttpRequest;
-  const originalFormData = global.FormData;
+  const originalFetch = global.fetch;
 
   beforeEach(() => {
     FakeXHR.instances = [];
-    global.XMLHttpRequest = FakeXHR as any;
-    global.FormData = FakeFormData as any;
+    mockPost.mockReset();
+    global.XMLHttpRequest = FakeXHR as unknown as typeof XMLHttpRequest;
+    global.fetch = jest.fn().mockResolvedValue({
+      blob: async () => ({ size: 1234 }) as Blob,
+    }) as unknown as typeof fetch;
   });
 
   afterEach(() => {
     global.XMLHttpRequest = originalXHR;
-    global.FormData = originalFormData;
+    global.fetch = originalFetch;
   });
 
-  it('builds multipart form data with the file part and clientId', async () => {
-    const promise = sendMultipartMessage(BASE_PARAMS);
+  it('requests an upload URL, PUTs the bytes without a Bearer header, registers the file, then sends the message', async () => {
+    mockHappyPath();
+    const promise = sendMultipartMessage({ ...BASE_PARAMS, text: 'look' });
+
     const xhr = await waitForXhr();
-
-    expect(xhr.openedMethod).toBe('POST');
-    expect(xhr.openedUrl).toBe(
-      'https://test.invalid/api/workspaces/ws-1/conversations/conv-1/messages',
-    );
-
-    const form = xhr.sentBody as FormData;
-    expect(getFormPart(form, 'clientId')).toBe('client-1');
-    expect(getFormPart(form, 'files')).toEqual({
-      uri: 'file:///tmp/photo.jpg',
-      type: 'image/jpeg',
-      name: 'photo.jpg',
+    expect(mockPost).toHaveBeenCalledWith('/v1/media-library/files/upload-url', {
+      body: { fileName: 'photo.jpg', mimeType: 'image/jpeg' },
     });
+    expect(xhr.method).toBe('PUT');
+    expect(xhr.url).toBe('https://storage.test/put/1?sig=abc');
+    expect(xhr.headers['Content-Type']).toBe('image/jpeg');
+    expect(xhr.headers.Authorization).toBeUndefined();
 
-    xhr.status = 201;
-    xhr.responseText = JSON.stringify({ id: 'msg-1' });
+    xhr.status = 200;
     xhr.onload?.();
-
     await expect(promise).resolves.toEqual({ id: 'msg-1' });
+
+    expect(mockPost).toHaveBeenCalledWith('/v1/media-library/files', {
+      body: { name: 'photo.jpg', path: 'uploads/1', mimeType: 'image/jpeg', size: 1234 },
+    });
+    expect(mockPost).toHaveBeenLastCalledWith('/v1/conversations/{conversationId}/messages', {
+      params: { path: { conversationId: 'conv-1' } },
+      body: expect.objectContaining({
+        text: 'look',
+        clientId: 'client-1',
+        mediaFileIds: ['file-1'],
+      }),
+    });
   });
 
-  it('includes optional text and reply fields only when provided', async () => {
+  it('uploads several attachments in order and reports overall progress', async () => {
+    mockHappyPath();
+    const onProgress = jest.fn();
     const promise = sendMultipartMessage({
       ...BASE_PARAMS,
-      text: 'caption',
-      replyToMessageId: 'parent-1',
-      replyToMessageCreatedAt: '2026-01-01T00:00:00.000Z',
+      attachments: [PHOTO, DOC],
+      onProgress,
     });
-    const xhr = await waitForXhr();
-    const form = xhr.sentBody as FormData;
 
-    expect(getFormPart(form, 'text')).toBe('caption');
-    expect(getFormPart(form, 'replyToMessageId')).toBe('parent-1');
-    expect(getFormPart(form, 'replyToMessageCreatedAt')).toBe('2026-01-01T00:00:00.000Z');
+    const first = await waitForXhr(0);
+    first.upload.onprogress?.({ lengthComputable: true, loaded: 50, total: 100 } as ProgressEvent);
+    expect(onProgress).toHaveBeenLastCalledWith(0.25);
+    first.status = 200;
+    first.onload?.();
 
-    xhr.status = 201;
-    xhr.responseText = JSON.stringify({ id: 'msg-1' });
-    xhr.onload?.();
+    const second = await waitForXhr(1);
+    second.upload.onprogress?.({ lengthComputable: true, loaded: 50, total: 100 } as ProgressEvent);
+    expect(onProgress).toHaveBeenLastCalledWith(0.75);
+    second.status = 200;
+    second.onload?.();
+
     await promise;
+    expect(mockPost).toHaveBeenLastCalledWith(
+      '/v1/conversations/{conversationId}/messages',
+      expect.objectContaining({
+        body: expect.objectContaining({ mediaFileIds: ['file-1', 'file-2'] }),
+      }),
+    );
   });
 
-  it('reports upload progress via onProgress', async () => {
-    const onProgress = jest.fn();
-    const promise = sendMultipartMessage({ ...BASE_PARAMS, onProgress });
-    const xhr = await waitForXhr();
-
-    xhr.upload.onprogress?.({ lengthComputable: true, loaded: 50, total: 100 } as ProgressEvent);
-    expect(onProgress).toHaveBeenCalledWith(0.5);
-
-    xhr.status = 201;
-    xhr.responseText = JSON.stringify({ id: 'msg-1' });
-    xhr.onload?.();
-    await promise;
-  });
-
-  it('ignores progress events that are not length-computable', async () => {
-    const onProgress = jest.fn();
-    const promise = sendMultipartMessage({ ...BASE_PARAMS, onProgress });
-    const xhr = await waitForXhr();
-
-    xhr.upload.onprogress?.({ lengthComputable: false, loaded: 50, total: 0 } as ProgressEvent);
-    expect(onProgress).not.toHaveBeenCalled();
-
-    xhr.status = 201;
-    xhr.responseText = JSON.stringify({ id: 'msg-1' });
-    xhr.onload?.();
-    await promise;
-  });
-
-  it('rejects with an ApiError built from the JSON error body on a non-2xx response', async () => {
+  it('rejects with an ApiError and never sends the message when the storage PUT fails', async () => {
+    mockHappyPath();
     const promise = sendMultipartMessage(BASE_PARAMS);
-    const xhr = await waitForXhr();
 
-    xhr.status = 402;
-    xhr.statusText = 'Payment Required';
-    xhr.responseText = JSON.stringify({ code: 'workspaceBlocked', message: 'blocked' });
+    const xhr = await waitForXhr();
+    xhr.status = 403;
+    xhr.statusText = 'Forbidden';
     xhr.onload?.();
 
     await expect(promise).rejects.toBeInstanceOf(ApiError);
-    await promise.catch((error: ApiError) => {
-      expect(error.body).toEqual({
-        code: 'workspaceBlocked',
-        status: 402,
-        message: 'blocked',
-        data: undefined,
-      });
-    });
+    expect(mockPost).not.toHaveBeenCalledWith(
+      '/v1/conversations/{conversationId}/messages',
+      expect.anything(),
+    );
   });
 
-  it('falls back to statusText when the error response has no JSON body', async () => {
+  it('rejects with a status-0 ApiError on a network error', async () => {
+    mockHappyPath();
     const promise = sendMultipartMessage(BASE_PARAMS);
+
     const xhr = await waitForXhr();
-
-    xhr.status = 500;
-    xhr.statusText = 'Internal Server Error';
-    xhr.responseText = '';
-    xhr.onload?.();
-
-    await promise.catch((error: ApiError) => {
-      expect(error.body.message).toBe('Internal Server Error');
-      expect(error.body.status).toBe(500);
-    });
-    await expect(promise).rejects.toBeInstanceOf(ApiError);
-  });
-
-  it('rejects with an ApiError on a network error', async () => {
-    const promise = sendMultipartMessage(BASE_PARAMS);
-    const xhr = await waitForXhr();
-
     xhr.onerror?.();
 
-    await expect(promise).rejects.toBeInstanceOf(ApiError);
-    await promise.catch((error: ApiError) => {
-      expect(error.body.message).toBe('Network request failed');
-      expect(error.body.status).toBe(0);
-    });
+    await expect(promise).rejects.toMatchObject({ body: { status: 0 } });
   });
 
-  it('rejects with an ApiError on an aborted upload', async () => {
-    const promise = sendMultipartMessage(BASE_PARAMS);
-    const xhr = await waitForXhr();
-
-    xhr.onabort?.();
-
-    await expect(promise).rejects.toBeInstanceOf(ApiError);
-    await promise.catch((error: ApiError) => {
-      expect(error.body.message).toBe('Upload aborted');
+  it('surfaces an API error body from the message-create call as an ApiError', async () => {
+    mockPost.mockImplementation(async (path: string) => {
+      if (path === '/v1/media-library/files/upload-url') {
+        return { data: { path: 'p', uploadUrl: 'https://storage.test/put', publicUrl: '' } };
+      }
+      if (path === '/v1/media-library/files') return { data: { id: 'file-1' } };
+      return { error: { code: 'imagesNotSupportedOnChannel', status: 422, message: 'nope' } };
     });
-  });
-
-  it('attaches a Bearer token header when one is stored', async () => {
-    await setAuthToken('test-token');
-
     const promise = sendMultipartMessage(BASE_PARAMS);
+
     const xhr = await waitForXhr();
-
-    expect(xhr.requestHeaders.Authorization).toBe('Bearer test-token');
-
-    xhr.status = 201;
-    xhr.responseText = JSON.stringify({ id: 'msg-1' });
+    xhr.status = 200;
     xhr.onload?.();
-    await promise;
+
+    await expect(promise).rejects.toMatchObject({
+      body: { code: 'imagesNotSupportedOnChannel', status: 422 },
+    });
   });
 });

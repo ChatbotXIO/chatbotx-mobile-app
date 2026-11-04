@@ -11,13 +11,13 @@ export interface Workspace {
   brandColor: string;
 }
 
-/** Lists workspaces the current user is a member of (`GET /users/me/workspaces`).
+/** Lists workspaces the current user is a member of (`GET /v1/me/workspaces`).
  * Global key — not workspace-scoped, since it lists across workspaces. */
 export function useWorkspaces() {
   return useQuery({
     queryKey: queryKeys.workspaces(),
     queryFn: async (): Promise<Workspace[]> => {
-      const { data, error } = await apiClient.GET('/users/me/workspaces');
+      const { data, error } = await apiClient.GET('/v1/me/workspaces');
       if (error) {
         throw new ApiError(error);
       }

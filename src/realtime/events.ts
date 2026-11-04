@@ -1,9 +1,10 @@
 /**
  * MIRRORED TYPES — mirrors the backend's realtime event schema (no shared package; this repo is
- * standalone, so there is no live cross-repo import).
+ * standalone, so there is no live cross-repo import). Only the event types the app handles are
+ * listed; any other event type on the wire is skipped by `parse-event.ts`.
  *
- * When the backend's event schema changes, re-copy `RealtimeEventType` / `RealtimeEvent*` here.
- * Last synced 2026-08-21 (added conversationCreated/conversationUpdated).
+ * When the backend's event schema changes, re-copy the relevant `RealtimeEvent*` types here.
+ * Last synced 2026-11-02 against the realtime v2 protocol.
  */
 
 export const RealtimeEventType = {
@@ -16,8 +17,6 @@ export const RealtimeEventType = {
   contactBlocked: 'contactBlocked',
   contactUnblocked: 'contactUnblocked',
   conversationAssigned: 'conversationAssigned',
-  notifyExportResult: 'notifyExportResult',
-  conversationCreated: 'conversationCreated',
   conversationUpdated: 'conversationUpdated',
 } as const;
 
@@ -25,6 +24,11 @@ export type RealtimeEventCreateMessage = {
   eventType: typeof RealtimeEventType.messageCreated;
   data: unknown;
 };
+
+/** Per-event routing hint attached by the server; the app never reads it. */
+export interface RealtimeEventRoute {
+  [key: string]: unknown;
+}
 
 export type RealtimeEventMessageDeleted = {
   eventType: typeof RealtimeEventType.messageDeleted;
@@ -89,22 +93,6 @@ export type RealtimeEventConversationAssigned = {
   };
 };
 
-export type RealtimeEventNotifyExportResult = {
-  eventType: typeof RealtimeEventType.notifyExportResult;
-  data: {
-    outputPath: string;
-    status: 'pending' | 'processing' | 'completed' | 'failed';
-    error?: string;
-  };
-};
-
-export type RealtimeEventConversationCreated = {
-  eventType: typeof RealtimeEventType.conversationCreated;
-  // Full conversation row — shape owned by @chatbotx.io/business's ConversationModel; kept as
-  // `unknown` here to match the source package (avoids a dependency on the database schema).
-  data: unknown;
-};
-
 export type RealtimeEventConversationUpdatedChanges = {
   archivedAt?: string | null;
   assignedUserId?: string | null;
@@ -131,6 +119,4 @@ export type RealtimeEventData =
   | RealtimeEventContactCommon
   | RealtimeEventConversationAssigned
   | RealtimeEventTyping
-  | RealtimeEventNotifyExportResult
-  | RealtimeEventConversationCreated
   | RealtimeEventConversationUpdated;
