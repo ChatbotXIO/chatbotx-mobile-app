@@ -100,8 +100,10 @@ describe('apiClient', () => {
     jest.resetModules();
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports -- reload after replacing global fetch.
-      const { apiClient: isolatedClient } = require('@/api/client') as typeof import('@/api/client');
+      const clientModule: typeof import('@/api/client') =
+        // eslint-disable-next-line @typescript-eslint/no-require-imports -- reload after replacing global fetch.
+        require('@/api/client');
+      const { apiClient: isolatedClient } = clientModule;
       const auth = jest.requireMock('@/api/auth-endpoints') as {
         getValidAccessToken: jest.Mock;
         refreshAccessToken: jest.Mock;

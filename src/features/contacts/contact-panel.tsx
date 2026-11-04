@@ -131,7 +131,9 @@ export function ContactPanel({
   return (
     <Screen>
       <ScrollView
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} />}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} />
+        }
       >
         <ContactHeader
           contact={contact}

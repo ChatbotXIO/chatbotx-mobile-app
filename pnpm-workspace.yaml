@@ -6,7 +6,7 @@ allowBuilds:
 # Expo SDK 58's compatibility check expects TypeScript 6; openapi-typescript's v7 peer range has not caught up.
 peerDependencyRules:
   allowedVersions:
-    "openapi-typescript@7.13.0>typescript": "6"
+    'openapi-typescript@7.13.0>typescript': '6'
 minimumReleaseAgeExclude:
   - '@expo/cli@58.1.19'
   - '@expo/config-plugins@58.0.12'

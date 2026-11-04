@@ -3,12 +3,10 @@ import { useRef } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Icon } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
-import { RelativeTime } from '@/components/ui/relative-time';
 import type { ContactDetail } from '@/features/contacts/api/use-contact-detail';
 import { SequencePickerSheet } from '@/features/sequences/components/sequence-picker-sheet';
 import { useTheme } from '@/theme/use-theme';
