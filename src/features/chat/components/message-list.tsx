@@ -45,6 +45,7 @@ type ListRow =
     };
 
 const NEAR_BOTTOM_THRESHOLD_PX = 120;
+const AUTO_SCROLL_TO_BOTTOM_THRESHOLD = 0.2;
 
 function buildRows(messages: Message[]): ListRow[] {
   const groups = computeMessageGroups(messages);
@@ -71,8 +72,8 @@ function buildRows(messages: Message[]): ListRow[] {
 }
 
 /**
- * FlashList v2 (installed: 2.0.2) dropped the v1 `inverted` prop in favor of
- * `maintainVisibleContentPosition` — so `messages` here is rendered in NATURAL chat order
+ * FlashList v2 (installed: 2.3.2) uses `maintainVisibleContentPosition` to keep chat content
+ * pinned to the bottom — so `messages` here is rendered in NATURAL chat order
  * (oldest → newest, newest at the bottom), the opposite of the API's own cursor order
  * (`nextCursor` walks toward older messages). `flattenMessagePages` in use-messages-infinite.ts
  * returns pages in fetch order (newest page first, since page 1 is the most recent messages), so
@@ -140,7 +141,12 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(funct
     const isOwnSend = justSentMessageId != null && lastMessageId === justSentMessageId;
     lastMessageIdRef.current = lastMessageId;
 
-    if (isFirstRender) return;
+    if (isFirstRender) {
+      const frame = requestAnimationFrame(() => {
+        listRef.current?.scrollToEnd({ animated: false });
+      });
+      return () => cancelAnimationFrame(frame);
+    }
 
     if (isOwnSend || isNearBottomRef.current) {
       listRef.current?.scrollToEnd({ animated: true });
@@ -192,7 +198,10 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(funct
             />
           )
         }
-        maintainVisibleContentPosition={{ startRenderingFromBottom: true }}
+        maintainVisibleContentPosition={{
+          startRenderingFromBottom: true,
+          autoscrollToBottomThreshold: AUTO_SCROLL_TO_BOTTOM_THRESHOLD,
+        }}
         onScroll={handleScroll}
         scrollEventThrottle={100}
         onStartReachedThreshold={0.4}
@@ -202,6 +211,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(funct
           }
         }}
         ListFooterComponent={<TypingIndicator conversationId={conversationId} />}
+        initialScrollIndex={rows.length - 1}
       />
       {!isNearBottom && hasNewMessages > 0 ? (
         <ScrollToBottomFab
