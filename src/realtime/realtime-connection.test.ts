@@ -31,6 +31,7 @@ function setup(getUrl?: (lastSeq: string | null) => Promise<string>) {
     onOpen: jest.fn(),
     onResync: jest.fn(),
     onRevoked: jest.fn(),
+    onFailed: jest.fn(),
   };
   const connection = createRealtimeConnection({
     ...handlers,
@@ -158,5 +159,56 @@ describe('createRealtimeConnection', () => {
     await flush();
     expect(handlers.getUrl).toHaveBeenLastCalledWith('3-0');
     expect(FakeSocket.instances).toHaveLength(2);
+  });
+
+  it('reports connecting on every automatic retry, not just the first attempt', async () => {
+    const { connection, handlers } = setup();
+    connection.start();
+    await flush();
+    FakeSocket.instances[0]!.serverClose(1006);
+    expect(handlers.onStatus).toHaveBeenLastCalledWith('closed');
+    jest.advanceTimersByTime(60_000);
+    await flush();
+    expect(handlers.onStatus).toHaveBeenLastCalledWith('connecting');
+  });
+
+  it('reports closed on a deliberate stop, since the socket never fires onClose for it', async () => {
+    const { connection, handlers } = setup();
+    connection.start();
+    await flush();
+    FakeSocket.instances[0]!.onopen?.();
+    connection.stop();
+    expect(handlers.onStatus).toHaveBeenLastCalledWith('closed');
+  });
+
+  it('reports a revoked close as a terminal failure', async () => {
+    const { connection, handlers } = setup();
+    connection.start();
+    await flush();
+    FakeSocket.instances[0]!.serverClose(REALTIME_CLOSE_CODE.revoked);
+    expect(handlers.onFailed).toHaveBeenCalledWith('revoked');
+  });
+
+  it('reports a permanent token-mint failure and does not revive on resume', async () => {
+    const { connection, handlers } = setup(async () => {
+      throw new RealtimeFatalError('forbidden');
+    });
+    connection.start();
+    await flush();
+    expect(handlers.onFailed).toHaveBeenCalledWith('auth');
+    connection.resume();
+    await flush();
+    expect(handlers.getUrl).toHaveBeenCalledTimes(1);
+  });
+
+  it('retry rebuilds the socket after a revoked close', async () => {
+    const { connection, handlers } = setup();
+    connection.start();
+    await flush();
+    FakeSocket.instances[0]!.serverClose(REALTIME_CLOSE_CODE.revoked);
+    connection.retry();
+    await flush();
+    expect(FakeSocket.instances).toHaveLength(2);
+    expect(handlers.onStatus).toHaveBeenLastCalledWith('connecting');
   });
 });

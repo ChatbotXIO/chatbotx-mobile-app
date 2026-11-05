@@ -8,7 +8,6 @@ import { KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { flattenPages } from '@/api/pagination';
-import { ConnectionBanner } from '@/components/ui/connection-banner';
 import { ErrorBanner } from '@/components/ui/error-banner';
 import { Screen } from '@/components/ui/screen';
 import { WorkspaceBlockedGate } from '@/components/workspace-blocked-gate';
@@ -26,7 +25,7 @@ import { useMessagesInfinite, type Message } from '@/features/chat/api/use-messa
 import { useDeleteMessage, useSetMessageAttributes } from '@/features/chat/api/use-message-actions';
 import { removeOptimisticMessage, useSendMessage } from '@/features/chat/api/use-send-message';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
-import { useConnectionBannerState } from '@/realtime/use-connection-store';
+import { ConnectionErrorCard } from '@/realtime/connection-error-card';
 import { queryKeys } from '@/api/query-keys';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
 
@@ -84,7 +83,6 @@ export default function ChatScreen() {
   const setComposerMode = useChatStore((state) => state.setComposerMode);
   const setDraft = useChatStore((state) => state.setDraft);
   const setActiveConversationId = useChatStore((state) => state.setActiveConversationId);
-  const connectionState = useConnectionBannerState();
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -200,7 +198,7 @@ export default function ChatScreen() {
         onBack={() => router.back()}
         onLayout={handleHeaderLayout}
       />
-      <ConnectionBanner state={connectionState} />
+      <ConnectionErrorCard />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

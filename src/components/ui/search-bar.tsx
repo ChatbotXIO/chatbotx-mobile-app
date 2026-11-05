@@ -10,9 +10,11 @@ interface SearchBarProps {
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
+  /** Fully rounded capsule instead of the default rounded rectangle. */
+  pill?: boolean;
 }
 
-export function SearchBar({ value, onChangeText, placeholder }: SearchBarProps) {
+export function SearchBar({ value, onChangeText, placeholder, pill = false }: SearchBarProps) {
   const { t } = useTranslation();
   const { colors, spacing, radius, scheme } = useTheme();
 
@@ -23,7 +25,7 @@ export function SearchBar({ value, onChangeText, placeholder }: SearchBarProps) 
         styles.container,
         {
           backgroundColor: colors.surface2,
-          borderRadius: radius.md,
+          borderRadius: pill ? radius.full : radius.md,
           paddingHorizontal: spacing.ms,
           gap: spacing.xs,
         },

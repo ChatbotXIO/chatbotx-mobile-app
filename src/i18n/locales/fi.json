@@ -84,7 +84,6 @@
     "noOtherMembers": "Tässä työtilassa ei vielä ole muita jäseniä.",
     "unnamed": "Nimetön",
     "unknownContact": "Unknown contact",
-    "attachmentPreview": "📎 {{count}} attachment(s)",
     "a11yUnread": "unread",
     "markRead": "Mark as read",
     "markUnread": "Mark as unread",
@@ -109,7 +108,23 @@
     "archiveConfirm": "Archive this conversation? You can find it again later in archived conversations.",
     "unarchiveConfirm": "Restore this conversation from the archive?",
     "disableBotHint": "Pauses bot for 24h",
-    "openActions": "Open conversation actions"
+    "openActions": "Open conversation actions",
+    "yesterday": "Yesterday",
+    "preview": {
+      "you": "You",
+      "bot": "Bot",
+      "failed": "Failed to send",
+      "deleted": "Message deleted",
+      "image": "Photo",
+      "gif": "GIF",
+      "video": "Video",
+      "audio": "Audio",
+      "file": "File"
+    },
+    "emptyUnread": "You're all caught up",
+    "emptyFollowing": "No followed conversations",
+    "emptyBot": "No conversations handled by the bot",
+    "inboxTitle": "Inbox"
   },
   "chat": {
     "typeAMessage": "Kirjoita viesti",
@@ -272,10 +287,14 @@
     "unknown": "Jokin meni pieleen. Yritä uudelleen."
   },
   "realtime": {
-    "online": "Back online",
     "connecting": "Connecting…",
-    "reconnecting": "Reconnecting…",
-    "offline": "You're offline"
+    "waitingNetwork": "Waiting for network…",
+    "updating": "Updating…",
+    "failedTitle": "Live updates stopped",
+    "failedRevoked": "You no longer have access to this workspace's live updates.",
+    "failedAuth": "We couldn't authorize the live connection.",
+    "failedGeneric": "The live connection stopped unexpectedly.",
+    "retry": "Retry"
   },
   "notifications": {
     "androidChannelName": "Default"

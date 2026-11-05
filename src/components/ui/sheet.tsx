@@ -38,6 +38,7 @@ export const Sheet = forwardRef<BottomSheet, SheetProps>(function Sheet(
       ref={ref}
       index={-1}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       enablePanDownToClose
       onClose={onDismiss}
       backdropComponent={renderBackdrop}
@@ -81,6 +82,7 @@ export const SheetModal = forwardRef<BottomSheetModal, SheetModalProps>(function
       ref={ref}
       index={0}
       snapPoints={snapPoints}
+      enableDynamicSizing={false}
       enablePanDownToClose
       onDismiss={onDismiss}
       backdropComponent={renderBackdrop}

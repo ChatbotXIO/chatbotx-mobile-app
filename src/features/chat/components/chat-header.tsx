@@ -21,6 +21,7 @@ import { useMessagingWindow } from '@/features/chat/api/use-messaging-window';
 import { formatRemaining } from '@/features/chat/lib/messaging-window';
 import { useSendMessage } from '@/features/chat/api/use-send-message';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
+import { useConnectionStatusLabel } from '@/realtime/use-connection-status-label';
 import { useTheme } from '@/theme/use-theme';
 
 import { BotStatusPill } from './bot-status-pill';
@@ -60,6 +61,7 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
   const sendMessage = useSendMessage(workspaceId, conversationId);
   const setDraft = useChatStore((state) => state.setDraft);
 
+  const connectionStatusLabel = useConnectionStatusLabel();
   const contactName = conversation?.contact?.fullName ?? t('conversations.unknownContact');
   const channel = conversation?.contactInboxes?.[0]?.channel;
   const assigneeName = conversation?.assignedUser?.name;
@@ -135,7 +137,17 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
           <Text variant="bodyStrong" numberOfLines={1}>
             {contactName}
           </Text>
-          {subtitleParts.length > 0 || messagingWindow.status === 'closing' ? (
+          {connectionStatusLabel ? (
+            // Telegram-style: while the connection is degraded the subtitle becomes the status.
+            <Text
+              accessibilityLiveRegion="polite"
+              variant="caption"
+              color="secondary"
+              numberOfLines={1}
+            >
+              {connectionStatusLabel}
+            </Text>
+          ) : subtitleParts.length > 0 || messagingWindow.status === 'closing' ? (
             <Text variant="caption" color="secondary" numberOfLines={1}>
               {subtitleParts.join(' · ')}
               {messagingWindow.status === 'closing' ? (

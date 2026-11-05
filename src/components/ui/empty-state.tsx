@@ -13,31 +13,41 @@ interface EmptyStateProps {
   title: string;
   description?: string;
   action?: { label: string; onPress: () => void };
+  /** Tighter padding and a smaller icon, for short containers such as bottom sheets. */
+  compact?: boolean;
 }
 
 const ICON_CIRCLE_SIZE = 72;
+const ICON_CIRCLE_SIZE_COMPACT = 56;
 
-export function EmptyState({ icon = 'inbox', title, description, action }: EmptyStateProps) {
+export function EmptyState({
+  icon = 'inbox',
+  title,
+  description,
+  action,
+  compact = false,
+}: EmptyStateProps) {
   const { colors, spacing } = useTheme();
   const reducedMotion = useReducedMotion();
+  const circleSize = compact ? ICON_CIRCLE_SIZE_COMPACT : ICON_CIRCLE_SIZE;
 
   return (
     <Animated.View
       entering={reducedMotion ? undefined : FadeInUp.duration(280)}
-      style={[styles.container, { padding: spacing.xl, gap: spacing.sm }]}
+      style={[styles.container, { padding: compact ? spacing.md : spacing.xl, gap: spacing.sm }]}
     >
       <View
         style={[
           styles.iconCircle,
           {
-            width: ICON_CIRCLE_SIZE,
-            height: ICON_CIRCLE_SIZE,
-            borderRadius: ICON_CIRCLE_SIZE / 2,
+            width: circleSize,
+            height: circleSize,
+            borderRadius: circleSize / 2,
             backgroundColor: colors.brandSoft,
           },
         ]}
       >
-        <Icon name={icon} size={32} color={colors.brand} />
+        <Icon name={icon} size={compact ? 26 : 32} color={colors.brand} />
       </View>
       <Text variant="title" style={styles.centered}>
         {title}

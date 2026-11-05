@@ -2,28 +2,10 @@ import { render, screen } from '@testing-library/react-native';
 
 import { initI18n } from '@/i18n';
 
-import { AssigneeBadge, BotStateIcon, StatusIconStrip } from './status-icons';
+import { AssigneeBadge, StatusIconStrip } from './status-icons';
 
 beforeAll(() => {
   initI18n();
-});
-
-describe('BotStateIcon', () => {
-  it('labels the "on" state', async () => {
-    await render(<BotStateIcon botEnabled botResumeAt={null} />);
-    expect(screen.getByLabelText('Bot handling')).toBeTruthy();
-  });
-
-  it('labels a disabled bot with a future botResumeAt as "off" (no separate paused state)', async () => {
-    const future = new Date(Date.now() + 60_000).toISOString();
-    await render(<BotStateIcon botEnabled={false} botResumeAt={future} />);
-    expect(screen.getByLabelText('Off')).toBeTruthy();
-  });
-
-  it('labels the "off" state', async () => {
-    await render(<BotStateIcon botEnabled={false} botResumeAt={null} />);
-    expect(screen.getByLabelText('Off')).toBeTruthy();
-  });
 });
 
 describe('AssigneeBadge', () => {

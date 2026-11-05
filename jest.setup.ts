@@ -107,3 +107,11 @@ jest.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
   }
   originalConsoleError(...args);
 });
+
+// expo-network is a native module with no Jest preset mock; reachability defaults to "online".
+jest.mock('expo-network', () => ({
+  __esModule: true,
+  getNetworkStateAsync: async () => ({ isConnected: true, isInternetReachable: true }),
+  addNetworkStateListener: () => ({ remove: () => {} }),
+  useNetworkState: () => ({ isConnected: true, isInternetReachable: true }),
+}));

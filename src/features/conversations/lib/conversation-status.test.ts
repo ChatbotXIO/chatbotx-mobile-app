@@ -1,4 +1,4 @@
-import { isBotActive, isUnread } from './conversation-status';
+import { botState, isBotActive, isUnread } from './conversation-status';
 
 describe('isBotActive', () => {
   it('returns true when the bot is enabled, regardless of botResumeAt', () => {
@@ -59,5 +59,19 @@ describe('isUnread', () => {
     expect(isUnread({ lastActivityAt: null, agentLastReadAt: '2026-01-01T00:00:00.000Z' })).toBe(
       false,
     );
+  });
+});
+
+describe('botState', () => {
+  const now = new Date('2026-01-10T00:00:00Z').getTime();
+  it('is on when enabled or when the auto-resume time has passed', () => {
+    expect(botState(true, null, now)).toBe('on');
+    expect(botState(false, '2026-01-09T00:00:00Z', now)).toBe('on');
+  });
+  it('is paused while an auto-resume is still scheduled', () => {
+    expect(botState(false, '2026-01-11T00:00:00Z', now)).toBe('paused');
+  });
+  it('is off when disabled with no auto-resume', () => {
+    expect(botState(false, null, now)).toBe('off');
   });
 });

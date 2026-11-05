@@ -29,14 +29,17 @@ const CHANNEL_ICONS: Record<string, ChannelIcon> = {
 interface ChannelBadgeProps {
   channel: string;
   size?: number;
+  /** Draws a separation ring in this color (the surface behind the avatar) so the badge reads
+   * cleanly over photos and initials. */
+  ringColor?: string;
 }
 
-export function ChannelBadge({ channel, size = 16 }: ChannelBadgeProps) {
+export function ChannelBadge({ channel, size = 16, ringColor }: ChannelBadgeProps) {
   const { colors } = useTheme();
   const color = (colors.channel as Record<string, string>)[channel] ?? colors.textSecondary;
   const icon = CHANNEL_ICONS[channel] ?? { kind: 'lucide', name: 'circle' };
 
-  return (
+  const badge = (
     <View style={[styles.container, { backgroundColor: color, width: size + 6, height: size + 6 }]}>
       {icon.kind === 'brand' ? (
         <BrandIcon name={icon.name} size={size - 4} color={colors.onBrand} />
@@ -50,6 +53,11 @@ export function ChannelBadge({ channel, size = 16 }: ChannelBadgeProps) {
       )}
     </View>
   );
+
+  if (!ringColor) return badge;
+  return (
+    <View style={[styles.container, styles.ring, { backgroundColor: ringColor }]}>{badge}</View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -57,5 +65,8 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  ring: {
+    padding: 2,
   },
 });

@@ -1,9 +1,14 @@
 import { parseRealtimeEnvelope, isRealtimeEnvelope } from './parse-event';
 import type { RealtimeEventData } from './events';
 import { createRealtimeFrameReader, parseBatchFrame } from './protocol/frame-reader';
-import { REALTIME_CLOSE_CODE, RealtimeSocket } from './protocol/realtime-socket';
+import {
+  REALTIME_CLOSE_CODE,
+  RealtimeFatalError,
+  RealtimeSocket,
+} from './protocol/realtime-socket';
 
 export type RealtimeConnectionStatus = 'connecting' | 'open' | 'closed';
+export type RealtimeFailureReason = 'revoked' | 'auth';
 
 type RealtimeSocketOptions = ConstructorParameters<typeof RealtimeSocket>[0];
 
@@ -21,6 +26,9 @@ export interface RealtimeConnectionOptions {
   onResync: () => void;
   /** Membership was removed (close code 4001): the socket stays closed. */
   onRevoked?: () => void;
+  /** The connection gave up for good (revoked membership or a permanent token-mint failure) and
+   * will not retry until `retry()` is called. */
+  onFailed?: (reason: RealtimeFailureReason) => void;
   onDiagnostic?: (error: unknown) => void;
   /** Test seams. */
   socketOptions?: Partial<Omit<RealtimeSocketOptions, 'getUrl' | 'onMessage'>>;
@@ -31,6 +39,9 @@ export interface RealtimeConnection {
   stop: () => void;
   /** Reconnects after a background period; starts a new socket when the old one was stopped. */
   resume: () => void;
+  /** User-initiated recovery from a terminal failure: rebuilds the socket even after a revoked
+   * close or a permanent token-mint failure. */
+  retry: () => void;
 }
 
 /**
@@ -41,6 +52,7 @@ export interface RealtimeConnection {
 export function createRealtimeConnection(options: RealtimeConnectionOptions): RealtimeConnection {
   let socket: RealtimeSocket | null = null;
   let revoked = false;
+  let failed = false;
 
   const reader = createRealtimeFrameReader<Record<string, unknown>>({
     parseBatch: (value) => parseBatchFrame(value, isRealtimeEnvelope),
@@ -77,7 +89,9 @@ export function createRealtimeConnection(options: RealtimeConnectionOptions): Re
         options.onStatus('closed');
         if (event.code === REALTIME_CLOSE_CODE.revoked) {
           revoked = true;
+          failed = true;
           options.onRevoked?.();
+          options.onFailed?.('revoked');
         }
       },
       onResync: () => {
@@ -87,27 +101,42 @@ export function createRealtimeConnection(options: RealtimeConnectionOptions): Re
       onError: (error) => {
         options.onStatus('closed');
         options.onDiagnostic?.(error);
+        if (error instanceof RealtimeFatalError) {
+          failed = true;
+          options.onFailed?.('auth');
+        }
       },
+      onConnecting: () => options.onStatus('connecting'),
     });
     socket = created;
-    options.onStatus('connecting');
     created.connect();
   }
 
   return {
     start: create,
     stop: () => {
-      socket?.close();
+      if (!socket) return;
+      socket.close();
       socket = null;
+      // `RealtimeSocket.close()` detaches its handlers before the native close event, so no
+      // `onClose` ever fires for a deliberate stop. Report it here or the store would stay `open`.
+      options.onStatus('closed');
     },
     resume: () => {
       // A revoked membership never reconnects, not even on foreground.
-      if (revoked) return;
+      if (revoked || failed) return;
       if (socket) {
         socket.reconnectNow();
       } else {
         create();
       }
+    },
+    retry: () => {
+      revoked = false;
+      failed = false;
+      socket?.close();
+      socket = null;
+      create();
     },
   };
 }

@@ -44,6 +44,7 @@ describe('RealtimeProvider', () => {
       start: mockStart,
       stop: mockStop,
       resume: mockResume,
+      retry: jest.fn(),
     }));
   });
 
@@ -62,7 +63,7 @@ describe('RealtimeProvider', () => {
     let getUrl: ((lastSeq: string | null) => Promise<string>) | undefined;
     mockCreateRealtimeConnection.mockImplementation((options: { getUrl: typeof getUrl }) => {
       getUrl = options.getUrl;
-      return { start: mockStart, stop: mockStop, resume: mockResume };
+      return { start: mockStart, stop: mockStop, resume: mockResume, retry: jest.fn() };
     });
 
     const { unmount } = await render(
@@ -93,7 +94,7 @@ describe('RealtimeProvider', () => {
     let getUrl: ((lastSeq: string | null) => Promise<string>) | undefined;
     mockCreateRealtimeConnection.mockImplementation((options: { getUrl: typeof getUrl }) => {
       getUrl = options.getUrl;
-      return { start: mockStart, stop: mockStop, resume: mockResume };
+      return { start: mockStart, stop: mockStop, resume: mockResume, retry: jest.fn() };
     });
 
     const { unmount } = await render(

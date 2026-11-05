@@ -2,6 +2,7 @@ import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { forwardRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/ui/empty-state';
 import { ListItem } from '@/components/ui/list-item';
@@ -19,6 +20,7 @@ interface SavedRepliesSheetProps {
 export const SavedRepliesSheet = forwardRef<BottomSheetModal, SavedRepliesSheetProps>(
   function SavedRepliesSheet({ workspaceId, onSelect }, ref) {
     const { t } = useTranslation();
+    const insets = useSafeAreaInsets();
     const [search, setSearch] = useState('');
     const { data: replies } = useSavedReplies(workspaceId);
 
@@ -38,7 +40,8 @@ export const SavedRepliesSheet = forwardRef<BottomSheetModal, SavedRepliesSheetP
         <BottomSheetFlatList
           data={filtered}
           keyExtractor={(reply) => reply.id}
-          ListEmptyComponent={<EmptyState title={t('chat.noSavedReplies')} />}
+          contentContainerStyle={{ paddingBottom: insets.bottom }}
+          ListEmptyComponent={<EmptyState compact title={t('chat.noSavedReplies')} />}
           renderItem={({ item }) => (
             <ListItem
               title={item.shortcut}

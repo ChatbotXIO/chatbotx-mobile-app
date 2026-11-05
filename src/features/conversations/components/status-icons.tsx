@@ -5,30 +5,6 @@ import { Avatar } from '@/components/ui/avatar';
 import { Icon } from '@/components/ui/icon';
 import { useTheme } from '@/theme/use-theme';
 
-import { isBotActive } from '../lib/conversation-status';
-
-interface BotStateIconProps {
-  botEnabled: boolean;
-  botResumeAt: string | null;
-  size?: number;
-}
-
-/** Bot on/off indicator: on (`bot`, brand-tinted) or off (`bot-off`, muted), derived via
- * `isBotActive()` so it agrees with the chat header. */
-export function BotStateIcon({ botEnabled, botResumeAt, size = 16 }: BotStateIconProps) {
-  const { t } = useTranslation();
-  const { colors } = useTheme();
-  const config = isBotActive(botEnabled, botResumeAt)
-    ? { icon: 'bot' as const, color: colors.bubbleBotAccent, label: t('conversations.botActive') }
-    : { icon: 'bot-off' as const, color: colors.textTertiary, label: t('conversations.botOff') };
-
-  return (
-    <View accessibilityLabel={config.label} accessible>
-      <Icon name={config.icon} size={size} color={config.color} />
-    </View>
-  );
-}
-
 interface AssigneeBadgeProps {
   assignedUser?: { name: string | null } | null;
   assignedInboxTeam?: { name: string } | null;
