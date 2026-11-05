@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { Message } from '@/features/chat/api/use-messages-infinite';
 import { computeMessageGroups } from '@/features/chat/lib/message-groups';
 
+import { Text } from '@/components/ui/text';
 import { MessageBubble } from './message-bubble';
 import { ScrollToBottomFab } from './scroll-to-bottom-fab';
 import { TypingIndicator } from './typing-indicator';
@@ -25,6 +26,8 @@ interface MessageListProps {
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   conversationId: string;
+  /** Contact identity for the inbound avatar on the last bubble of each group. */
+  contact?: { name: string; avatarUri?: string | null };
   /** id of the message most recently sent by the current user, if any — used to force
    * auto-scroll-to-end even when the user had scrolled away, since a just-sent message should
    * always be visible to its sender. */
@@ -36,6 +39,7 @@ interface MessageListProps {
 
 type ListRow =
   | { kind: 'separator'; id: string; date: string }
+  | { kind: 'time'; id: string; date: string }
   | {
       kind: 'bubble';
       id: string;
@@ -44,6 +48,8 @@ type ListRow =
       showMeta: boolean;
     };
 
+/** A gap longer than this between two messages on the same day gets a centered time marker. */
+const TIME_GAP_MS = 15 * 60 * 1000;
 const NEAR_BOTTOM_THRESHOLD_PX = 120;
 const AUTO_SCROLL_TO_BOTTOM_THRESHOLD = 0.2;
 
@@ -51,13 +57,20 @@ function buildRows(messages: Message[]): ListRow[] {
   const groups = computeMessageGroups(messages);
   const rows: ListRow[] = [];
   let lastDay: string | null = null;
+  let lastTimestamp: number | null = null;
 
   messages.forEach((message, index) => {
     const day = dayjs(message.createdAt).format('YYYY-MM-DD');
     if (day !== lastDay) {
       rows.push({ kind: 'separator', id: `sep-${day}`, date: message.createdAt });
       lastDay = day;
+    } else if (
+      lastTimestamp !== null &&
+      new Date(message.createdAt).getTime() - lastTimestamp > TIME_GAP_MS
+    ) {
+      rows.push({ kind: 'time', id: `time-${message.id}`, date: message.createdAt });
     }
+    lastTimestamp = new Date(message.createdAt).getTime();
     const group = groups[index]!;
     rows.push({
       kind: 'bubble',
@@ -91,6 +104,7 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(funct
     hasNextPage,
     isFetchingNextPage,
     conversationId,
+    contact,
     justSentMessageId,
     onLoadOlder,
     onLongPressMessage,
@@ -183,16 +197,21 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(funct
         ref={listRef}
         data={rows}
         keyExtractor={(row) => row.id}
-        getItemType={(row) => (row.kind === 'separator' ? 'separator' : `bubble-${row.position}`)}
+        getItemType={(row) => (row.kind === 'bubble' ? `bubble-${row.position}` : row.kind)}
         renderItem={({ item }) =>
           item.kind === 'separator' ? (
             <DateSeparator date={item.date} />
+          ) : item.kind === 'time' ? (
+            <Text variant="micro" color="tertiary" style={styles.timeMarker}>
+              {dayjs(item.date).format('HH:mm')}
+            </Text>
           ) : (
             <MessageBubble
               message={item.message}
               position={item.position}
               showMeta={item.showMeta}
               messagesById={messagesById}
+              contact={contact}
               onLongPress={() => onLongPressMessage(item.message)}
               onRetry={() => onRetryMessage(item.message)}
             />
@@ -227,6 +246,10 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(funct
 });
 
 const styles = StyleSheet.create({
+  timeMarker: {
+    alignSelf: 'center',
+    marginVertical: 8,
+  },
   skeleton: {
     marginHorizontal: 12,
     marginVertical: 4,

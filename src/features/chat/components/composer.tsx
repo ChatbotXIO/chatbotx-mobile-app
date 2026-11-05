@@ -14,6 +14,9 @@ import { useToast } from '@/components/ui/toast';
 import { normalizeApiError } from '@/api/errors';
 import { FEATURES } from '@/config/features';
 import { useConversationDetail } from '@/features/conversations/api/use-conversation-detail';
+import { useEnableBot } from '@/features/conversations/api/use-conversation-actions';
+import { botState } from '@/features/conversations/lib/conversation-status';
+import { useMessagingWindow } from '@/features/chat/api/use-messaging-window';
 import type { FlowListItem } from '@/features/flows/api/use-flows';
 import { useEditMessage } from '@/features/chat/api/use-message-actions';
 import {
@@ -33,7 +36,10 @@ import { useTheme } from '@/theme/use-theme';
 
 import { ComposerActionsSheet } from './composer-actions-sheet';
 import { FlowPickerSheet } from './flow-picker-sheet';
+import { BotPausedBar } from './bot-paused-bar';
 import { QuotaBanner } from './quota-banner';
+import { SavedReplySuggestions } from './saved-reply-suggestions';
+import { WindowClosedBar } from './window-closed-bar';
 import { SavedRepliesSheet } from './saved-replies-sheet';
 
 interface ComposerProps {
@@ -78,6 +84,15 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
     FEATURES.sendSequence ? workspaceId : null,
     FEATURES.sendSequence ? conversationId : null,
   );
+
+  // Same query key as the chat header's, so this is a cache hit rather than a second request.
+  const { data: conversation } = useConversationDetail(workspaceId, conversationId);
+  const messagingWindow = useMessagingWindow(conversation);
+  const enableBot = useEnableBot(workspaceId);
+  const pausedResumeAt =
+    conversation && botState(conversation.botEnabled, conversation.botResumeAt) === 'paused'
+      ? conversation.botResumeAt
+      : null;
 
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [inputHeight, setInputHeight] = useState(MIN_INPUT_HEIGHT);
@@ -268,6 +283,18 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
         </View>
       ) : null}
 
+      {pausedResumeAt ? (
+        <BotPausedBar resumeAt={pausedResumeAt} onResume={() => enableBot.mutate([conversationId])} />
+      ) : null}
+
+      {isEditing || isReplying || messagingWindow.status === 'closed' ? null : (
+        <SavedReplySuggestions
+          workspaceId={workspaceId}
+          draft={draft}
+          onSelect={(text) => setDraft(conversationId, text)}
+        />
+      )}
+
       {modeBarLabel ? (
         <View
           style={[
@@ -306,6 +333,9 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
         </View>
       ) : null}
 
+      {messagingWindow.status === 'closed' ? (
+        <WindowClosedBar onSendFlow={handleOpenFlowPicker} />
+      ) : (
       <View
         style={[
           styles.row,
@@ -387,6 +417,7 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
           </Pressable>
         </Animated.View>
       </View>
+      )}
 
       <ComposerActionsSheet
         ref={actionsSheetRef}

@@ -17,11 +17,13 @@ import { useDisableBot, useEnableBot } from '@/features/conversations/api/use-co
 import { botState, isBotActive } from '@/features/conversations/lib/conversation-status';
 import { findConversationInListCache } from '@/features/conversations/lib/find-conversation-in-cache';
 import type { FlowListItem } from '@/features/flows/api/use-flows';
+import { useMessagingWindow } from '@/features/chat/api/use-messaging-window';
+import { formatRemaining } from '@/features/chat/lib/messaging-window';
 import { useSendMessage } from '@/features/chat/api/use-send-message';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
-import { withAlpha } from '@/theme/color-utils';
 import { useTheme } from '@/theme/use-theme';
 
+import { BotStatusPill } from './bot-status-pill';
 import { ConversationActionsSheet } from './conversation-actions-sheet';
 import { FlowPickerSheet } from './flow-picker-sheet';
 import { SavedRepliesSheet } from './saved-replies-sheet';
@@ -52,6 +54,7 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
     placeholderData: () => findConversationInListCache(queryClient, workspaceId, conversationId),
   });
 
+  const messagingWindow = useMessagingWindow(conversation);
   const enableBot = useEnableBot(workspaceId);
   const disableBot = useDisableBot(workspaceId);
   const sendMessage = useSendMessage(workspaceId, conversationId);
@@ -135,35 +138,25 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
           <Text variant="bodyStrong" numberOfLines={1}>
             {contactName}
           </Text>
-          {subtitleParts.length > 0 ? (
+          {subtitleParts.length > 0 || messagingWindow.status === 'closing' ? (
             <Text variant="caption" color="secondary" numberOfLines={1}>
               {subtitleParts.join(' · ')}
+              {messagingWindow.status === 'closing' ? (
+                <Text variant="caption" color="warning" style={{ fontWeight: '600' }}>
+                  {`${subtitleParts.length > 0 ? ' · ' : ''}${t('chat.windowRemaining', {
+                    time: formatRemaining(messagingWindow.remainingMs),
+                  })}`}
+                </Text>
+              ) : null}
             </Text>
           ) : null}
         </View>
       </Pressable>
 
-      <IconButton
-        accessibilityLabel={
-          botActive ? t('conversations.disableBot') : t('conversations.enableBot')
-        }
-        icon={botTriState === 'on' ? 'bot' : botTriState === 'paused' ? 'clock' : 'bot-off'}
-        variant="tonal"
-        tint={
-          botTriState === 'on'
-            ? colors.bubbleBotAccent
-            : botTriState === 'paused'
-              ? colors.warning
-              : undefined
-        }
-        style={
-          botTriState === 'on'
-            ? { backgroundColor: withAlpha(colors.bubbleBotAccent, 0.16) }
-            : botTriState === 'paused'
-              ? { backgroundColor: withAlpha(colors.warning, 0.16) }
-              : undefined
-        }
-        haptic="medium"
+      <BotStatusPill
+        state={botTriState}
+        resumeAt={conversation?.botResumeAt ?? null}
+        accessibilityLabel={botActive ? t('conversations.disableBot') : t('conversations.enableBot')}
         onPress={handleToggleBot}
       />
 
