@@ -64,9 +64,9 @@ This creates a new EAS project scoped to this brand and writes the resulting `pr
 
 Same as the default brand, scoped to `acme`'s EAS project — see
 [deploy.md](deploy.md#eas-environment-variables-per-brand-per-environment). This customer's
-`API_BASE_URL`/`WS_URL` (if the backend is multi-tenant, these may be identical to another
-customer's; if not, they're per-customer here) and Android `google-services.json` (from a Firebase
-project registered with `com.acme.support[.dev|.preview]` — see
+`API_BASE_URL` (if the backend is multi-tenant, it may be identical to another customer's) and
+Android `google-services.json` (from a Firebase project registered with
+`com.acme.support[.dev|.preview]` — see
 [push-notifications.md](push-notifications.md)) all live here, never in this repo.
 
 ## 6. Build and submit

@@ -1,6 +1,41 @@
 import { ApiError, normalizeApiError } from '@/api/errors';
 
 describe('normalizeApiError', () => {
+  it('maps the public API 403 trialExpired / macLimitReached codes to workspaceBlocked', () => {
+    expect(
+      normalizeApiError(new ApiError({ code: 'trialExpired', status: 403, message: 'x' })),
+    ).toEqual({ kind: 'workspaceBlocked', reason: 'trialExpired', message: 'x' });
+    expect(
+      normalizeApiError(new ApiError({ code: 'macLimitReached', status: 403, message: 'y' })),
+    ).toEqual({ kind: 'workspaceBlocked', reason: 'mac', message: 'y' });
+  });
+
+  it('treats INVALID_CHATBOT_TOKEN as unauthorized', () => {
+    expect(normalizeApiError(new ApiError({ code: 'INVALID_CHATBOT_TOKEN', status: 401 }))).toEqual(
+      {
+        kind: 'unauthorized',
+      },
+    );
+  });
+
+  it('classifies 429, 422, cursor and workspace-selection errors', () => {
+    expect(normalizeApiError(new ApiError({ code: 'tooManyRequests', status: 429 })).kind).toBe(
+      'tooManyRequests',
+    );
+    expect(normalizeApiError(new ApiError({ code: 'invalidRequestData', status: 422 })).kind).toBe(
+      'invalidRequestData',
+    );
+    expect(normalizeApiError(new ApiError({ code: 'invalidCursor', status: 400 })).kind).toBe(
+      'invalidCursor',
+    );
+    expect(
+      normalizeApiError(new ApiError({ code: 'WORKSPACE_SELECTION_REQUIRED', status: 400 })).kind,
+    ).toBe('workspaceSelectionRequired');
+    expect(
+      normalizeApiError(new ApiError({ code: 'imagesNotSupportedOnChannel', status: 422 })).kind,
+    ).toBe('imagesNotSupportedOnChannel');
+  });
+
   it('returns mustChangePassword for FORBIDDEN with the change-password message', () => {
     const error = new ApiError({ code: 'FORBIDDEN', message: 'Password change required' });
     expect(normalizeApiError(error)).toEqual({ kind: 'mustChangePassword' });

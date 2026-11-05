@@ -1,7 +1,7 @@
 import { Link, router, type Href } from 'expo-router';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { TextInput } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
@@ -33,7 +33,7 @@ export default function SignInScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const passwordInputRef = useRef<TextInput>(null);
+  const passwordInputRef = useRef<TextInputInstance>(null);
 
   const handleSubmit = async () => {
     setError(null);

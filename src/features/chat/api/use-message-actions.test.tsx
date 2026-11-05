@@ -22,7 +22,7 @@ const mockedPost = apiClient.POST as jest.Mock;
 const activeQueryClients: QueryClient[] = [];
 
 function createTestQueryClient(): QueryClient {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({ defaultOptions: { mutations: { gcTime: Infinity } } });
   activeQueryClients.push(queryClient);
   return queryClient;
 }

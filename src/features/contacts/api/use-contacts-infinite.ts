@@ -6,7 +6,7 @@ import { queryKeys } from '@/api/query-keys';
 import type { operations } from '@/api/generated/schema';
 
 /**
- * `contactsAPIs.listContactsAuthenticatedAPI` (`GET /workspaces/{workspaceId}/contacts`) uses
+ * `contacts.list` (`GET /v1/contacts`) uses
  * OFFSET pagination (`page`/`perPage`/`pageCount`/`totalCount`), NOT the cursor shape
  * (`{ data, nextCursor }`) every other list endpoint in this app uses — verified directly against
  * the generated schema. `api/pagination.ts`'s CursorPage helpers don't apply here; this hook
@@ -21,7 +21,7 @@ import type { operations } from '@/api/generated/schema';
  * their own assignments. Closing this gap would require building the `contactFilter` DSL query,
  * which is out of scope for this pass; flagging it explicitly rather than silently leaving it.
  */
-type ListContactsOperation = operations['contactsAPIs.listContactsAuthenticatedAPI'];
+type ListContactsOperation = operations['contacts.list'];
 export type ListContactsResponse =
   ListContactsOperation['responses'][200]['content']['application/json'];
 export type ContactListItem = ListContactsResponse['data'][number];
@@ -34,10 +34,14 @@ export function useContactsInfinite(workspaceId: string | null, keyword: string)
     enabled: workspaceId !== null,
     initialPageParam: 1,
     queryFn: async ({ pageParam }): Promise<ListContactsResponse> => {
-      const { data, error } = await apiClient.GET('/workspaces/{workspaceId}/contacts', {
+      const { data, error } = await apiClient.GET('/v1/contacts', {
         params: {
-          path: { workspaceId: workspaceId! },
-          query: { page: pageParam, perPage: PER_PAGE, keyword: keyword || undefined },
+          query: {
+            page: pageParam,
+            perPage: PER_PAGE,
+            keyword: keyword || undefined,
+            include: ['tags', 'inboxes', 'conversation'],
+          },
         },
       });
       if (error) throw new ApiError(error);

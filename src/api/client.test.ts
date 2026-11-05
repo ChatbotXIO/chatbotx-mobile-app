@@ -1,5 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
-import type { Middleware } from 'openapi-fetch';
+import { getValidAccessToken } from '@/api/auth-endpoints';
 
 import { apiClient } from '@/api/client';
 
@@ -12,7 +11,6 @@ jest.mock('expo-constants', () => ({
     expoConfig: {
       extra: {
         apiBaseUrl: 'http://localhost:3123',
-        wsUrl: 'ws://localhost:3123',
         brandId: 'chatbotx',
         brandScheme: 'chatbotxmobileapp',
         brandColor: '#3c6df0',
@@ -20,14 +18,13 @@ jest.mock('expo-constants', () => ({
     },
   },
 }));
-jest.mock('expo-secure-store', () => ({ getItemAsync: jest.fn() }));
+jest.mock('@/api/auth-endpoints', () => ({
+  getValidAccessToken: jest.fn(),
+  refreshAccessToken: jest.fn(),
+}));
 
-/**
- * Stand-in for React Native's second `Response` realm (see the plan this test accompanies):
- * duck-types a Response but is never `instanceof` the global `Response` openapi-fetch checks
- * against, which is exactly the mismatch that produced
- * "onResponse: must return new Response() when modifying the response".
- */
+/** A response from React Native's fetch realm, which is not an instance of the Response class
+ * that openapi-fetch captures while it initializes. */
 class ForeignResponse {
   constructor(
     private readonly bodyText: string,
@@ -41,6 +38,9 @@ class ForeignResponse {
   }
   get headers() {
     return new Headers(this.init.headers);
+  }
+  get ok() {
+    return this.status >= 200 && this.status < 300;
   }
   async text() {
     return this.bodyText;
@@ -60,13 +60,19 @@ describe('apiClient', () => {
       headers: { 'content-type': 'application/json' },
     });
     fetchMock = jest.fn().mockResolvedValue(serverResponse);
+    jest.mocked(getValidAccessToken).mockResolvedValue(null);
   });
 
-  it('does not throw the RN dual-Response error, because no onResponse middleware is registered', async () => {
-    jest.mocked(SecureStore.getItemAsync).mockResolvedValueOnce(null);
+  it('accepts a response from React Native without passing it through onResponse', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new ForeignResponse(JSON.stringify({ id: '123' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
 
-    const result = await apiClient.GET('/analytics/broadcasts/{broadcastId}/stats', {
-      params: { path: { broadcastId: '1' }, query: { workspaceId: 'w1' } },
+    const result = await apiClient.GET('/v1/contacts/{identifier}', {
+      params: { path: { identifier: 'id:1' } },
       fetch: fetchMock,
     });
 
@@ -74,37 +80,59 @@ describe('apiClient', () => {
     expect(result.data).toEqual({ id: '123' });
   });
 
-  it('regression: a rewrapping onResponse middleware reproduces the exact RN dual-Response error', async () => {
-    // Proves the mechanism this suite guards against: only a middleware that reconstructs the
-    // response (as the deleted bigNumberSafeParsingMiddleware did) can trigger openapi-fetch's
-    // `instanceof Response` check. If such a middleware is ever reintroduced against a
-    // foreign-realm Response class, it fails exactly like the original bug.
-    const rewrapMiddleware: Middleware = {
-      async onResponse({ response }) {
-        const raw = await response.text();
-        return new ForeignResponse(raw, { status: response.status }) as unknown as Response;
-      },
-    };
-    apiClient.use(rewrapMiddleware);
-    jest.mocked(SecureStore.getItemAsync).mockResolvedValueOnce(null);
+  it('retries a 401 mutation without returning the retried response through onResponse', async () => {
+    const originalFetch = global.fetch;
+    const requestBodies: string[] = [];
+    const globalFetch = jest
+      .fn()
+      .mockImplementationOnce(async (request: Request) => {
+        requestBodies.push(await request.text());
+        return new ForeignResponse('', { status: 401 });
+      })
+      .mockImplementationOnce(async (request: Request) => {
+        requestBodies.push(await request.text());
+        return new ForeignResponse(JSON.stringify({ id: '123' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      });
+    global.fetch = globalFetch;
+    jest.resetModules();
 
     try {
+      const clientModule: typeof import('@/api/client') =
+        // eslint-disable-next-line @typescript-eslint/no-require-imports -- reload after replacing global fetch.
+        require('@/api/client');
+      const { apiClient: isolatedClient } = clientModule;
+      const auth = jest.requireMock('@/api/auth-endpoints') as {
+        getValidAccessToken: jest.Mock;
+        refreshAccessToken: jest.Mock;
+      };
+      auth.getValidAccessToken.mockResolvedValue('expired-access-token');
+      auth.refreshAccessToken.mockResolvedValue('fresh-access-token');
+
       await expect(
-        apiClient.GET('/analytics/broadcasts/{broadcastId}/stats', {
-          params: { path: { broadcastId: '1' }, query: { workspaceId: 'w1' } },
-          fetch: fetchMock,
-        }),
-      ).rejects.toThrow('onResponse: must return new Response() when modifying the response');
+        isolatedClient.POST('/v1/contacts', {
+          body: { displayName: 'Ada' },
+        } as never),
+      ).resolves.toMatchObject({ data: { id: '123' } });
+
+      expect(globalFetch).toHaveBeenCalledTimes(2);
+      expect(requestBodies).toEqual(['{"displayName":"Ada"}', '{"displayName":"Ada"}']);
+      const retryRequest = globalFetch.mock.calls[1][0] as Request;
+      expect(retryRequest.headers.get('Authorization')).toBe('Bearer fresh-access-token');
+      expect(retryRequest.headers.get('x-mobile-refresh-retry')).toBe('1');
     } finally {
-      apiClient.eject(rewrapMiddleware);
+      global.fetch = originalFetch;
+      jest.resetModules();
     }
   });
 
-  it('sets Authorization: Bearer <token> when getAuthToken resolves a token', async () => {
-    jest.mocked(SecureStore.getItemAsync).mockResolvedValueOnce('test-token');
+  it('sets Authorization: Bearer <token> when getValidAccessToken resolves a token', async () => {
+    jest.mocked(getValidAccessToken).mockResolvedValueOnce('test-token');
 
-    await apiClient.GET('/analytics/broadcasts/{broadcastId}/stats', {
-      params: { path: { broadcastId: '1' }, query: { workspaceId: 'w1' } },
+    await apiClient.GET('/v1/contacts/{identifier}', {
+      params: { path: { identifier: 'id:1' } },
       fetch: fetchMock,
     });
 
@@ -112,15 +140,37 @@ describe('apiClient', () => {
     expect(request.headers.get('Authorization')).toBe('Bearer test-token');
   });
 
-  it('leaves the Authorization header unset when getAuthToken resolves null', async () => {
-    jest.mocked(SecureStore.getItemAsync).mockResolvedValueOnce(null);
-
-    await apiClient.GET('/analytics/broadcasts/{broadcastId}/stats', {
-      params: { path: { broadcastId: '1' }, query: { workspaceId: 'w1' } },
+  it('leaves the Authorization header unset when getValidAccessToken resolves null', async () => {
+    await apiClient.GET('/v1/contacts/{identifier}', {
+      params: { path: { identifier: 'id:1' } },
       fetch: fetchMock,
     });
 
     const request = fetchMock.mock.calls[0][0] as Request;
     expect(request.headers.has('Authorization')).toBe(false);
+  });
+
+  it('serializes status/tags/contactFilter as JSON strings and other params as plain values', async () => {
+    await apiClient.GET('/v1/conversations', {
+      params: { query: { tags: ['unread', 'archived'], keyword: 'hi', perPage: 30 } },
+      fetch: fetchMock,
+    });
+
+    const url = new URL((fetchMock.mock.calls[0][0] as Request).url);
+    expect(url.searchParams.get('tags')).toBe('["unread","archived"]');
+    expect(url.searchParams.get('keyword')).toBe('hi');
+    expect(url.searchParams.get('perPage')).toBe('30');
+  });
+
+  it('repeats other array params and drops null/undefined values', async () => {
+    await apiClient.GET('/v1/contacts', {
+      params: { query: { include: ['tags', 'inboxes'], keyword: undefined, page: null } },
+      fetch: fetchMock,
+    });
+
+    const url = new URL((fetchMock.mock.calls[0][0] as Request).url);
+    expect(url.searchParams.getAll('include')).toEqual(['tags', 'inboxes']);
+    expect(url.searchParams.has('keyword')).toBe(false);
+    expect(url.searchParams.has('page')).toBe(false);
   });
 });

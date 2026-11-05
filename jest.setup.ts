@@ -12,7 +12,6 @@ jest.mock('expo-constants', () => ({
     expoConfig: {
       extra: {
         apiBaseUrl: 'https://test.invalid',
-        wsUrl: 'wss://test.invalid',
         brandId: 'chatbotx',
         brandScheme: 'chatbotxmobileapp',
         brandColor: '#3c6df0',
@@ -61,6 +60,13 @@ jest.mock('expo-crypto', () => {
   return {
     __esModule: true,
     randomUUID: () => nodeCrypto.randomUUID(),
+    CryptoDigestAlgorithm: { SHA256: 'SHA-256' },
+    CryptoEncoding: { BASE64: 'base64', HEX: 'hex' },
+    digestStringAsync: async (_algorithm: string, data: string, options?: { encoding?: string }) =>
+      nodeCrypto
+        .createHash('sha256')
+        .update(data)
+        .digest(options?.encoding === 'base64' ? 'base64' : 'hex'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock-only; expo-crypto's
     // real generic signature is asserted separately by src/lib/install-crypto-polyfill.ts.
     getRandomValues: (typedArray: any) => nodeCrypto.webcrypto.getRandomValues(typedArray),

@@ -3,14 +3,18 @@ import { renderHook, waitFor } from '@testing-library/react-native';
 import { act } from 'react';
 import type { PropsWithChildren } from 'react';
 
+import { apiClient } from '@/api/client';
+
 import { useEnrollContactInSequences } from './use-enroll-contact-in-sequences';
 
-// `FEATURES.sendSequence` is hardcoded `false` in src/config/features.ts — this hook must refuse
-// to execute (and never reach `fetch`) while that's the case, per its own doc comment.
-const originalFetch = global.fetch;
+jest.mock('@/api/client', () => ({
+  apiClient: { POST: jest.fn() },
+}));
+
+const mockPost = apiClient.POST as jest.Mock;
 
 afterEach(() => {
-  global.fetch = originalFetch;
+  mockPost.mockReset();
 });
 
 function wrapper(queryClient: QueryClient) {
@@ -20,10 +24,9 @@ function wrapper(queryClient: QueryClient) {
 }
 
 describe('useEnrollContactInSequences', () => {
-  it('throws before any network call while FEATURES.sendSequence is off', async () => {
-    const fetchSpy = jest.fn();
-    global.fetch = fetchSpy as unknown as typeof fetch;
-    const queryClient = new QueryClient();
+  it('enrolls through the public API using the prefixed contact identifier', async () => {
+    mockPost.mockResolvedValue({ data: {}, error: undefined });
+    const queryClient = new QueryClient({ defaultOptions: { mutations: { gcTime: Infinity } } });
 
     const { result } = await renderHook(() => useEnrollContactInSequences('ws-1', 'contact-1'), {
       wrapper: wrapper(queryClient),
@@ -33,9 +36,11 @@ describe('useEnrollContactInSequences', () => {
       result.current.mutate(['seq-1']);
     });
 
-    await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(fetchSpy).not.toHaveBeenCalled();
-    expect(result.current.error).toBeInstanceOf(Error);
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockPost).toHaveBeenCalledWith('/v1/contacts/{identifier}/sequences', {
+      params: { path: { identifier: 'id:contact-1' } },
+      body: { sequenceIds: ['seq-1'] },
+    });
 
     queryClient.clear();
     queryClient.unmount();

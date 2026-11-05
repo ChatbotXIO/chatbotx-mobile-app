@@ -1,4 +1,4 @@
-import { parseRealtimeEvent } from './parse-event';
+import { parseRealtimeEnvelope, parseRealtimeEvent } from './parse-event';
 import { RealtimeEventType } from './events';
 
 describe('parseRealtimeEvent', () => {
@@ -221,31 +221,22 @@ describe('parseRealtimeEvent', () => {
     });
   });
 
-  describe('notifyExportResult', () => {
-    it('accepts a valid payload', () => {
-      const raw = JSON.stringify({
-        eventType: RealtimeEventType.notifyExportResult,
-        data: { outputPath: '/out.csv', status: 'completed' },
+  describe('unhandled event types', () => {
+    it('classifies a well-formed envelope of an unhandled type as unknown, not invalid', () => {
+      expect(parseRealtimeEnvelope({ eventType: 'pipelineItemChanged', data: {} })).toEqual({
+        status: 'unknown',
       });
-      expect(parseRealtimeEvent(raw)).not.toBeNull();
     });
 
-    it('rejects an invalid status value', () => {
-      const raw = JSON.stringify({
-        eventType: RealtimeEventType.notifyExportResult,
-        data: { outputPath: '/out.csv', status: 'bogus' },
-      });
-      expect(parseRealtimeEvent(raw)).toBeNull();
+    it('classifies a non-envelope as invalid', () => {
+      expect(parseRealtimeEnvelope('nope')).toEqual({ status: 'invalid' });
+      expect(parseRealtimeEnvelope({ data: {} })).toEqual({ status: 'invalid' });
     });
-  });
 
-  describe('conversationCreated', () => {
-    it('accepts any present data payload (untyped by design)', () => {
-      const raw = JSON.stringify({
-        eventType: RealtimeEventType.conversationCreated,
-        data: { id: 'conv1' },
-      });
-      expect(parseRealtimeEvent(raw)).not.toBeNull();
+    it('classifies a handled type with bad data as invalid', () => {
+      expect(
+        parseRealtimeEnvelope({ eventType: RealtimeEventType.messageDeleted, data: {} }),
+      ).toEqual({ status: 'invalid' });
     });
   });
 

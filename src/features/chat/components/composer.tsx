@@ -2,12 +2,7 @@ import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type {
-  NativeSyntheticEvent,
-  StyleProp,
-  TextInputContentSizeChangeEventData,
-  ViewStyle,
-} from 'react-native';
+import type { StyleProp, TextInputContentSizeChangeEvent, ViewStyle } from 'react-native';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -21,7 +16,11 @@ import { FEATURES } from '@/config/features';
 import { useConversationDetail } from '@/features/conversations/api/use-conversation-detail';
 import type { FlowListItem } from '@/features/flows/api/use-flows';
 import { useEditMessage } from '@/features/chat/api/use-message-actions';
-import { MAX_FILE_SIZE_BYTES, useSendMessage } from '@/features/chat/api/use-send-message';
+import {
+  MAX_FILE_SIZE_BYTES,
+  MAX_MESSAGE_TEXT_LENGTH,
+  useSendMessage,
+} from '@/features/chat/api/use-send-message';
 import {
   partitionBySize,
   pickDocuments,
@@ -100,9 +99,7 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
     setDraft(conversationId, text);
   }
 
-  function handleContentSizeChange(
-    event: NativeSyntheticEvent<TextInputContentSizeChangeEventData>,
-  ) {
+  function handleContentSizeChange(event: TextInputContentSizeChangeEvent) {
     const nextHeight = Math.min(
       MAX_INPUT_HEIGHT,
       Math.max(MIN_INPUT_HEIGHT, event.nativeEvent.contentSize.height),
@@ -341,6 +338,7 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
           placeholderTextColor={colors.textSecondary}
           keyboardAppearance={scheme}
           multiline
+          maxLength={MAX_MESSAGE_TEXT_LENGTH}
           editable={!quotaBlocked}
           style={[
             styles.input,

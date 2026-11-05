@@ -165,15 +165,17 @@ export const ContactActionsSheet = forwardRef<BottomSheet, ContactActionsSheetPr
               onPress={handleMessage}
             />
           ) : null}
-          <ListItem
-            title={t('contacts.assign')}
-            leading={<Icon name="user-plus" size={20} color={colors.textSecondary} />}
-            onPress={() => {
-              onClose();
-              pendingAssignmentRef.current = true;
-              setOpenedAssignment(true);
-            }}
-          />
+          {conversationId ? (
+            <ListItem
+              title={t('contacts.assign')}
+              leading={<Icon name="user-plus" size={20} color={colors.textSecondary} />}
+              onPress={() => {
+                onClose();
+                pendingAssignmentRef.current = true;
+                setOpenedAssignment(true);
+              }}
+            />
+          ) : null}
           <ListItem
             title={t('contacts.setTags')}
             leading={<Icon name="tag" size={20} color={colors.textSecondary} />}
@@ -220,7 +222,12 @@ export const ContactActionsSheet = forwardRef<BottomSheet, ContactActionsSheetPr
             sheetRef={assignmentSheetRef}
             workspaceId={workspaceId}
             onAssign={(userId) => {
-              assignConversations.mutate({ contactIds: [contact.id], assignedId: userId });
+              if (conversationId) {
+                assignConversations.mutate({
+                  conversationIds: [conversationId],
+                  assignedId: userId,
+                });
+              }
             }}
           />
         ) : null}

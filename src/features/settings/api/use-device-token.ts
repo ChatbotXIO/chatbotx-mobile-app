@@ -10,11 +10,11 @@ import { brand } from '@/config/brand';
 import { getPushTokenAsync } from '@/lib/notifications';
 
 /**
- * Real Expo push token registration against `PUT/DELETE /users/me/device-tokens` (verified in
- * src/api/generated/schema.ts: PUT body `{ workspaceId?, platform: "ios"|"android", token }`,
- * DELETE body `{ token }`). The last-registered token is cached in SecureStore so unregister (and
- * re-registration after a token rotation) always targets the token the backend actually has on
- * file, not whatever `getExpoPushTokenAsync` returns *now* if it has since changed.
+ * Registers Expo push tokens through the member-scoped `/v1/me/device-tokens` endpoint. The
+ * selected workspace is an `x-workspace-id` header, never a request-body field. The
+ * last-registered token is cached in SecureStore so unregister (and re-registration after a token
+ * rotation) always targets the token the backend actually has on file, not whatever
+ * `getExpoPushTokenAsync` returns now if it has since changed.
  */
 const LAST_REGISTERED_TOKEN_KEY = `${brand.brandId}.lastRegisteredPushToken`;
 
@@ -24,19 +24,21 @@ function resolvePlatform(): 'ios' | 'android' | null {
   return null; // web / other — the backend enum has no matching value, don't attempt registration.
 }
 
-async function registerToken(workspaceId: string, token: string): Promise<void> {
+async function registerToken(token: string): Promise<void> {
   const platform = resolvePlatform();
   if (!platform) throw new Error('Push registration is only supported on iOS and Android.');
 
-  const { error } = await apiClient.PUT('/users/me/device-tokens', {
-    body: { workspaceId, platform, token },
+  // The generated member route does not declare an explicit header parameter. apiClient's
+  // middleware attaches the current workspace id, including immediately after a workspace switch.
+  const { error } = await apiClient.PUT('/v1/me/device-tokens', {
+    body: { platform, token },
   });
   if (error) throw new ApiError(error);
   await SecureStore.setItemAsync(LAST_REGISTERED_TOKEN_KEY, token);
 }
 
 async function unregisterToken(token: string): Promise<void> {
-  const { error } = await apiClient.DELETE('/users/me/device-tokens', { body: { token } });
+  const { error } = await apiClient.DELETE('/v1/me/device-tokens', { body: { token } });
   if (error) throw new ApiError(error);
 }
 
@@ -47,7 +49,7 @@ export function useRegisterDeviceToken(workspaceId: string) {
       if (result.status !== 'granted') {
         throw new Error(`Push permission ${result.status}`);
       }
-      await registerToken(workspaceId, result.token);
+      await registerToken(result.token);
       return result.token;
     },
   });
@@ -84,7 +86,7 @@ export function usePushTokenRotation(workspaceId: string, enabled: boolean): voi
         await unregisterToken(previousToken).catch(() => {});
         if (cancelled) return;
       }
-      await registerToken(workspaceId, newToken);
+      await registerToken(newToken);
     });
 
     return () => {

@@ -83,7 +83,9 @@ export function SequencePickerSheet({
         data={activeSequences}
         keyExtractor={(sequence) => sequence.id}
         ListEmptyComponent={
-          !isLoading ? <EmptyState icon="layers-2" title={t('contacts.noActiveSequences')} /> : null
+          !isLoading ? (
+            <EmptyState icon="layers-2" title={t('contacts.noActiveSequences')} />
+          ) : undefined
         }
         renderItem={({ item }: { item: SequenceListItem }) => {
           const selected = selectedIds.includes(item.id);

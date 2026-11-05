@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
+import { AndroidImportance } from 'expo-notifications';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
@@ -53,7 +54,7 @@ export async function ensureAndroidNotificationChannel(): Promise<void> {
 
   await Notifications.setNotificationChannelAsync(ANDROID_DEFAULT_CHANNEL_ID, {
     name: i18next.t('notifications.androidChannelName'),
-    importance: Notifications.AndroidImportance.DEFAULT,
+    importance: AndroidImportance.DEFAULT,
   });
 }
 

@@ -1,5 +1,5 @@
 import { forwardRef, useState } from 'react';
-import type { TextInput as RNTextInputType } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { useTheme } from '@/theme/use-theme';
@@ -20,7 +20,7 @@ interface TextFieldProps extends React.ComponentProps<typeof TextInput> {
   onTrailingIconPress?: () => void;
 }
 
-export const TextField = forwardRef<RNTextInputType, TextFieldProps>(function TextField(
+export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function TextField(
   {
     label,
     error,

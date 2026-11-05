@@ -8,7 +8,7 @@ chatbot platform.
 - **Auth & workspaces:** sign in, switch workspaces, workspace picker
 - **Live Chat:** Conversations tab with attachments, replies, edit/delete, and read state
 - **Contact CRM:** Contacts tab with tags, custom fields, and PII masking for restricted roles
-- **Realtime:** PartyKit-backed live updates for messages and conversation state
+- **Realtime:** Gateway-backed live updates with replay-safe cursor recovery for messages and conversation state
 - **Push notifications:** Expo push + Android FCM, with deep-linking into a conversation/contact
 - **i18n:** 20 locales, including RTL support for `ar`/`he`
 - **Typed API client:** REST client generated from the backend's OpenAPI spec
@@ -27,7 +27,10 @@ There is no web target — this app ships iOS/Android only.
 
 ## Quick Start
 
+Requires Node.js 26 and pnpm 12.16.1. Node.js 26 does not include Corepack; install pnpm with npm:
+
 ```bash
+npm install --global pnpm@12.16.1
 pnpm install
 cp .env.example .env
 # edit API_BASE_URL if the backend isn't on the default local port (http://localhost:3123)

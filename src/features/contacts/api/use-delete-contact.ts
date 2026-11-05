@@ -1,28 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { apiClient } from '@/api/client';
+import { ApiError } from '@/api/errors';
 import { isWorkspaceQuery } from '@/api/query-keys';
-import { env } from '@/config/env';
-import { FEATURES } from '@/config/features';
-import { authorizedFetch } from '@/features/contacts/api/contact-fetch';
+import { toContactIdentifier } from '@/features/contacts/lib/contact-identifier';
 import type { ListContactsResponse } from '@/features/contacts/api/use-contacts-infinite';
 import {
   conversationListPredicate,
   patchConversationListCache,
 } from '@/features/conversations/lib/patch-conversation-list-cache';
 
-/**
- * Hand-rolled fetch — no generated-client route exists for this endpoint at all
- * (`GET /workspaces/{workspaceId}/contacts/{contactId}` has no sibling `delete` in the schema).
- * Replace with the generated client + delete this file once
- * `DELETE /workspaces/{workspaceId}/contacts/{contactId}` ships and `pnpm generate:api` has been
- * re-run.
- */
-class FeatureUnavailableError extends Error {}
-
-async function deleteContactRequest(workspaceId: string, contactId: string): Promise<void> {
-  await authorizedFetch(`${env.apiBaseUrl}/api/workspaces/${workspaceId}/contacts/${contactId}`, {
-    method: 'DELETE',
+async function deleteContactRequest(contactId: string): Promise<void> {
+  const { error } = await apiClient.DELETE('/v1/contacts/{identifier}', {
+    params: { path: { identifier: toContactIdentifier(contactId) } },
   });
+  if (error) throw new ApiError(error);
 }
 
 type InfiniteData = { pages: ListContactsResponse[]; pageParams: unknown[] };
@@ -38,12 +30,7 @@ export function useDeleteContact(workspaceId: string) {
 
   return useMutation({
     mutationFn: async (contactId: string) => {
-      if (!FEATURES.deleteContact) {
-        throw new FeatureUnavailableError(
-          'Delete contact is not yet available — the backend endpoint has not shipped.',
-        );
-      }
-      await deleteContactRequest(workspaceId, contactId);
+      await deleteContactRequest(contactId);
     },
     onMutate: async (contactId: string) => {
       await queryClient.cancelQueries({

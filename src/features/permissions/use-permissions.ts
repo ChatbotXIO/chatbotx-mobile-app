@@ -2,12 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '@/api/client';
 import { ApiError } from '@/api/errors';
+import { fetchAllPages, MAX_PER_PAGE } from '@/api/pagination';
 import { queryKeys } from '@/api/query-keys';
 import { useAuthStore } from '@/stores/use-auth-store';
 
 /**
- * `GET /workspaces/{workspaceId}/members` (`workspaceMembersAPI.listWorkspaceMembersAuthenticatedAPI`
- * in src/api/generated/schema.ts) embeds a `permissions` object on every member row with EXACTLY
+ * `workspaceMembers.list` (`GET /v1/members` in src/api/generated/schema.ts) embeds a `permissions` object on every member row with EXACTLY
  * these field names:
  * `{ superAdmin, analytics, flows, contacts, onlyAssignedContacts, emailAndPhone, broadcast, ecommerce }`.
  * This hook finds the current signed-in user's own member row (matched by `userId` against the
@@ -60,13 +60,14 @@ const LOADING_PERMISSIONS: Omit<WorkspacePermissions, 'isLoading'> = {
 export function useWorkspaceMembersList(workspaceId: string) {
   return useQuery({
     queryKey: queryKeys.ws.members.list(workspaceId),
-    queryFn: async () => {
-      const { data, error } = await apiClient.GET('/workspaces/{workspaceId}/members', {
-        params: { path: { workspaceId } },
-      });
-      if (error) throw new ApiError(error);
-      return data.data;
-    },
+    queryFn: () =>
+      fetchAllPages(async (page) => {
+        const { data, error } = await apiClient.GET('/v1/members', {
+          params: { query: { page, perPage: MAX_PER_PAGE } },
+        });
+        if (error) throw new ApiError(error);
+        return data;
+      }),
     enabled: workspaceId.length > 0,
   });
 }

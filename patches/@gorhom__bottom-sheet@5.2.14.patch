@@ -1,0 +1,487 @@
+diff --git a/src/components/bottomSheet/BottomSheet.tsx b/src/components/bottomSheet/BottomSheet.tsx
+index fc520337115ce7a2c7aacb0f81f16b9046ce2c89..7d35d6b78a22fedc8c249b168ad8b9938230e3d6 100644
+--- a/src/components/bottomSheet/BottomSheet.tsx
++++ b/src/components/bottomSheet/BottomSheet.tsx
+@@ -211,7 +211,7 @@ const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
+       }
+ 
+       return containerHeight - highestDetentPosition;
+-    }, [animatedLayoutState, animatedDetentsState]);
++    });
+     const animatedCurrentIndex = useReactiveSharedValue(
+       animateOnMount ? -1 : _providedIndex
+     );
+@@ -255,7 +255,7 @@ const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
+         isHandleHeightCalculated &&
+         isSnapPointsNormalized
+       );
+-    }, [animatedLayoutState, animatedDetentsState, handleComponent]);
++    });
+     const isInTemporaryPosition = useSharedValue(false);
+     const animatedContainerHeightDidChange = useSharedValue(false);
+ 
+@@ -340,15 +340,7 @@ const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
+       }
+ 
+       return SHEET_STATE.OPENED;
+-    }, [
+-      animatedLayoutState,
+-      animatedDetentsState,
+-      animatedKeyboardState,
+-      animatedPosition,
+-      animatedSheetHeight,
+-      isInTemporaryPosition,
+-      keyboardBehavior,
+-    ]);
++    });
+     const {
+       state: animatedScrollableState,
+       status: animatedScrollableStatus,
+@@ -422,16 +414,7 @@ const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
+       }
+ 
+       return currentIndex;
+-    }, [
+-      android_keyboardInputMode,
+-      animatedAnimationState,
+-      animatedLayoutState,
+-      animatedCurrentIndex,
+-      animatedPosition,
+-      animatedDetentsState,
+-      isInTemporaryPosition,
+-      isLayoutCalculated,
+-    ]);
++    });
+     //#endregion
+ 
+     //#region private methods
+@@ -1570,11 +1553,6 @@ const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
+           animateToPosition(closedDetentPosition, ANIMATION_SOURCE.GESTURE);
+         }
+       },
+-      [
+-        animatedContainerHeightDidChange,
+-        animatedAnimationState,
+-        animatedDetentsState,
+-      ]
+     );
+ 
+     /**
+@@ -1617,7 +1595,6 @@ const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
+ 
+         evaluatePosition(ANIMATION_SOURCE.SNAP_POINT_CHANGE);
+       },
+-      [isLayoutCalculated, didAnimateOnMount, animatedDetentsState]
+     );
+ 
+     /**
+@@ -1737,16 +1714,6 @@ const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
+         const animationConfigs = getKeyboardAnimationConfigs(easing, duration);
+         evaluatePosition(ANIMATION_SOURCE.KEYBOARD, animationConfigs);
+       },
+-      [
+-        $modal,
+-        bottomInset,
+-        keyboardBehavior,
+-        keyboardBlurBehavior,
+-        android_keyboardInputMode,
+-        animatedKeyboardState,
+-        animatedLayoutState,
+-        getEvaluatedPosition,
+-      ]
+     );
+ 
+     /**
+@@ -1759,7 +1726,6 @@ const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
+           _providedAnimatedPosition.value = _animatedPosition + topInset;
+         }
+       },
+-      [_providedAnimatedPosition, topInset]
+     );
+ 
+     /**
+@@ -1772,7 +1738,6 @@ const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
+           _providedAnimatedIndex.value = _animatedIndex;
+         }
+       },
+-      [_providedAnimatedIndex]
+     );
+ 
+     /**
+diff --git a/src/components/bottomSheet/BottomSheetBody.tsx b/src/components/bottomSheet/BottomSheetBody.tsx
+index 91b6a6a6291bbd3ef8df100b21f328e591ae180a..47d9b74f58f88f94ee4086cbea54e183478f3426 100644
+--- a/src/components/bottomSheet/BottomSheetBody.tsx
++++ b/src/components/bottomSheet/BottomSheetBody.tsx
+@@ -16,17 +16,14 @@ function BottomSheetBodyComponent({ style, children }: BottomSheetBodyProps) {
+   //#endregion
+ 
+   //#region styles
+-  const containerAnimatedStyle = useAnimatedStyle(
+-    () => ({
+-      opacity: Platform.OS === 'android' && animatedIndex.get() === -1 ? 0 : 1,
+-      transform: [
+-        {
+-          translateY: animatedPosition.get(),
+-        },
+-      ],
+-    }),
+-    [animatedPosition, animatedIndex]
+-  );
++  const containerAnimatedStyle = useAnimatedStyle(() => ({
++    opacity: Platform.OS === 'android' && animatedIndex.get() === -1 ? 0 : 1,
++    transform: [
++      {
++        translateY: animatedPosition.get(),
++      },
++    ],
++  }));
+   const containerStyle = useMemo(
+     () => [style, styles.container, containerAnimatedStyle],
+     [style, containerAnimatedStyle]
+diff --git a/src/components/bottomSheet/BottomSheetContent.tsx b/src/components/bottomSheet/BottomSheetContent.tsx
+index 4a69a6892ff553836b72216b598451c56f6284cc..50d419c1ff631b7b30651bf9c8cf218e321d8ccb 100644
+--- a/src/components/bottomSheet/BottomSheetContent.tsx
++++ b/src/components/bottomSheet/BottomSheetContent.tsx
+@@ -123,13 +123,7 @@ function BottomSheetContentComponent({
+      * @link (https://github.com/gorhom/react-native-bottom-sheet/issues/470)
+      */
+     return Math.max(contentHeight, 0);
+-  }, [
+-    animatedLayoutState,
+-    animatedKeyboardState,
+-    animatedSheetHeight,
+-    isInTemporaryPosition,
+-    keyboardBehavior,
+-  ]);
++  });
+   const animatedPaddingBottom = useDerivedValue(() => {
+     const containerHeight = animatedLayoutState.get().containerHeight;
+     /**
+@@ -169,13 +163,7 @@ function BottomSheetContentComponent({
+     }
+ 
+     return paddingBottom;
+-  }, [
+-    overDragResistanceFactor,
+-    animatedPosition,
+-    animatedLayoutState,
+-    animatedDetentsState,
+-    animatedKeyboardState,
+-  ]);
++  });
+   //#endregion
+ 
+   //#region styles
+@@ -211,16 +199,7 @@ function BottomSheetContentComponent({
+         overrideReduceMotion,
+       }),
+     };
+-  }, [
+-    overDragResistanceFactor,
+-    enableDynamicSizing,
+-    detached,
+-    animationConfigs,
+-    overrideReduceMotion,
+-    animatedLayoutState,
+-    animatedContentHeightMax,
+-    animatedLayoutState,
+-  ]);
++  });
+   const contentContainerStyle = useMemo(
+     () => [
+       detached
+diff --git a/src/components/bottomSheetBackdrop/BottomSheetBackdrop.tsx b/src/components/bottomSheetBackdrop/BottomSheetBackdrop.tsx
+index a0345b013904e92e0c00ba55ff23ba191d96a395..6bc2d304c0815c0ba4e37a45570513632fce30ea 100644
+--- a/src/components/bottomSheetBackdrop/BottomSheetBackdrop.tsx
++++ b/src/components/bottomSheetBackdrop/BottomSheetBackdrop.tsx
+@@ -96,17 +96,14 @@ const BottomSheetBackdropComponent = ({
+   //#endregion
+ 
+   //#region styles
+-  const containerAnimatedStyle = useAnimatedStyle(
+-    () => ({
+-      opacity: interpolate(
+-        animatedIndex.value,
+-        [-1, disappearsOnIndex, appearsOnIndex],
+-        [0, 0, opacity],
+-        Extrapolation.CLAMP
+-      ),
+-    }),
+-    [animatedIndex, appearsOnIndex, disappearsOnIndex, opacity]
+-  );
++  const containerAnimatedStyle = useAnimatedStyle(() => ({
++    opacity: interpolate(
++      animatedIndex.value,
++      [-1, disappearsOnIndex, appearsOnIndex],
++      [0, 0, opacity],
++      Extrapolation.CLAMP
++    ),
++  }));
+   const containerStyle = useMemo(
+     () => [
+       StyleSheet.absoluteFill,
+@@ -126,8 +123,7 @@ const BottomSheetBackdropComponent = ({
+         return;
+       }
+       runOnJS(handleContainerTouchability)(shouldDisableTouchability);
+-    },
+-    [disappearsOnIndex]
++    }
+   );
+ 
+   // addressing updating the state after unmounting.
+diff --git a/src/components/bottomSheetDebugView/ReText.tsx b/src/components/bottomSheetDebugView/ReText.tsx
+index 3091565187fd02297a289cdce2c80152570ce81a..f907e5c23113284dd4fa22b527483f8f93f8d004 100644
+--- a/src/components/bottomSheetDebugView/ReText.tsx
++++ b/src/components/bottomSheetDebugView/ReText.tsx
+@@ -50,12 +50,10 @@ const ReText = ({ text, value: _providedValue, style }: TextProps) => {
+     }
+ 
+     return `${text}: ${rawValue}`;
+-  }, [text, _providedValue]);
+-  const animatedProps = useAnimatedProps(() => {
+-    return {
+-      text: providedValue.get(),
+-    };
+-  }, [providedValue]);
++  });
++  const animatedProps = useAnimatedProps(() => ({
++    text: providedValue.get(),
++  }));
+   return (
+     <AnimatedTextInput
+       underlineColorAndroid="transparent"
+diff --git a/src/components/bottomSheetFooter/BottomSheetFooter.tsx b/src/components/bottomSheetFooter/BottomSheetFooter.tsx
+index 639f2af3fdd106a6147972d9f2c853ab39b94b53..7da1ce2bf2e3d898b158871c1295d07932507e5b 100644
+--- a/src/components/bottomSheetFooter/BottomSheetFooter.tsx
++++ b/src/components/bottomSheetFooter/BottomSheetFooter.tsx
+@@ -44,7 +44,7 @@ function BottomSheetFooterComponent({
+         },
+       ],
+     };
+-  }, [bottomInset, animatedKeyboardState, animatedFooterPosition]);
++  });
+   const containerStyle = useMemo(
+     () => [styles.container, style, containerAnimatedStyle],
+     [style, containerAnimatedStyle]
+diff --git a/src/components/bottomSheetFooter/BottomSheetFooterContainer.tsx b/src/components/bottomSheetFooter/BottomSheetFooterContainer.tsx
+index 183903f7b9fb350646a44fa642c4f865f48a6ed1..1ecf9f940c34c8af7ea319dd9b8b3ddc5a7986bd 100644
+--- a/src/components/bottomSheetFooter/BottomSheetFooterContainer.tsx
++++ b/src/components/bottomSheetFooter/BottomSheetFooterContainer.tsx
+@@ -31,7 +31,7 @@ const BottomSheetFooterContainerComponent = ({
+ 
+     footerTranslateY = footerTranslateY - footerHeight - handleHeight;
+     return footerTranslateY;
+-  }, [animatedKeyboardState, animatedPosition, animatedLayoutState]);
++  });
+   //#endregion
+ 
+   return <FooterComponent animatedFooterPosition={animatedFooterPosition} />;
+diff --git a/src/components/bottomSheetRefreshControl/BottomSheetRefreshControl.android.tsx b/src/components/bottomSheetRefreshControl/BottomSheetRefreshControl.android.tsx
+index 36a1a60ba1028f032823e13fc345e333a9d4bf88..56da3832252b14a2d69fe621fd80ac70861c402e 100644
+--- a/src/components/bottomSheetRefreshControl/BottomSheetRefreshControl.android.tsx
++++ b/src/components/bottomSheetRefreshControl/BottomSheetRefreshControl.android.tsx
+@@ -34,12 +34,9 @@ function BottomSheetRefreshControlComponent({
+   }
+ 
+   //#region variables
+-  const animatedProps = useAnimatedProps(
+-    () => ({
+-      enabled: animatedScrollableState.value === SCROLLABLE_STATUS.UNLOCKED,
+-    }),
+-    [animatedScrollableState.value]
+-  );
++  const animatedProps = useAnimatedProps(() => ({
++    enabled: animatedScrollableState.value === SCROLLABLE_STATUS.UNLOCKED,
++  }));
+ 
+   const gesture = useMemo(
+     () =>
+diff --git a/src/components/bottomSheetScrollable/createBottomSheetScrollableComponent.tsx b/src/components/bottomSheetScrollable/createBottomSheetScrollableComponent.tsx
+index 6a57f511ff52a732ace18a27a0370f695fd01b8e..c8a48c421b077b74ce2a1921e11f8091453f4603 100644
+--- a/src/components/bottomSheetScrollable/createBottomSheetScrollableComponent.tsx
++++ b/src/components/bottomSheetScrollable/createBottomSheetScrollableComponent.tsx
+@@ -74,16 +74,13 @@ export function createBottomSheetScrollableComponent<T, P>(
+     }
+ 
+     //#region variables
+-    const scrollableAnimatedProps = useAnimatedProps(
+-      () => ({
+-        decelerationRate:
+-          SCROLLABLE_DECELERATION_RATE_MAPPER[animatedScrollableState.value],
+-        showsVerticalScrollIndicator: showsVerticalScrollIndicator
+-          ? animatedScrollableState.value === SCROLLABLE_STATUS.UNLOCKED
+-          : showsVerticalScrollIndicator,
+-      }),
+-      [animatedScrollableState, showsVerticalScrollIndicator]
+-    );
++    const scrollableAnimatedProps = useAnimatedProps(() => ({
++      decelerationRate:
++        SCROLLABLE_DECELERATION_RATE_MAPPER[animatedScrollableState.value],
++      showsVerticalScrollIndicator: showsVerticalScrollIndicator
++        ? animatedScrollableState.value === SCROLLABLE_STATUS.UNLOCKED
++        : showsVerticalScrollIndicator,
++    }));
+ 
+     const scrollableGesture = useMemo(
+       () =>
+diff --git a/src/hooks/useAnimatedDetents.ts b/src/hooks/useAnimatedDetents.ts
+index cc34d3b059a6faab964392eb20b04711308c8e01..55aa2adbaf60e79d3149d032d7e392a1b14f0899 100644
+--- a/src/hooks/useAnimatedDetents.ts
++++ b/src/hooks/useAnimatedDetents.ts
+@@ -106,14 +106,6 @@ export const useAnimatedDetents = (
+       highestDetentPosition,
+       closedDetentPosition,
+     };
+-  }, [
+-    detents,
+-    layoutState,
+-    enableDynamicSizing,
+-    maxDynamicContentSize,
+-    detached,
+-    $modal,
+-    bottomInset,
+-  ]);
++  });
+   return state;
+ };
+diff --git a/src/hooks/useAnimatedKeyboard.ts b/src/hooks/useAnimatedKeyboard.ts
+index d7051bfb9d2c623a3e1d4ed7cc4f862a26bfeea7..8169596fb7e07767eef4889aa67668af36fbe670 100644
+--- a/src/hooks/useAnimatedKeyboard.ts
++++ b/src/hooks/useAnimatedKeyboard.ts
+@@ -167,8 +167,7 @@ export const useAnimatedKeyboard = () => {
+         cachedState.duration,
+         cachedState.easing
+       );
+-    },
+-    [temporaryCachedState, handleKeyboardEvent]
++    }
+   );
+   //#endregion
+ 
+diff --git a/src/hooks/useAnimatedLayout.ts b/src/hooks/useAnimatedLayout.ts
+index 68c674de6287b89a97be778f7e5273f6b6b1c929..da4b977c5f16e8fa8eca181c25de0d7159373408 100644
+--- a/src/hooks/useAnimatedLayout.ts
++++ b/src/hooks/useAnimatedLayout.ts
+@@ -84,8 +84,7 @@ export function useAnimatedLayout(
+         _state.containerHeight = modal ? result - verticalInset : result;
+         return _state;
+       });
+-    },
+-    [state, verticalInset, modal]
++    }
+   );
+   useAnimatedReaction(
+     () => containerLayoutState?.get().height,
+@@ -102,8 +101,7 @@ export function useAnimatedLayout(
+         _state.containerHeight = modal ? result - verticalInset : result;
+         return _state;
+       });
+-    },
+-    [state, verticalInset, modal]
++    }
+   );
+   useEffect(() => {
+     Dimensions.addEventListener('change', ({ window }) => {
+diff --git a/src/hooks/useBottomSheetContentContainerStyle.ts b/src/hooks/useBottomSheetContentContainerStyle.ts
+index 6c0bffe15dc3496066c3aba248f54e54ca22f0d3..e21f97499943b4489ee906772c28d77d058e5235 100644
+--- a/src/hooks/useBottomSheetContentContainerStyle.ts
++++ b/src/hooks/useBottomSheetContentContainerStyle.ts
+@@ -80,8 +80,7 @@ export function useBottomSheetContentContainerStyle(
+           });
+         }
+       }
+-    },
+-    [animatedLayoutState, enableFooterMarginAdjustment]
++    }
+   );
+   //#endregion
+   return style;
+diff --git a/src/hooks/useScrollHandler.ts b/src/hooks/useScrollHandler.ts
+index a7910834920a83cfc49cb52b338a656c2aef4e07..6ab6e029df81aa9366e4ac2b9530e69ca4fcf069 100644
+--- a/src/hooks/useScrollHandler.ts
++++ b/src/hooks/useScrollHandler.ts
+@@ -30,43 +30,31 @@ export const useScrollHandler = (
+   } = useScrollEventsHandlers(scrollableRef, scrollableContentOffsetY);
+ 
+   // callbacks
+-  const scrollHandler = useAnimatedScrollHandler(
+-    {
+-      onScroll: (event, context) => {
+-        handleOnScroll(event, context);
++  const scrollHandler = useAnimatedScrollHandler({
++    onScroll: (event, context) => {
++      handleOnScroll(event, context);
+ 
+-        if (onScroll) {
+-          runOnJS(onScroll)({ nativeEvent: event });
+-        }
+-      },
+-      onBeginDrag: (event, context) => {
+-        handleOnBeginDrag(event, context);
++      if (onScroll) {
++        runOnJS(onScroll)({ nativeEvent: event });
++      }
++    },
++    onBeginDrag: (event, context) => {
++      handleOnBeginDrag(event, context);
+ 
+-        if (onScrollBeginDrag) {
+-          runOnJS(onScrollBeginDrag)({ nativeEvent: event });
+-        }
+-      },
+-      onEndDrag: (event, context) => {
+-        handleOnEndDrag(event, context);
++      if (onScrollBeginDrag) {
++        runOnJS(onScrollBeginDrag)({ nativeEvent: event });
++      }
++    },
++    onEndDrag: (event, context) => {
++      handleOnEndDrag(event, context);
+ 
+-        if (onScrollEndDrag) {
+-          runOnJS(onScrollEndDrag)({ nativeEvent: event });
+-        }
+-      },
+-      onMomentumBegin: handleOnMomentumBegin,
+-      onMomentumEnd: handleOnMomentumEnd,
++      if (onScrollEndDrag) {
++        runOnJS(onScrollEndDrag)({ nativeEvent: event });
++      }
+     },
+-    [
+-      handleOnScroll,
+-      handleOnBeginDrag,
+-      handleOnEndDrag,
+-      handleOnMomentumBegin,
+-      handleOnMomentumEnd,
+-      onScroll,
+-      onScrollBeginDrag,
+-      onScrollEndDrag,
+-    ]
+-  );
++    onMomentumBegin: handleOnMomentumBegin,
++    onMomentumEnd: handleOnMomentumEnd,
++  });
+ 
+   return { scrollHandler, scrollableRef, scrollableContentOffsetY };
+ };
+diff --git a/src/hooks/useScrollable.ts b/src/hooks/useScrollable.ts
+index 9c19051d146e3f90bfb639af53d7767f66582a98..9c0790ddafa26eb2ec29a785cdb42e88eb682309 100644
+--- a/src/hooks/useScrollable.ts
++++ b/src/hooks/useScrollable.ts
+@@ -74,13 +74,7 @@ export const useScrollable = (
+     }
+ 
+     return SCROLLABLE_STATUS.LOCKED;
+-  }, [
+-    enableContentPanningGesture,
+-    animatedSheetState,
+-    animatedKeyboardState,
+-    animatedAnimationState,
+-    state,
+-  ]);
++  });
+   //#endregion
+ 
+   //#region callbacks

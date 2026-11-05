@@ -17,7 +17,7 @@ const mockedGet = apiClient.GET as jest.Mock;
 const activeQueryClients: QueryClient[] = [];
 
 function createTestQueryClient(): QueryClient {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } });
   activeQueryClients.push(queryClient);
   return queryClient;
 }

@@ -8,7 +8,7 @@ import { useWorkspaceStore } from '@/stores/use-workspace-store';
 /**
  * Global error normalization: FORBIDDEN mustChangePassword and 401 route through the auth store so
  * the root layout's redirect guard reacts everywhere, not just on the request that triggered it.
- * 402 workspaceBlocked is left for the calling screen (composer banner, etc.) to read via
+ * Blocked-workspace errors (403 trialExpired/macLimitReached) are left for the calling screen (composer banner, etc.) to read via
  * `normalizeApiError` on its own `error` — this handler only manages the auth-affecting codes.
  */
 async function handleGlobalError(error: unknown): Promise<void> {

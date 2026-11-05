@@ -123,15 +123,17 @@ export function ContactPanel({
   }
 
   function handleAssign(userId: string | null) {
-    if (!contact) return;
-    assignMutation.mutate({ contactIds: [contact.id], assignedId: userId });
+    if (!conversationId) return;
+    assignMutation.mutate({ conversationIds: [conversationId], assignedId: userId });
     assignmentSheetRef.current?.dismiss();
   }
 
   return (
     <Screen>
       <ScrollView
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} />
+        }
       >
         <ContactHeader
           contact={contact}

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '@/api/client';
-import { ApiError } from '@/api/errors';
+import { ApiError, normalizeApiError } from '@/api/errors';
 import { queryKeys } from '@/api/query-keys';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
 import { generateClientId } from './generate-client-id';
@@ -25,6 +25,9 @@ interface SendMessageParams {
 }
 
 export const MAX_FILE_SIZE_BYTES = 5 * 1000 * 1000;
+
+/** Longest message text the public API accepts. */
+export const MAX_MESSAGE_TEXT_LENGTH = 1000;
 
 export class AttachmentTooLargeError extends Error {
   constructor(fileName: string) {
@@ -60,6 +63,7 @@ function toOptimisticAttachment(
     thumbnailPath: null,
     originPath: attachment.uri,
     name: attachment.fileName,
+    keepOriginal: null,
     url: attachment.uri,
   };
 }
@@ -177,20 +181,17 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
         return { clientId, serverId: parseCreatedMessageId(body) };
       }
 
-      const { data, error } = await apiClient.POST(
-        '/workspaces/{workspaceId}/conversations/{conversationId}/messages',
-        {
-          params: { path: { workspaceId, conversationId } },
-          body: {
-            text: params.text,
-            clientId,
-            flowId: params.flowId,
-            nodeId: params.nodeId,
-            replyToMessageId: params.replyTo?.messageId,
-            replyToMessageCreatedAt: params.replyTo?.createdAt,
-          },
+      const { data, error } = await apiClient.POST('/v1/conversations/{conversationId}/messages', {
+        params: { path: { conversationId } },
+        body: {
+          text: params.text,
+          clientId,
+          flowId: params.flowId,
+          nodeId: params.nodeId,
+          replyToMessageId: params.replyTo?.messageId,
+          replyToMessageCreatedAt: params.replyTo?.createdAt,
         },
-      );
+      });
       if (error) {
         throw new ApiError(error);
       }
@@ -251,12 +252,9 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
       // context.skippedOptimistic (flow sends): nothing was inserted, so there's no cache entry
       // to touch — but a blocked/unauthorized rejection below still restores the draft.
 
-      const body = error instanceof ApiError ? error.body : null;
+      const normalized = normalizeApiError(error);
       const isTerminal =
-        body?.code === 'workspaceBlocked' ||
-        body?.status === 402 ||
-        body?.code === 'UNAUTHORIZED' ||
-        body?.status === 401;
+        normalized.kind === 'workspaceBlocked' || normalized.kind === 'unauthorized';
 
       if (isTerminal) {
         removeOptimisticMessage(queryClient, queryKey, context.clientId);

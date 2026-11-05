@@ -109,7 +109,7 @@ describe('createOptimisticMessage', () => {
 const activeQueryClients: QueryClient[] = [];
 
 function createTestQueryClient(): QueryClient {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({ defaultOptions: { mutations: { gcTime: Infinity } } });
   activeQueryClients.push(queryClient);
   return queryClient;
 }
@@ -164,7 +164,7 @@ describe('useSendMessage', () => {
     const data = queryClient.getQueryData<ReturnType<typeof messagesData>>(queryKey);
     expect(data?.pages[0]?.data).toHaveLength(0);
     expect(mockedPost).toHaveBeenCalledWith(
-      '/workspaces/{workspaceId}/conversations/{conversationId}/messages',
+      '/v1/conversations/{conversationId}/messages',
       expect.objectContaining({
         body: expect.objectContaining({ flowId: 'flow-1', nodeId: 'node-1' }),
       }),
@@ -201,7 +201,7 @@ describe('useSendMessage', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockedPost).toHaveBeenCalledWith(
-      '/workspaces/{workspaceId}/conversations/{conversationId}/messages',
+      '/v1/conversations/{conversationId}/messages',
       expect.objectContaining({
         body: expect.objectContaining({
           replyToMessageId: 'parent-1',
@@ -292,7 +292,7 @@ describe('useSendMessage', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(mockedPost).toHaveBeenCalledWith(
-      '/workspaces/{workspaceId}/conversations/{conversationId}/messages',
+      '/v1/conversations/{conversationId}/messages',
       expect.objectContaining({ body: expect.objectContaining({ clientId: cachedClientId }) }),
     );
   });

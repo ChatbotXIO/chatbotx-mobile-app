@@ -16,15 +16,19 @@ import { useAuthStore } from '@/stores/use-auth-store';
 
 /**
  * Request/response types derived directly from the generated schema's `operations` map, so they
- * always match `conversationsAPI.listConversationsByPOSTAuthenticatedAPI` exactly (verified by
- * reading src/api/generated/schema.ts — do not hand-declare these, the operation gets regenerated
- * whenever `pnpm generate:api` reruns). The response shape matches api/pagination.ts's
- * `CursorPage<T>` (`{ data, nextCursor, prevCursor }`), so this hook uses the shared helpers.
+ * always match the `conversations.list` operation exactly (do not hand-declare these, the operation
+ * gets regenerated whenever `pnpm generate:api` reruns). The response shape matches
+ * api/pagination.ts's `CursorPage<T>` (`{ data, nextCursor, prevCursor }`), so this hook uses the
+ * shared helpers.
  */
-type ListConversationsOperation =
-  operations['conversationsAPI.listConversationsByPOSTAuthenticatedAPI'];
-export type ListConversationsResponse =
+type ListConversationsOperation = operations['conversations.list'];
+type AllListConversationsResponses =
   ListConversationsOperation['responses'][200]['content']['application/json'];
+/** `view: "full"` retains contact, message, and inbox details the mobile conversation UI needs. */
+export type ListConversationsResponse = Extract<
+  AllListConversationsResponses,
+  { data: { contactInboxes: { adReferral: unknown }[] }[] }
+>;
 export type ConversationListItem = ListConversationsResponse['data'][number];
 
 const PER_PAGE = 30;
@@ -60,26 +64,26 @@ export function useConversationsInfinite(workspaceId: string | null) {
     enabled: workspaceId !== null && !isPermissionsLoading,
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam }): Promise<ListConversationsResponse> => {
-      const { data, error } = await apiClient.POST('/workspaces/{workspaceId}/conversations/list', {
-        params: { path: { workspaceId: workspaceId! } },
-        body: {
-          botCategory: effectiveFilters.botCategory,
-          assignedId: effectiveFilters.assignedId,
-          channel: effectiveFilters.channel,
-          // The request schema accepts both `status` and `tags` (same enum), but the backend's
-          // where-builder only honors `tags` — sending `status` silently returns the unfiltered
-          // list (the archived view in particular never worked through `status`).
-          tags: effectiveFilters.status,
-          keyword: effectiveFilters.keyword || undefined,
-          botEnabled: effectiveFilters.botEnabled,
-          cursor: pageParam,
-          perPage: PER_PAGE,
+      const { data, error } = await apiClient.GET('/v1/conversations', {
+        params: {
+          query: {
+            view: 'full',
+            botCategory: effectiveFilters.botCategory,
+            assignedId: effectiveFilters.assignedId,
+            channel: effectiveFilters.channel,
+            // `status` and `tags` accept the same enum; the filter store's value is sent as `tags`.
+            tags: effectiveFilters.status,
+            keyword: effectiveFilters.keyword || undefined,
+            botEnabled: effectiveFilters.botEnabled,
+            cursor: pageParam,
+            perPage: PER_PAGE,
+          },
         },
       });
       if (error) {
         throw new ApiError(error);
       }
-      return data;
+      return data as ListConversationsResponse;
     },
     getNextPageParam,
   });

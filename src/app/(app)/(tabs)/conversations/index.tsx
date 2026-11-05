@@ -111,8 +111,8 @@ export default function ConversationsScreen() {
   }, []);
 
   function handleAssign(userId: string | null) {
-    if (!assigningConversation?.contactId) return;
-    assignMutation.mutate({ contactIds: [assigningConversation.contactId], assignedId: userId });
+    if (!assigningConversation) return;
+    assignMutation.mutate({ conversationIds: [assigningConversation.id], assignedId: userId });
   }
 
   function handleToggleRead(conversation: ConversationListItem) {
@@ -250,7 +250,7 @@ export default function ConversationsScreen() {
           refreshControl={
             <RefreshControl
               refreshing={query.isRefetching}
-              onRefresh={() => query.refetch()}
+              onRefresh={() => void query.refetch()}
               tintColor={colors.brand}
             />
           }

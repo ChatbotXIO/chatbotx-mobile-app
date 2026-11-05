@@ -2,12 +2,9 @@ import { RealtimeEventType, type RealtimeEventData } from './events';
 
 /**
  * Hand-rolled runtime type guards for every `RealtimeEventData` variant in events.ts — no zod
- * dependency in this project (see AGENTS.md/plan), so each event shape is validated by hand.
- * `parseRealtimeEvent` is the single entry point: parses the raw websocket text, validates the
- * envelope (`eventType` + `data` object), then dispatches to the per-type guard. Returns `null`
- * on ANY malformation (invalid JSON, non-object, unrecognized eventType, wrong-shaped data)
- * rather than throwing — realtime-provider.tsx's onMessage handler is expected to `__DEV__ warn`
- * and drop the event rather than crash the socket handler.
+ * dependency in this project, so each event shape is validated by hand.
+ * `parseRealtimeEnvelope` classifies one envelope from a batch frame as ok / unknown / invalid;
+ * unknown event types are skipped quietly, invalid ones trigger a resync in the provider.
  */
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -90,21 +87,6 @@ function validateConversationAssigned(data: unknown): boolean {
   return true;
 }
 
-const NOTIFY_EXPORT_STATUSES = new Set(['pending', 'processing', 'completed', 'failed']);
-
-function validateNotifyExportResult(data: unknown): boolean {
-  if (!isObject(data)) return false;
-  if (!isString(data.outputPath)) return false;
-  if (!isString(data.status) || !NOTIFY_EXPORT_STATUSES.has(data.status)) return false;
-  if (data.error !== undefined && typeof data.error !== 'string') return false;
-  return true;
-}
-
-function validateConversationCreated(data: unknown): boolean {
-  // Untyped payload by design (see events.ts) — any presence is "valid" here.
-  return data !== undefined;
-}
-
 function validateConversationUpdatedChanges(changes: unknown): boolean {
   if (!isObject(changes)) return false;
   if (!isOptionalNullableString(changes.archivedAt)) return false;
@@ -124,9 +106,46 @@ function validateConversationUpdated(data: unknown): boolean {
   );
 }
 
-/** Parses and validates a raw websocket text payload into a `RealtimeEventData`, or `null` if the
- * payload is malformed JSON, not an object, missing/unrecognized `eventType`, or has a `data`
- * shape that doesn't match the event type. Never throws. */
+const EVENT_VALIDATORS: Record<string, (data: unknown) => boolean> = {
+  [RealtimeEventType.messageCreated]: validateMessageCreated,
+  [RealtimeEventType.messageDeleted]: validateMessageDeleted,
+  [RealtimeEventType.messageIdAssigned]: validateMessageIdAssigned,
+  [RealtimeEventType.messageUpdated]: validateMessageUpdated,
+  [RealtimeEventType.messageFailed]: validateMessageFailed,
+  [RealtimeEventType.typing]: validateTyping,
+  [RealtimeEventType.contactBlocked]: validateContactCommon,
+  [RealtimeEventType.contactUnblocked]: validateContactCommon,
+  [RealtimeEventType.conversationAssigned]: validateConversationAssigned,
+  [RealtimeEventType.conversationUpdated]: validateConversationUpdated,
+};
+
+export type RealtimeEnvelopeResult =
+  | { status: 'ok'; event: RealtimeEventData }
+  /** Well-formed envelope for an event type this app doesn't handle (the protocol carries many
+   * more types than mobile uses) — skipped silently, never a reason to resync. */
+  | { status: 'unknown' }
+  /** Not an envelope at all, or a handled event type whose `data` fails validation. */
+  | { status: 'invalid' };
+
+/** True when `value` has the `{ eventType: string, data? }` envelope shape. */
+export function isRealtimeEnvelope(value: unknown): value is Record<string, unknown> {
+  return isObject(value) && typeof value.eventType === 'string';
+}
+
+/** Classifies one already-JSON-parsed envelope from a batch frame. Never throws. */
+export function parseRealtimeEnvelope(envelope: unknown): RealtimeEnvelopeResult {
+  if (!isRealtimeEnvelope(envelope)) return { status: 'invalid' };
+
+  const validate = EVENT_VALIDATORS[envelope.eventType as string];
+  if (!validate) return { status: 'unknown' };
+
+  return validate(envelope.data)
+    ? { status: 'ok', event: envelope as unknown as RealtimeEventData }
+    : { status: 'invalid' };
+}
+
+/** Parses and validates a raw JSON text payload holding ONE envelope into a `RealtimeEventData`,
+ * or `null` if it is malformed, unhandled, or fails validation. Never throws. */
 export function parseRealtimeEvent(raw: string): RealtimeEventData | null {
   let parsed: unknown;
   try {
@@ -135,35 +154,6 @@ export function parseRealtimeEvent(raw: string): RealtimeEventData | null {
     return null;
   }
 
-  if (!isObject(parsed)) return null;
-  const { eventType, data } = parsed;
-  if (typeof eventType !== 'string') return null;
-
-  switch (eventType) {
-    case RealtimeEventType.messageCreated:
-      return validateMessageCreated(data) ? (parsed as RealtimeEventData) : null;
-    case RealtimeEventType.messageDeleted:
-      return validateMessageDeleted(data) ? (parsed as RealtimeEventData) : null;
-    case RealtimeEventType.messageIdAssigned:
-      return validateMessageIdAssigned(data) ? (parsed as RealtimeEventData) : null;
-    case RealtimeEventType.messageUpdated:
-      return validateMessageUpdated(data) ? (parsed as RealtimeEventData) : null;
-    case RealtimeEventType.messageFailed:
-      return validateMessageFailed(data) ? (parsed as RealtimeEventData) : null;
-    case RealtimeEventType.typing:
-      return validateTyping(data) ? (parsed as RealtimeEventData) : null;
-    case RealtimeEventType.contactBlocked:
-    case RealtimeEventType.contactUnblocked:
-      return validateContactCommon(data) ? (parsed as RealtimeEventData) : null;
-    case RealtimeEventType.conversationAssigned:
-      return validateConversationAssigned(data) ? (parsed as RealtimeEventData) : null;
-    case RealtimeEventType.notifyExportResult:
-      return validateNotifyExportResult(data) ? (parsed as RealtimeEventData) : null;
-    case RealtimeEventType.conversationCreated:
-      return validateConversationCreated(data) ? (parsed as RealtimeEventData) : null;
-    case RealtimeEventType.conversationUpdated:
-      return validateConversationUpdated(data) ? (parsed as RealtimeEventData) : null;
-    default:
-      return null;
-  }
+  const result = parseRealtimeEnvelope(parsed);
+  return result.status === 'ok' ? result.event : null;
 }

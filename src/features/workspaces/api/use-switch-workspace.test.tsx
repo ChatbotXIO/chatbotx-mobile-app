@@ -34,7 +34,7 @@ const activeQueryClients: QueryClient[] = [];
  * QueryClient schedules per-query `gcTime` timers (and focus/online listeners via `unmount()`)
  * that otherwise keep the Jest process alive past the test run. */
 function createTestQueryClient(): QueryClient {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({ defaultOptions: { queries: { gcTime: Infinity } } });
   activeQueryClients.push(queryClient);
   return queryClient;
 }

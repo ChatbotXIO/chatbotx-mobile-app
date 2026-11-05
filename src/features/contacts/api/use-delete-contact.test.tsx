@@ -3,6 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react-native';
 import { act } from 'react';
 import type { PropsWithChildren } from 'react';
 
+import { apiClient } from '@/api/client';
 import { queryKeys } from '@/api/query-keys';
 import type {
   ContactListItem,
@@ -15,23 +16,22 @@ import type {
 
 import { useDeleteContact } from './use-delete-contact';
 
-const mockFetch = jest.fn();
-global.fetch = mockFetch as unknown as typeof fetch;
-
-jest.mock('@/api/auth-token', () => ({
-  getAuthToken: jest.fn().mockResolvedValue('test-token'),
+jest.mock('@/api/client', () => ({
+  apiClient: { DELETE: jest.fn() },
 }));
+
+const mockDelete = apiClient.DELETE as jest.Mock;
 
 const activeQueryClients: QueryClient[] = [];
 
 function createTestQueryClient(): QueryClient {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({ defaultOptions: { mutations: { gcTime: Infinity } } });
   activeQueryClients.push(queryClient);
   return queryClient;
 }
 
 afterEach(() => {
-  mockFetch.mockReset();
+  mockDelete.mockReset();
   while (activeQueryClients.length > 0) {
     const queryClient = activeQueryClients.pop()!;
     queryClient.clear();
@@ -64,7 +64,8 @@ function wrapper(queryClient: QueryClient) {
 }
 
 describe('useDeleteContact', () => {
-  it('throws without calling fetch while FEATURES.deleteContact is false', async () => {
+  it('deletes through the public API using the prefixed contact identifier', async () => {
+    mockDelete.mockResolvedValue({ data: {}, error: undefined });
     const queryClient = createTestQueryClient();
 
     const { result } = await renderHook(() => useDeleteContact('ws-1'), {
@@ -75,12 +76,14 @@ describe('useDeleteContact', () => {
       result.current.mutate('contact-1');
     });
 
-    await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(mockFetch).not.toHaveBeenCalled();
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(mockDelete).toHaveBeenCalledWith('/v1/contacts/{identifier}', {
+      params: { path: { identifier: 'id:contact-1' } },
+    });
   });
 
   it('rolls back the optimistic removal from the contacts-list cache on error', async () => {
-    mockFetch.mockResolvedValue({ ok: false, statusText: 'boom', json: async () => ({}) });
+    mockDelete.mockResolvedValue({ data: undefined, error: { message: 'boom' } });
     const queryClient = createTestQueryClient();
     const listKey = queryKeys.ws.contacts.list('ws-1', { keyword: '' });
     const page: ListContactsResponse = {
@@ -106,13 +109,7 @@ describe('useDeleteContact', () => {
   });
 
   it('removes only the deleted contact rows from the conversations-list cache on success', async () => {
-    // FEATURES.deleteContact is a hardcoded `false` constant with no env override — flip it
-    // directly (TS `as const` is compile-time-only, not runtime-frozen) to reach the success path.
-    const { FEATURES } =
-      jest.requireActual<typeof import('@/config/features')>('@/config/features');
-    (FEATURES as { deleteContact: boolean }).deleteContact = true;
-
-    mockFetch.mockResolvedValue({ ok: true, statusText: 'OK', json: async () => ({}) });
+    mockDelete.mockResolvedValue({ data: {}, error: undefined });
     const queryClient = createTestQueryClient();
     const conversationsListKey = queryKeys.ws.conversations.list('ws-1', {});
     const conversationsPage: ListConversationsResponse = {
@@ -139,7 +136,5 @@ describe('useDeleteContact', () => {
       conversationsListKey,
     );
     expect(cached?.pages[0]?.data.map((item) => item.id)).toEqual(['conv-2']);
-
-    (FEATURES as { deleteContact: boolean }).deleteContact = false;
   });
 });

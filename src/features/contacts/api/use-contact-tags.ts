@@ -3,33 +3,34 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
 import { ApiError } from '@/api/errors';
 import { queryKeys } from '@/api/query-keys';
-import type { ContactDetail } from '@/features/contacts/api/use-contact-detail';
+import { fetchAllPages, MAX_PER_PAGE } from '@/api/pagination';
+import type { ContactDetail, ContactTag } from '@/features/contacts/api/use-contact-detail';
+import { toContactIdentifier } from '@/features/contacts/lib/contact-identifier';
 
-export type WorkspaceTag = ContactDetail['tags'][number];
+export type WorkspaceTag = ContactTag;
 
 /**
- * Available-tags picker source: `tagsAPI.privateListWorkspaceTagsAPI`
- * (`GET /workspaces/{workspaceId}/tags`) — the workspace's full tag catalog, separate from a
- * contact's assigned tags (which come embedded in useContactDetail's `tags` field).
+ * Available-tags picker source: `tags.list` (`GET /v1/tags`), drained across pages — the
+ * workspace's full tag catalog, separate from a contact's assigned tags (which come embedded in
+ * useContactDetail's `tags` field).
  */
 export function useWorkspaceTags(workspaceId: string | null) {
   return useQuery({
     queryKey: queryKeys.ws.tags.catalog(workspaceId ?? ''),
     enabled: workspaceId !== null,
-    queryFn: async () => {
-      const { data, error } = await apiClient.GET('/workspaces/{workspaceId}/tags', {
-        params: { path: { workspaceId: workspaceId! } },
-      });
-      if (error) throw new ApiError(error);
-      return data.data;
-    },
+    queryFn: () =>
+      fetchAllPages(async (page) => {
+        const { data, error } = await apiClient.GET('/v1/tags', {
+          params: { query: { page, perPage: MAX_PER_PAGE } },
+        });
+        if (error) throw new ApiError(error);
+        return data;
+      }),
   });
 }
 
 /**
- * `contactsAPIs.addContactTagAuthenticatedAPI` — `POST /workspaces/{workspaceId}/contacts/tags`,
- * body `{ ids: string[], tags: string[] }`: batch by CONTACT id (mirrors the assign-by-contact
- * pattern used elsewhere), `tags` is an array of tag ids.
+ * `contacts.addTags` — `POST /v1/contacts/{identifier}/tags`, body `{ tagIds: string[] }`.
  *
  * Optimistic: takes the full tag object (not just an id) so `onMutate` can push it straight into
  * the cached contact-detail's `tags` array and the UI shows the new chip immediately, instead of
@@ -43,9 +44,9 @@ export function useAddContactTag(workspaceId: string, contactId: string) {
 
   return useMutation({
     mutationFn: async (tag: WorkspaceTag) => {
-      const { error } = await apiClient.POST('/workspaces/{workspaceId}/contacts/tags', {
-        params: { path: { workspaceId } },
-        body: { ids: [contactId], tags: [tag.id] },
+      const { error } = await apiClient.POST('/v1/contacts/{identifier}/tags', {
+        params: { path: { identifier: toContactIdentifier(contactId) } },
+        body: { tagIds: [tag.id] },
       });
       if (error) throw new ApiError(error);
     },
@@ -71,8 +72,8 @@ export function useAddContactTag(workspaceId: string, contactId: string) {
   });
 }
 
-/** `contactsAPIs.removeContactTagAuthenticatedAPI` —
- * `DELETE /workspaces/{workspaceId}/contacts/{contactId}/tags/{tagId}`, single contact/tag pair.
+/** `contacts.removeTags` —
+ * `DELETE /v1/contacts/{identifier}/tags`, body `{ tagIds: string[] }`.
  * Optimistic: removes the tag from the cached contact-detail's `tags` array immediately, rolls
  * back on error, reconciles with a settle-time invalidation. */
 export function useRemoveContactTag(workspaceId: string, contactId: string) {
@@ -81,10 +82,10 @@ export function useRemoveContactTag(workspaceId: string, contactId: string) {
 
   return useMutation({
     mutationFn: async (tagId: string) => {
-      const { error } = await apiClient.DELETE(
-        '/workspaces/{workspaceId}/contacts/{contactId}/tags/{tagId}',
-        { params: { path: { workspaceId, contactId, tagId } } },
-      );
+      const { error } = await apiClient.DELETE('/v1/contacts/{identifier}/tags', {
+        params: { path: { identifier: toContactIdentifier(contactId) } },
+        body: { tagIds: [tagId] },
+      });
       if (error) throw new ApiError(error);
     },
     onMutate: async (tagId: string) => {
