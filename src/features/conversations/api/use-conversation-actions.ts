@@ -4,6 +4,7 @@ import { apiClient } from '@/api/client';
 import { ApiError } from '@/api/errors';
 import { queryKeys } from '@/api/query-keys';
 import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
+import { BOT_PAUSE_DURATION_MS } from '@/features/conversations/lib/conversation-status';
 import {
   conversationListPredicate,
   patchConversationListCache,
@@ -210,8 +211,7 @@ export function useUnfollowConversation(workspaceId: string) {
  * the UI here always calls with a single-id array (swipe/long-press actions) — batching UI is a
  * later concern if ever needed. `onSettledIds` runs after the mutation settles (success or
  * error) with the affected ids, for callers that need a side effect beyond the optimistic patch
- * (e.g. `useDisableBot` invalidating the detail query so the server-computed `botResumeAt`
- * arrives). */
+ * (e.g. the bot toggles invalidating the detail query to resync with the server). */
 function useBatchConversationAction(
   workspaceId: string,
   action: 'archive' | 'unarchive' | 'enable-bot' | 'disable-bot',
@@ -282,29 +282,45 @@ export function useUnarchiveConversations(workspaceId: string) {
   );
 }
 
-export function useEnableBot(workspaceId: string) {
-  return useBatchConversationAction(workspaceId, 'enable-bot', () => ({ botEnabled: true }));
+/** Invalidates the detail query for each id so the chat header/contact screens resync with the
+ * server after a bot toggle. The list cache is left as-is — the optimistic patch already matches
+ * what the server writes, and invalidating every list query on each toggle is needless churn. */
+function invalidateConversationDetails(
+  queryClient: ReturnType<typeof useQueryClient>,
+  workspaceId: string,
+  ids: string[],
+): void {
+  ids.forEach((id) => {
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.ws.conversations.detail(workspaceId, id),
+    });
+  });
 }
 
-/** Disabling the bot triggers a 24h server-side pause (`botResumeAt`) — the optimistic patch above
- * only knows `botEnabled: false`, it can't predict the server-computed resume timestamp. Once the
- * mutation succeeds, invalidate the detail query for each affected conversation so a refetch
- * brings in the real `botResumeAt` (used by `isBotActive` to show "paused until…" rather than
- * just "off"). The list cache is left as-is here — it already shows a reasonable "not handled by
- * bot" state from the optimistic patch, and invalidating N list queries on every disable is
- * unnecessary churn; the detail query is what chat-header and contact screens read closely. */
+/** Enabling the bot clears any pending auto-resume server-side (`botResumeAt: null`), so the
+ * optimistic patch clears it too — otherwise a leftover future `botResumeAt` would keep the
+ * conversation reading as inactive until the next refetch. */
+export function useEnableBot(workspaceId: string) {
+  return useBatchConversationAction(
+    workspaceId,
+    'enable-bot',
+    () => ({ botEnabled: true, botResumeAt: null }),
+    (queryClient, ids) => invalidateConversationDetails(queryClient, workspaceId, ids),
+  );
+}
+
+/** Disabling the bot sets a server-side auto-resume `BOT_PAUSE_DURATION_MS` from now. The
+ * optimistic patch approximates that timestamp locally so `isBotActive` reports inactive right
+ * away; the detail refetch on success then brings in the exact server value. */
 export function useDisableBot(workspaceId: string) {
   return useBatchConversationAction(
     workspaceId,
     'disable-bot',
-    () => ({ botEnabled: false }),
-    (queryClient, ids) => {
-      ids.forEach((id) => {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.ws.conversations.detail(workspaceId, id),
-        });
-      });
-    },
+    () => ({
+      botEnabled: false,
+      botResumeAt: new Date(Date.now() + BOT_PAUSE_DURATION_MS).toISOString(),
+    }),
+    (queryClient, ids) => invalidateConversationDetails(queryClient, workspaceId, ids),
   );
 }
 

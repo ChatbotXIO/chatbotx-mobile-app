@@ -8,10 +8,12 @@ import { queryKeys } from '@/api/query-keys';
 import {
   useArchiveConversations,
   useDisableBot,
+  useEnableBot,
   useMarkConversationRead,
   useUnarchiveConversations,
 } from '@/features/conversations/api/use-conversation-actions';
 import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
+import { isBotActive } from '@/features/conversations/lib/conversation-status';
 
 jest.mock('@/api/client', () => ({
   apiClient: {
@@ -116,7 +118,103 @@ describe('patchConversationDetail (via useMarkConversationRead)', () => {
   });
 });
 
+describe('useEnableBot', () => {
+  it('optimistically clears botResumeAt so a paused conversation reads as active immediately', async () => {
+    // Never resolves, so only the onMutate patch is observable.
+    mockedPost.mockReturnValue(new Promise(() => {}));
+    const queryClient = createTestQueryClient();
+    const detailKey = queryKeys.ws.conversations.detail('ws-1', 'conv-1');
+    const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    queryClient.setQueryData(
+      detailKey,
+      fakeConversation({ botEnabled: false, botResumeAt: future }),
+    );
+
+    const { result } = await renderHook(() => useEnableBot('ws-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate(['conv-1']);
+    });
+
+    await waitFor(() => {
+      const detail = queryClient.getQueryData<ConversationListItem>(detailKey);
+      expect(detail?.botEnabled).toBe(true);
+      expect(detail?.botResumeAt).toBeNull();
+    });
+    const detail = queryClient.getQueryData<ConversationListItem>(detailKey)!;
+    expect(isBotActive(detail.botEnabled, detail.botResumeAt)).toBe(true);
+  });
+
+  it('invalidates the detail query for each enabled conversation on success', async () => {
+    mockedPost.mockResolvedValue({ data: {}, error: undefined });
+    const queryClient = createTestQueryClient();
+    const invalidateSpy = jest.spyOn(queryClient, 'invalidateQueries');
+    const detailKey = queryKeys.ws.conversations.detail('ws-1', 'conv-1');
+    queryClient.setQueryData(detailKey, fakeConversation({ botEnabled: false }));
+
+    const { result } = await renderHook(() => useEnableBot('ws-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate(['conv-1']);
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: detailKey });
+  });
+
+  it('restores the previous botResumeAt on error', async () => {
+    mockedPost.mockResolvedValue({ data: undefined, error: { message: 'boom' } });
+    const queryClient = createTestQueryClient();
+    const detailKey = queryKeys.ws.conversations.detail('ws-1', 'conv-1');
+    const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    queryClient.setQueryData(
+      detailKey,
+      fakeConversation({ botEnabled: false, botResumeAt: future }),
+    );
+
+    const { result } = await renderHook(() => useEnableBot('ws-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate(['conv-1']);
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    const detail = queryClient.getQueryData<ConversationListItem>(detailKey);
+    expect(detail?.botEnabled).toBe(false);
+    expect(detail?.botResumeAt).toBe(future);
+  });
+});
+
 describe('useDisableBot', () => {
+  it('optimistically sets a future botResumeAt so the conversation reads as inactive immediately', async () => {
+    mockedPost.mockReturnValue(new Promise(() => {}));
+    const queryClient = createTestQueryClient();
+    const detailKey = queryKeys.ws.conversations.detail('ws-1', 'conv-1');
+    queryClient.setQueryData(detailKey, fakeConversation({ botEnabled: true, botResumeAt: null }));
+
+    const { result } = await renderHook(() => useDisableBot('ws-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate(['conv-1']);
+    });
+
+    await waitFor(() => {
+      const detail = queryClient.getQueryData<ConversationListItem>(detailKey);
+      expect(detail?.botEnabled).toBe(false);
+      expect(detail?.botResumeAt).not.toBeNull();
+    });
+    const detail = queryClient.getQueryData<ConversationListItem>(detailKey)!;
+    expect(new Date(detail.botResumeAt!).getTime()).toBeGreaterThan(Date.now());
+    expect(isBotActive(detail.botEnabled, detail.botResumeAt)).toBe(false);
+  });
   it('invalidates the detail query for each disabled conversation on success', async () => {
     mockedPost.mockResolvedValue({ data: {}, error: undefined });
     const queryClient = createTestQueryClient();
@@ -136,11 +234,11 @@ describe('useDisableBot', () => {
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: detailKey });
   });
 
-  it('rolls back the optimistic botEnabled patch on error', async () => {
+  it('rolls back the optimistic botEnabled/botResumeAt patch on error', async () => {
     mockedPost.mockResolvedValue({ data: undefined, error: { message: 'boom' } });
     const queryClient = createTestQueryClient();
     const detailKey = queryKeys.ws.conversations.detail('ws-1', 'conv-1');
-    queryClient.setQueryData(detailKey, fakeConversation({ botEnabled: true }));
+    queryClient.setQueryData(detailKey, fakeConversation({ botEnabled: true, botResumeAt: null }));
 
     const { result } = await renderHook(() => useDisableBot('ws-1'), {
       wrapper: wrapper(queryClient),
@@ -151,7 +249,9 @@ describe('useDisableBot', () => {
     });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(queryClient.getQueryData<ConversationListItem>(detailKey)?.botEnabled).toBe(true);
+    const detail = queryClient.getQueryData<ConversationListItem>(detailKey);
+    expect(detail?.botEnabled).toBe(true);
+    expect(detail?.botResumeAt).toBeNull();
   });
 });
 

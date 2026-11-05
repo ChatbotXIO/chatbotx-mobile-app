@@ -199,7 +199,7 @@ export const ConversationActionsSheet = forwardRef<BottomSheetModal, Conversatio
 
     return (
       <>
-        <SheetModal ref={ref} snapPoints={['70%']} onDismiss={onClose}>
+        <SheetModal ref={ref} snapPoints={['70%']}>
           <SheetHeader title={t('conversations.actions')} onClose={onClose} />
           {/* mobile-only: bot toggle */}
           <ListItem

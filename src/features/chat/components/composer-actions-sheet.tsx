@@ -30,7 +30,7 @@ export const ComposerActionsSheet = forwardRef<BottomSheetModal, ComposerActions
     const { colors } = useTheme();
 
     return (
-      <SheetModal ref={ref} snapPoints={['50%']} onDismiss={onClose}>
+      <SheetModal ref={ref} snapPoints={['50%']}>
         <SheetHeader title={t('chat.attach')} onClose={onClose} />
         <ListItem
           title={t('chat.camera')}

@@ -14,10 +14,10 @@ describe('BotStateIcon', () => {
     expect(screen.getByLabelText('Bot handling')).toBeTruthy();
   });
 
-  it('labels the "paused" state with the resume time', async () => {
+  it('labels a disabled bot with a future botResumeAt as "off" (no separate paused state)', async () => {
     const future = new Date(Date.now() + 60_000).toISOString();
     await render(<BotStateIcon botEnabled={false} botResumeAt={future} />);
-    expect(screen.getByLabelText(/Bot resumes at/)).toBeTruthy();
+    expect(screen.getByLabelText('Off')).toBeTruthy();
   });
 
   it('labels the "off" state', async () => {

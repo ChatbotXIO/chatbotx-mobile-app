@@ -14,7 +14,7 @@ import { normalizeApiError } from '@/api/errors';
 import { ChannelBadge } from '@/features/conversations/components/channel-badge';
 import { useConversationDetail } from '@/features/conversations/api/use-conversation-detail';
 import { useDisableBot, useEnableBot } from '@/features/conversations/api/use-conversation-actions';
-import { botState, isBotActive } from '@/features/conversations/lib/conversation-status';
+import { isBotActive } from '@/features/conversations/lib/conversation-status';
 import { findConversationInListCache } from '@/features/conversations/lib/find-conversation-in-cache';
 import type { FlowListItem } from '@/features/flows/api/use-flows';
 import { useMessagingWindow } from '@/features/chat/api/use-messaging-window';
@@ -66,9 +66,6 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
   const botActive = conversation
     ? isBotActive(conversation.botEnabled, conversation.botResumeAt)
     : false;
-  const botTriState = conversation
-    ? botState(conversation.botEnabled, conversation.botResumeAt)
-    : 'off';
 
   function handleToggleBot() {
     if (!conversation) return;
@@ -154,8 +151,7 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
       </Pressable>
 
       <BotStatusPill
-        state={botTriState}
-        resumeAt={conversation?.botResumeAt ?? null}
+        active={botActive}
         accessibilityLabel={
           botActive ? t('conversations.disableBot') : t('conversations.enableBot')
         }

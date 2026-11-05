@@ -5,7 +5,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Icon } from '@/components/ui/icon';
 import { useTheme } from '@/theme/use-theme';
 
-import { botState } from '../lib/conversation-status';
+import { isBotActive } from '../lib/conversation-status';
 
 interface BotStateIconProps {
   botEnabled: boolean;
@@ -13,32 +13,14 @@ interface BotStateIconProps {
   size?: number;
 }
 
-/** Tri-state bot indicator: on (`bot`, brand-tinted), paused (`clock`, warning-tinted, a11y label
- * carries the resume time), off (`bot-off`, muted). See `botState()` for the state derivation. */
+/** Bot on/off indicator: on (`bot`, brand-tinted) or off (`bot-off`, muted), derived via
+ * `isBotActive()` so it agrees with the chat header. */
 export function BotStateIcon({ botEnabled, botResumeAt, size = 16 }: BotStateIconProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const state = botState(botEnabled, botResumeAt);
-
-  const config = {
-    on: {
-      icon: 'bot' as const,
-      color: colors.bubbleBotAccent,
-      label: t('conversations.botActive'),
-    },
-    paused: {
-      icon: 'clock' as const,
-      color: colors.warning,
-      label: botResumeAt
-        ? t('conversations.botResumesAt', { time: new Date(botResumeAt).toLocaleTimeString() })
-        : t('conversations.botPaused'),
-    },
-    off: {
-      icon: 'bot-off' as const,
-      color: colors.textTertiary,
-      label: t('conversations.botOff'),
-    },
-  }[state];
+  const config = isBotActive(botEnabled, botResumeAt)
+    ? { icon: 'bot' as const, color: colors.bubbleBotAccent, label: t('conversations.botActive') }
+    : { icon: 'bot-off' as const, color: colors.textTertiary, label: t('conversations.botOff') };
 
   return (
     <View accessibilityLabel={config.label} accessible>

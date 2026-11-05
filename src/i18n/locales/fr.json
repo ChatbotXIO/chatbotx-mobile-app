@@ -90,7 +90,6 @@
     "archiveUndone": "Conversation restored",
     "undo": "Undo",
     "botActive": "Bot handling",
-    "botPaused": "Bot paused",
     "assignedTo": "Assigned to {{name}}",
     "quickFilterMine": "Mine",
     "emptyFiltered": "No conversations match your filters",
@@ -106,7 +105,6 @@
     "archiveConfirm": "Archive this conversation? You can find it again later in archived conversations.",
     "unarchiveConfirm": "Restore this conversation from the archive?",
     "disableBotHint": "Pauses bot for 24h",
-    "botResumesAt": "Bot resumes at {{time}}",
     "openActions": "Open conversation actions"
   },
   "chat": {
@@ -163,12 +161,8 @@
     "activityFallback": "Activity",
     "botStatusOn": "Bot",
     "botStatusOff": "Bot off",
-    "botStatusPaused": "Paused",
-    "botStatusPausedUntil": "Paused · {{time}}",
     "windowClosedBanner": "More than 24h since the contact's last message. You can only send a template or flow.",
-    "windowRemaining": "{{time}} left",
-    "botPausedRemaining": "Bot paused · {{minutes}} min left",
-    "resumeBot": "Resume bot"
+    "windowRemaining": "{{time}} left"
   },
   "contacts": {
     "title": "Contacts",

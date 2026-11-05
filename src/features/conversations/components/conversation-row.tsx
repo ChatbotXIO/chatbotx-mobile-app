@@ -11,7 +11,7 @@ import type { SwipeAction } from '@/components/ui/swipeable-row';
 import { SwipeableRow } from '@/components/ui/swipeable-row';
 import { Text } from '@/components/ui/text';
 import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
-import { isUnread } from '@/features/conversations/lib/conversation-status';
+import { isBotActive, isUnread } from '@/features/conversations/lib/conversation-status';
 import { useTheme } from '@/theme/use-theme';
 
 import { ChannelBadge } from './channel-badge';
@@ -64,6 +64,7 @@ export const ConversationRow = memo(function ConversationRow({
   const preview = lastMessagePreview(conversation, t);
   const unread = isUnread(conversation);
   const isArchived = Boolean(conversation.archivedAt);
+  const botActive = isBotActive(conversation.botEnabled, conversation.botResumeAt);
   const relativeTimeLabel = conversation.lastActivityAt
     ? new Date(conversation.lastActivityAt).toLocaleString()
     : '';
@@ -91,7 +92,6 @@ export const ConversationRow = memo(function ConversationRow({
 
   const rightActions: SwipeAction[] = [];
   if (onToggleBot) {
-    const botActive = conversation.botEnabled;
     rightActions.push({
       icon: botActive ? 'bot' : 'user',
       label: botActive ? t('conversations.disableBot') : t('conversations.enableBot'),
@@ -122,9 +122,7 @@ export const ConversationRow = memo(function ConversationRow({
       ? [
           {
             name: 'toggleBot',
-            label: conversation.botEnabled
-              ? t('conversations.disableBot')
-              : t('conversations.enableBot'),
+            label: botActive ? t('conversations.disableBot') : t('conversations.enableBot'),
           },
         ]
       : []),
@@ -181,7 +179,7 @@ export const ConversationRow = memo(function ConversationRow({
             uri={conversation.contact?.avatar}
             name={contactName}
             size={52}
-            ring={conversation.botEnabled ? 'bot' : 'none'}
+            ring={botActive ? 'bot' : 'none'}
             badge={<ChannelBadge channel={channel} size={14} />}
           />
           <View style={styles.assigneeBadgeAnchor} pointerEvents="none">
