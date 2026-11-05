@@ -59,7 +59,10 @@ interface SheetModalProps extends PropsWithChildren {
  * to wherever it's mounted in the tree. Requires a `BottomSheetModalProvider` ancestor (already
  * mounted once at the app root in `src/app/_layout.tsx`). Use this for sheets opened from screens
  * nested under the tab navigator that need to visually overlay the tab bar (field editors,
- * composer action sheets, etc). */
+ * composer action sheets, etc).
+ *
+ * `onDismiss` fires *after* the modal has unmounted and reset itself — never call `ref.dismiss()`
+ * from it, or the modal gets stuck in a dismissing state and `present()` stops rendering. */
 export const SheetModal = forwardRef<BottomSheetModal, SheetModalProps>(function SheetModal(
   { children, snapPoints = ['50%', '90%'], onDismiss },
   ref,

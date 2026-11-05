@@ -30,7 +30,7 @@ export const FlowPickerSheet = forwardRef<BottomSheetModal, FlowPickerSheetProps
     );
 
     return (
-      <SheetModal ref={ref} snapPoints={['60%', '90%']} onDismiss={onClose}>
+      <SheetModal ref={ref} snapPoints={['60%', '90%']}>
         <SheetHeader title={t('chat.sendFlow')} onClose={onClose} />
         <BottomSheetFlatList
           data={flows}

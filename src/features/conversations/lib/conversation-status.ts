@@ -1,12 +1,15 @@
 import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
 
+/** How long a `disable-bot` call keeps the bot off before the backend auto-resumes it. Used to
+ * approximate the server-computed `botResumeAt` in the optimistic patch. */
+export const BOT_PAUSE_DURATION_MS = 24 * 60 * 60 * 1000;
+
 /**
- * Bot-active derivation, matching the backend's own rule (`isBotActive =
- * botEnabled || botResumeAt < now`): the bot is considered "active" either because it's
- * explicitly enabled, or because a previous 24h disable-pause (`botResumeAt`) has already
- * elapsed — the backend auto-resumes the bot at that point even though `botEnabled` itself only
- * flips back via the next `enable-bot` call or scheduled job. A `botResumeAt` in the future means
- * the bot is still paused.
+ * Bot on/off derivation, matching the backend's own rule (`isBotActive =
+ * botEnabled || botResumeAt < now`): the bot is active either because it's explicitly enabled,
+ * or because the auto-resume time (`botResumeAt`) set by a previous disable has already elapsed.
+ * A `botResumeAt` still in the future means the bot is off. This is the single source of truth
+ * for every bot indicator in the UI.
  */
 export function isBotActive(
   botEnabled: boolean,
@@ -16,18 +19,6 @@ export function isBotActive(
   if (botEnabled) return true;
   if (!botResumeAt) return false;
   return new Date(botResumeAt).getTime() < now;
-}
-
-/** Tri-state bot indicator for row/header display: 'paused' (a `botResumeAt` still in the future —
- * `isBotActive` already reports this as inactive, but it's a distinct UI state from a plain
- * 'off') takes priority over the plain `isBotActive` on/off split. */
-export function botState(
-  botEnabled: boolean,
-  botResumeAt: string | null,
-  now: number = Date.now(),
-): 'on' | 'paused' | 'off' {
-  if (botResumeAt && new Date(botResumeAt).getTime() >= now) return 'paused';
-  return isBotActive(botEnabled, botResumeAt, now) ? 'on' : 'off';
 }
 
 /** Unread = the contact's last incoming activity is newer than the agent's last read timestamp.

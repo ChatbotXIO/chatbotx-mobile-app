@@ -14,8 +14,6 @@ import { useToast } from '@/components/ui/toast';
 import { normalizeApiError } from '@/api/errors';
 import { FEATURES } from '@/config/features';
 import { useConversationDetail } from '@/features/conversations/api/use-conversation-detail';
-import { useEnableBot } from '@/features/conversations/api/use-conversation-actions';
-import { botState } from '@/features/conversations/lib/conversation-status';
 import { useMessagingWindow } from '@/features/chat/api/use-messaging-window';
 import type { FlowListItem } from '@/features/flows/api/use-flows';
 import { useEditMessage } from '@/features/chat/api/use-message-actions';
@@ -36,7 +34,6 @@ import { useTheme } from '@/theme/use-theme';
 
 import { ComposerActionsSheet } from './composer-actions-sheet';
 import { FlowPickerSheet } from './flow-picker-sheet';
-import { BotPausedBar } from './bot-paused-bar';
 import { QuotaBanner } from './quota-banner';
 import { SavedReplySuggestions } from './saved-reply-suggestions';
 import { WindowClosedBar } from './window-closed-bar';
@@ -88,11 +85,6 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
   // Same query key as the chat header's, so this is a cache hit rather than a second request.
   const { data: conversation } = useConversationDetail(workspaceId, conversationId);
   const messagingWindow = useMessagingWindow(conversation);
-  const enableBot = useEnableBot(workspaceId);
-  const pausedResumeAt =
-    conversation && botState(conversation.botEnabled, conversation.botResumeAt) === 'paused'
-      ? conversation.botResumeAt
-      : null;
 
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [inputHeight, setInputHeight] = useState(MIN_INPUT_HEIGHT);
@@ -281,13 +273,6 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
         <View style={{ paddingHorizontal: spacing.sm, paddingTop: spacing.xs }}>
           <ErrorBanner message={attachmentError} tone="danger" />
         </View>
-      ) : null}
-
-      {pausedResumeAt ? (
-        <BotPausedBar
-          resumeAt={pausedResumeAt}
-          onResume={() => enableBot.mutate([conversationId])}
-        />
       ) : null}
 
       {isEditing || isReplying || messagingWindow.status === 'closed' ? null : (
