@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { PropsWithChildren } from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AppState } from 'react-native';
 
 import { apiClient } from '@/api/client';
 import { ApiError } from '@/api/errors';
@@ -8,9 +9,11 @@ import { useWorkspaceStore } from '@/stores/use-workspace-store';
 
 import { invalidateWorkspaceQueries, useRealtimeAppState } from './app-state';
 import { RealtimeFatalError } from './protocol/realtime-socket';
+import { RealtimeControlsContext } from './realtime-context';
 import { createRealtimeConnection } from './realtime-connection';
 import { clearAllTypingTimers } from './typing-timers';
 import { resetConnectionStore, useConnectionStore } from './use-connection-store';
+import { useNetworkReachability } from './use-network-reachability';
 import { clearPendingConversationInvalidates, useRealtimeHandlers } from './use-realtime-handlers';
 
 /** Connects the selected workspace to the v2 realtime gateway. The backend mints a short-lived
@@ -24,6 +27,7 @@ function ConnectedRealtimeProvider({
   const handleEvent = useRealtimeHandlers(queryClient, workspaceId);
   const setStatus = useConnectionStore((state) => state.setStatus);
   const markOpened = useConnectionStore((state) => state.markOpened);
+  const markFailed = useConnectionStore((state) => state.markFailed);
 
   // This component is keyed by workspaceId, so this initializer creates exactly one connection
   // per selected workspace. It also resets synchronously before the connection starts in the
@@ -49,12 +53,15 @@ function ConnectedRealtimeProvider({
       },
       onEvent: handleEvent,
       onStatus: setStatus,
-      onOpen: () => {
-        if (useConnectionStore.getState().hasEverOpened) {
+      onOpen: ({ hasCursor }) => {
+        // With a cursor the server replays missed frames (and closes with `resync`, which
+        // refetches, if it cannot), so only a cursor-less reconnect needs a catch-up refetch.
+        if (!hasCursor && useConnectionStore.getState().hasEverOpened) {
           invalidateWorkspaceQueries(queryClient, workspaceId);
         }
         markOpened();
       },
+      onFailed: markFailed,
       onResync: () => invalidateWorkspaceQueries(queryClient, workspaceId),
       onDiagnostic: (error) => {
         if (__DEV__) console.warn('[realtime] connection error', error);
@@ -75,14 +82,25 @@ function ConnectedRealtimeProvider({
     connection.stop();
   }, [connection]);
 
+  // The reconnect's `onOpen` owns the catch-up refetch, so foreground only resumes the socket.
   const handleForeground = useCallback(() => {
     connection.resume();
-    invalidateWorkspaceQueries(queryClient, workspaceId);
-  }, [connection, queryClient, workspaceId]);
+  }, [connection]);
 
   useRealtimeAppState({ onBackground: handleBackground, onForeground: handleForeground });
 
-  return children;
+  const handleNetworkRegained = useCallback(() => {
+    // A stopped (backgrounded) connection must not be revived by a network event.
+    if (AppState.currentState === 'active') connection.resume();
+  }, [connection]);
+
+  useNetworkReachability({ onRegained: handleNetworkRegained });
+
+  const controls = useMemo(() => ({ retry: () => connection.retry() }), [connection]);
+
+  return (
+    <RealtimeControlsContext.Provider value={controls}>{children}</RealtimeControlsContext.Provider>
+  );
 }
 
 /** Only connects once a workspace is selected — defensive, since the tabs layout already guards

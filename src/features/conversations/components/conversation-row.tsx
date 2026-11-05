@@ -1,21 +1,27 @@
 import { memo } from 'react';
-import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/ui/avatar';
 import { IconButton } from '@/components/ui/icon-button';
 import { PressableScale } from '@/components/ui/pressable-scale';
-import { RelativeTime } from '@/components/ui/relative-time';
 import type { SwipeAction } from '@/components/ui/swipeable-row';
 import { SwipeableRow } from '@/components/ui/swipeable-row';
 import { Text } from '@/components/ui/text';
 import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
-import { isBotActive, isUnread } from '@/features/conversations/lib/conversation-status';
+import { describeConversationPreview } from '@/features/conversations/lib/conversation-preview';
+import { botState, isUnread } from '@/features/conversations/lib/conversation-status';
 import { useTheme } from '@/theme/use-theme';
 
 import { ChannelBadge } from './channel-badge';
-import { AssigneeBadge, BotStateIcon, StatusIconStrip } from './status-icons';
+import { ConversationPreviewLine, previewText } from './conversation-preview-line';
+import { AssigneeBadge, StatusIconStrip } from './status-icons';
+import { useConversationTimeLabel } from './use-conversation-time-label';
+import { WaitingChip } from './waiting-chip';
+
+const AVATAR_SIZE = 54;
+const ROW_GAP = 12;
+const ROW_INSET = 16;
 
 interface ConversationRowProps {
   conversation: ConversationListItem;
@@ -25,16 +31,6 @@ interface ConversationRowProps {
   onToggleBot?: () => void;
   onArchive?: () => void;
   onOpenActions?: () => void;
-}
-
-function lastMessagePreview(conversation: ConversationListItem, t: TFunction): string {
-  const lastMessage = conversation.messages[conversation.messages.length - 1];
-  if (!lastMessage) return '';
-  if (lastMessage.text) return lastMessage.text;
-  if (lastMessage.attachmentCount) {
-    return t('conversations.attachmentPreview', { count: lastMessage.attachmentCount });
-  }
-  return '';
 }
 
 /**
@@ -58,23 +54,23 @@ export const ConversationRow = memo(function ConversationRow({
   onOpenActions,
 }: ConversationRowProps) {
   const { t } = useTranslation();
-  const { colors, spacing } = useTheme();
+  const { colors } = useTheme();
   const contactName = conversation.contact?.fullName ?? t('conversations.unknownContact');
   const channel = conversation.contactInboxes[0]?.channel ?? 'omnichannel';
-  const preview = lastMessagePreview(conversation, t);
   const unread = isUnread(conversation);
   const isArchived = Boolean(conversation.archivedAt);
-  const botActive = isBotActive(conversation.botEnabled, conversation.botResumeAt);
-  const relativeTimeLabel = conversation.lastActivityAt
-    ? new Date(conversation.lastActivityAt).toLocaleString()
-    : '';
+  const bot = botState(conversation.botEnabled, conversation.botResumeAt);
+  const botActive = bot === 'on';
+  const timeLabel = useConversationTimeLabel(conversation.lastActivityAt);
+  const previewDescription = describeConversationPreview(conversation);
+  const previewA11y = previewText(previewDescription, t);
 
   const accessibilityLabel = [
     contactName,
     channel,
     unread ? t('conversations.a11yUnread') : null,
-    preview || null,
-    relativeTimeLabel || null,
+    previewA11y || null,
+    timeLabel || null,
   ]
     .filter(Boolean)
     .join(', ');
@@ -166,21 +162,15 @@ export const ConversationRow = memo(function ConversationRow({
         haptic={false}
         style={[
           styles.row,
-          {
-            paddingVertical: spacing.ms,
-            paddingHorizontal: spacing.md,
-            gap: spacing.ms,
-            backgroundColor: colors.surface1,
-          },
+          { paddingHorizontal: ROW_INSET, gap: ROW_GAP, backgroundColor: colors.surface1 },
         ]}
       >
         <View style={styles.avatarWrap}>
           <Avatar
             uri={conversation.contact?.avatar}
             name={contactName}
-            size={52}
-            ring={botActive ? 'bot' : 'none'}
-            badge={<ChannelBadge channel={channel} size={14} />}
+            size={AVATAR_SIZE}
+            badge={<ChannelBadge channel={channel} size={14} ringColor={colors.surface1} />}
           />
           <View style={styles.assigneeBadgeAnchor} pointerEvents="none">
             <AssigneeBadge
@@ -195,33 +185,32 @@ export const ConversationRow = memo(function ConversationRow({
             <Text variant={unread ? 'bodyStrong' : 'body'} numberOfLines={1} style={styles.name}>
               {contactName}
             </Text>
-            {conversation.lastActivityAt ? (
-              <RelativeTime date={conversation.lastActivityAt} />
-            ) : null}
-          </View>
-          <View style={styles.previewRow}>
-            <Text
-              variant="callout"
-              color={unread ? 'primary' : 'secondary'}
-              numberOfLines={1}
-              style={[styles.preview, unread && styles.previewUnread]}
-            >
-              {preview}
-            </Text>
-            {unread ? <View style={[styles.unreadDot, { backgroundColor: colors.brand }]} /> : null}
-          </View>
-
-          <View style={[styles.metaRow, { gap: spacing.xs }]}>
-            <BotStateIcon
-              botEnabled={conversation.botEnabled}
-              botResumeAt={conversation.botResumeAt}
-            />
             <StatusIconStrip
               followed={conversation.followed}
               archivedAt={conversation.archivedAt}
               blockedAt={conversation.contact?.blockedAt}
-              unread={unread}
+              unread={false}
+              size={12}
             />
+            {timeLabel ? (
+              <Text variant="caption" color={unread ? 'brand' : 'tertiary'} numeric>
+                {timeLabel}
+              </Text>
+            ) : null}
+          </View>
+          <View style={styles.previewRow}>
+            <ConversationPreviewLine
+              messages={conversation.messages}
+              unread={unread}
+              botState={bot}
+            />
+            {conversation.awaitingHumanReplySince ? (
+              <WaitingChip
+                since={conversation.awaitingHumanReplySince}
+                slaBreachingAt={conversation.responseSlaBreachingAt}
+              />
+            ) : null}
+            {unread ? <View style={[styles.unreadDot, { backgroundColor: colors.brand }]} /> : null}
           </View>
         </View>
 
@@ -234,6 +223,14 @@ export const ConversationRow = memo(function ConversationRow({
             onPress={onOpenActions}
           />
         ) : null}
+        {/* Inset hairline: starts at the text column (iOS/WhatsApp style), not the screen edge. */}
+        <View
+          pointerEvents="none"
+          style={[
+            styles.separator,
+            { start: ROW_INSET + AVATAR_SIZE + ROW_GAP, backgroundColor: colors.borderSubtle },
+          ]}
+        />
       </PressableScale>
     </SwipeableRow>
   );
@@ -242,7 +239,9 @@ export const ConversationRow = memo(function ConversationRow({
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    minHeight: 76,
+    paddingVertical: 10,
   },
   avatarWrap: {
     position: 'relative',
@@ -254,13 +253,12 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    gap: 3,
+    gap: 2,
   },
   headerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   name: {
     flex: 1,
@@ -270,26 +268,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  preview: {
-    flex: 1,
-  },
-  previewUnread: {
-    fontWeight: '600',
-  },
   unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  metaChip: {
-    borderRadius: 999,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+  separator: {
+    position: 'absolute',
+    bottom: 0,
+    end: 0,
+    height: StyleSheet.hairlineWidth,
   },
 });
 

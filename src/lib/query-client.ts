@@ -1,7 +1,16 @@
-import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
+import {
+  focusManager,
+  MutationCache,
+  onlineManager,
+  QueryCache,
+  QueryClient,
+} from '@tanstack/react-query';
+import { addNetworkStateListener } from 'expo-network';
+import { AppState } from 'react-native';
 
 import { ApiError, normalizeApiError } from '@/api/errors';
 import { clearAuthToken, getAuthToken } from '@/api/auth-token';
+import { isNetworkStateReachable } from '@/realtime/use-network-reachability';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
 
@@ -44,6 +53,21 @@ function shouldRetry(failureCount: number, error: unknown): boolean {
   }
   return failureCount < 1;
 }
+
+// React Query has no native notion of app focus or connectivity in React Native; wire both so
+// paused queries resume when the network returns and stale data refetches on foreground.
+onlineManager.setEventListener((setOnline) => {
+  const subscription = addNetworkStateListener((state) =>
+    setOnline(isNetworkStateReachable(state)),
+  );
+  return () => subscription.remove();
+});
+focusManager.setEventListener((handleFocus) => {
+  const subscription = AppState.addEventListener('change', (state) =>
+    handleFocus(state === 'active'),
+  );
+  return () => subscription.remove();
+});
 
 export const queryClient = new QueryClient({
   defaultOptions: {

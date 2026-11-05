@@ -53,9 +53,20 @@ export function Chip({
         ? (color ?? colors.brand)
         : colors.textSecondary;
 
-  const backgroundColor = selected ? withAlpha(baseColor, 0.16) : colors.surface1;
-  const borderColor = selected ? withAlpha(baseColor, 0.4) : colors.borderSubtle;
-  const textColorStyle = selected ? baseColor : colors.textSecondary;
+  // A selected brand chip is solid (white on brand) — the tinted style was low-contrast against
+  // the pale surfaces of the Inbox header.
+  const isSolid = selected && tone === 'brand';
+  const backgroundColor = isSolid
+    ? colors.brand
+    : selected
+      ? withAlpha(baseColor, 0.16)
+      : colors.surface1;
+  const borderColor = isSolid
+    ? colors.brand
+    : selected
+      ? withAlpha(baseColor, 0.4)
+      : colors.borderSubtle;
+  const textColorStyle = isSolid ? colors.onBrand : selected ? baseColor : colors.textSecondary;
 
   const content = (
     <View

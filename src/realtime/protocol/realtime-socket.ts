@@ -38,6 +38,9 @@ type RealtimeSocketOptions = {
   maxReconnectDelayMs?: number;
   minUptimeBeforeResetMs?: number;
   onClose?: (event: { code: number; reason: string }) => void;
+  /** Fires at the start of every connection attempt, including automatic retries, so callers can
+   * surface "connecting" instead of leaving the previous "closed" state up during backoff loops. */
+  onConnecting?: (info: { attempt: number }) => void;
   onError?: (error: unknown) => void;
   onMessage: (data: string) => void;
   onOpen?: () => void;
@@ -103,6 +106,7 @@ export class RealtimeSocket {
       return;
     }
     this.#connecting = true;
+    this.options.onConnecting?.({ attempt: this.#attempt });
     this.options
       .getUrl()
       .then((url) => {

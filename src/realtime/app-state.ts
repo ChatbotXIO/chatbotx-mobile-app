@@ -19,13 +19,11 @@ export function useRealtimeAppState({ onBackground, onForeground }: UseRealtimeA
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState) => {
-      const wasBackground = previousState.current?.match(/inactive|background/);
-      const isNowActive = nextState === 'active';
-      const isNowBackground = nextState.match(/inactive|background/);
-
-      if (isNowBackground && !previousState.current?.match(/inactive|background/)) {
+      // `inactive` (Control Center, app switcher peek, incoming call banner) keeps the socket;
+      // only a real `background` stops it, otherwise every pull-down would drop the connection.
+      if (nextState === 'background' && previousState.current !== 'background') {
         onBackground();
-      } else if (isNowActive && wasBackground) {
+      } else if (nextState === 'active' && previousState.current === 'background') {
         onForeground();
       }
 

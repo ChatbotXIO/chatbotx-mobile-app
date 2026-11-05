@@ -1,50 +1,64 @@
 import { create } from 'zustand';
 
 /**
- * Client-state store mirroring the v2 realtime connection lifecycle. It reflects socket state but
- * does not own reconnect logic; `createRealtimeConnection` handles retry and cursor recovery.
- * ConnectionBanner call sites (Inbox + chat screen) use it to render connecting, reconnecting,
- * and offline states instead of a hardcoded "online".
+ * Client-state store mirroring the v2 realtime connection lifecycle. It reflects socket and
+ * network state but does not own reconnect logic; `createRealtimeConnection` handles retry and
+ * cursor recovery. UI reads it through `deriveConnectionPresentation` (see
+ * `use-connection-presentation.ts`, which adds the grace period).
  */
-export type ConnectionStatus = 'connecting' | 'open' | 'closed';
+export type ConnectionStatus = 'connecting' | 'open' | 'closed' | 'failed';
+export type ConnectionFailureReason = 'revoked' | 'auth' | 'unknown';
+
+/** What the user should be told, independent of timing. */
+export type ConnectionPresentation =
+  'online' | 'connecting' | 'waiting-network' | 'reconnecting' | 'failed';
 
 interface ConnectionStoreState {
   status: ConnectionStatus;
-  /** Whether the socket has ever successfully reached `open` at least once during this app
-   * session. Distinguishes the FIRST connect (status 'connecting' with `hasEverOpened: false` →
-   * banner shows "Connecting…") from a later drop-and-retry (status 'connecting'/'closed' with
-   * `hasEverOpened: true` → banner shows "Reconnecting…"/"You're offline"). Reset to `false` on
-   * every workspace switch since realtime-provider.tsx remounts (`key={workspaceId}`) and this
-   * store is a plain singleton, not scoped per-provider-instance — see `resetConnectionStore`. */
+  /** `null` until the first reachability reading arrives. */
+  isNetworkReachable: boolean | null;
+  /** Whether the socket has reached `open` at least once since the provider mounted. Separates the
+   * FIRST connect ("Connecting…") from a later drop-and-retry ("Updating…"). Reset on every
+   * workspace switch (`resetConnectionStore`) since the provider remounts per workspace. */
   hasEverOpened: boolean;
-  setStatus: (status: ConnectionStatus) => void;
+  failureReason: ConnectionFailureReason | null;
+  setStatus: (status: Exclude<ConnectionStatus, 'failed'>) => void;
   markOpened: () => void;
+  markFailed: (reason: ConnectionFailureReason) => void;
+  setNetworkReachable: (isReachable: boolean) => void;
 }
 
-export const useConnectionStore = create<ConnectionStoreState>((set) => ({
+const INITIAL_STATE = {
   status: 'connecting',
   hasEverOpened: false,
-  setStatus: (status) => set({ status }),
-  markOpened: () => set({ status: 'open', hasEverOpened: true }),
+  failureReason: null,
+} as const;
+
+export const useConnectionStore = create<ConnectionStoreState>((set) => ({
+  ...INITIAL_STATE,
+  isNetworkReachable: null,
+  // A terminal failure only clears through an explicit non-failed status (i.e. retry started).
+  setStatus: (status) => set({ status, failureReason: null }),
+  markOpened: () => set({ status: 'open', hasEverOpened: true, failureReason: null }),
+  markFailed: (failureReason) => set({ status: 'failed', failureReason }),
+  setNetworkReachable: (isNetworkReachable) => set({ isNetworkReachable }),
 }));
 
-/** Resets the store back to its initial "never connected" state — call when the realtime provider
- * itself is torn down for a reason that should NOT be read as "reconnecting" (e.g. workspace
- * switch, where the next connect is a fresh first-connect from the new provider's point of view,
- * not a resume of the old one). */
+/** Resets the connection fields back to "never connected" — call when the provider is torn down
+ * for a reason that must NOT read as "reconnecting" (workspace switch). Reachability belongs to
+ * the device, not the workspace, so it is kept. */
 export function resetConnectionStore(): void {
-  useConnectionStore.setState({ status: 'connecting', hasEverOpened: false });
+  useConnectionStore.setState({ ...INITIAL_STATE });
 }
 
-/** Maps the store's `status`/`hasEverOpened` pair to `ConnectionBanner`'s four-state prop, so both
- * mount sites (Inbox header, chat screen) render identical banner text/color for the same
- * underlying socket state instead of each hand-rolling the mapping. `open` intentionally still
- * renders as `ConnectionBanner`'s `'online'` state briefly (see that component's own auto-hide
- * behavior) rather than being hidden here — the banner owns "when to disappear". */
-export function useConnectionBannerState(): 'online' | 'connecting' | 'reconnecting' | 'offline' {
-  return useConnectionStore((state) => {
-    if (state.status === 'open') return 'online';
-    if (!state.hasEverOpened) return 'connecting';
-    return state.status === 'connecting' ? 'reconnecting' : 'offline';
-  });
+type PresentationInput = Pick<
+  ConnectionStoreState,
+  'status' | 'isNetworkReachable' | 'hasEverOpened'
+>;
+
+export function deriveConnectionPresentation(state: PresentationInput): ConnectionPresentation {
+  if (state.status === 'failed') return 'failed';
+  if (state.status === 'open') return 'online';
+  if (state.isNetworkReachable === false) return 'waiting-network';
+  return state.hasEverOpened ? 'reconnecting' : 'connecting';
 }

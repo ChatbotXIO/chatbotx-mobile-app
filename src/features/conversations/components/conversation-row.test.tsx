@@ -54,7 +54,7 @@ describe('ConversationRow', () => {
     expect(screen.getByText('Unknown contact')).toBeTruthy();
   });
 
-  it('renders a translated attachment preview when the last message has no text', async () => {
+  it('renders a typed attachment label when the last message has no text', async () => {
     await render(
       <ConversationRow
         conversation={fakeConversation({
@@ -66,7 +66,7 @@ describe('ConversationRow', () => {
       />,
     );
 
-    expect(screen.getByText('📎 3 attachment(s)')).toBeTruthy();
+    expect(screen.getByText('File')).toBeTruthy();
   });
 
   it('calls onPress when the row is tapped', async () => {
@@ -144,5 +144,62 @@ describe('ConversationRow', () => {
       button.props.accessibilityActions as { name: string; label: string }[]
     ).find((action) => action.name === 'archive');
     expect(archiveAction?.label).toBe('Unarchive');
+  });
+
+  it('prefixes the preview with the sender for agent and bot messages', async () => {
+    await render(
+      <ConversationRow
+        conversation={fakeConversation({
+          messages: [
+            { text: 'On it', senderType: 'user' },
+          ] as unknown as ConversationListItem['messages'],
+        })}
+        onPress={() => {}}
+      />,
+    );
+
+    expect(screen.getByText('You: On it')).toBeTruthy();
+  });
+
+  it('shows a red failed-to-send preview', async () => {
+    await render(
+      <ConversationRow
+        conversation={fakeConversation({
+          messages: [
+            { text: 'Hi', senderType: 'user', sendError: 'x' },
+          ] as unknown as ConversationListItem['messages'],
+        })}
+        onPress={() => {}}
+      />,
+    );
+
+    expect(screen.getByText('Failed to send')).toBeTruthy();
+  });
+
+  it('shows a compact awaiting-reply chip', async () => {
+    const since = new Date(Date.now() - 125 * 60 * 1000).toISOString();
+    await render(
+      <ConversationRow
+        conversation={fakeConversation({ awaitingHumanReplySince: since })}
+        onPress={() => {}}
+      />,
+    );
+
+    expect(screen.getByText('2h')).toBeTruthy();
+  });
+
+  it('shows no awaiting chip when nobody is waiting', async () => {
+    await render(<ConversationRow conversation={fakeConversation()} onPress={() => {}} />);
+
+    expect(screen.queryByText(/^\d+[mhd]$/)).toBeNull();
+  });
+
+  it('uses the same formatted time in the accessibility label as on screen', async () => {
+    await render(<ConversationRow conversation={fakeConversation()} onPress={() => {}} />);
+
+    const label = screen.getByLabelText(/Jane Doe/).props.accessibilityLabel as string;
+    expect(label).toContain('Jane Doe');
+    expect(label).toContain('Hello there');
+    expect(label).not.toMatch(/GMT|AM|PM/);
   });
 });

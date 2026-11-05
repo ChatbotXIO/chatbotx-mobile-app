@@ -4,11 +4,18 @@ import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { RefreshControl, StyleSheet, View } from 'react-native';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 import { useShallow } from 'zustand/react/shallow';
 
 import { flattenPages } from '@/api/pagination';
-import { ConnectionBanner } from '@/components/ui/connection-banner';
+import { ConnectionTitle } from '@/components/ui/connection-title';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorBanner } from '@/components/ui/error-banner';
 import { IconButton } from '@/components/ui/icon-button';
@@ -46,18 +53,31 @@ import {
   useConversationFilters,
 } from '@/features/conversations/stores/use-conversation-filters';
 import { WorkspaceSwitcherSheet } from '@/features/workspaces/components/workspace-switcher-sheet';
-import { WorkspacePill } from '@/features/workspaces/components/workspace-pill';
+import { WorkspaceAvatarButton } from '@/features/workspaces/components/workspace-avatar-button';
 import { useWorkspaces } from '@/features/workspaces/api/use-workspaces';
-import { useConnectionBannerState } from '@/realtime/use-connection-store';
+import { ConnectionErrorCard } from '@/realtime/connection-error-card';
+import { useReducedMotion } from '@/theme/motion';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
 import { useTheme } from '@/theme/use-theme';
 
 const SEARCH_DEBOUNCE_MS = 350;
 const SKELETON_ROW_COUNT = 8;
+/** Scroll distance over which the large title shrinks and the header hairline fades in. */
+const TITLE_COLLAPSE_DISTANCE = 48;
+const COLLAPSED_TITLE_SCALE = 0.62;
 
 /** Count of active filter dimensions (excluding `keyword`, which has its own search bar affordance
  * and doesn't belong in the "how many filters are on" badge) — drives the filter IconButton's
  * `badgeCount`. */
+/** Copy for an empty result, specific to the active quick-filter chip. */
+function emptyFilteredKey(filters: ReturnType<typeof conversationFiltersSnapshot>): string {
+  if (filters.keyword) return 'conversations.emptyFiltered';
+  if (filters.status?.includes('unread')) return 'conversations.emptyUnread';
+  if (filters.status?.includes('followUp')) return 'conversations.emptyFollowing';
+  if (filters.botCategory === 'bot') return 'conversations.emptyBot';
+  return 'conversations.emptyFiltered';
+}
+
 function activeFilterCount(filters: ReturnType<typeof conversationFiltersSnapshot>): number {
   let count = 0;
   if (filters.botCategory) count += 1;
@@ -73,7 +93,8 @@ export default function ConversationsScreen() {
   const { colors, spacing } = useTheme();
   const workspaceId = useWorkspaceStore((state) => state.currentWorkspaceId);
   const showToast = useToast();
-  const connectionState = useConnectionBannerState();
+  const reducedMotion = useReducedMotion();
+  const scrollY = useSharedValue(0);
 
   const [searchText, setSearchText] = useState('');
   const setKeyword = useConversationFilters((state) => state.setKeyword);
@@ -104,6 +125,29 @@ export default function ConversationsScreen() {
   const disableBot = useDisableBot(workspaceId ?? '');
   const archiveConversations = useArchiveConversations(workspaceId ?? '');
   const unarchiveConversations = useUnarchiveConversations(workspaceId ?? '');
+
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollY.set(event.nativeEvent.contentOffset.y);
+    },
+    [scrollY],
+  );
+  // Transform/opacity only — no layout-bound animation, so the header never reflows while scrolling.
+  const titleStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        scale: interpolate(
+          scrollY.value,
+          [0, TITLE_COLLAPSE_DISTANCE],
+          [1, COLLAPSED_TITLE_SCALE],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+  }));
+  const hairlineStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [0, TITLE_COLLAPSE_DISTANCE], [0, 1], Extrapolation.CLAMP),
+  }));
 
   const openAssignmentSheet = useCallback((conversation: ConversationListItem) => {
     setAssigningConversation(conversation);
@@ -161,13 +205,13 @@ export default function ConversationsScreen() {
       return (
         <EmptyState
           icon="list-filter"
-          title={t('conversations.emptyFiltered')}
+          title={t(emptyFilteredKey(filtersSnapshot))}
           action={{ label: t('conversations.clearFilters'), onPress: resetFilters }}
         />
       );
     }
     return <EmptyState icon="messages-square" title={t('conversations.empty')} />;
-  }, [filterCount, filtersSnapshot.keyword, resetFilters, t]);
+  }, [filterCount, filtersSnapshot, resetFilters, t]);
 
   const normalizedError = query.error ? normalizeApiError(query.error) : null;
   if (normalizedError?.kind === 'workspaceBlocked') {
@@ -179,23 +223,19 @@ export default function ConversationsScreen() {
   }
 
   return (
-    <Screen edges={['top']}>
-      <View style={[styles.header, { padding: spacing.md, gap: spacing.sm }]}>
-        {currentWorkspace ? (
-          <WorkspacePill
-            name={currentWorkspace.name}
-            logo={currentWorkspace.logo}
-            onPress={() => workspaceSwitcherSheetRef.current?.expand()}
-          />
-        ) : null}
-        <View style={styles.searchRow}>
-          <View style={styles.searchInput}>
-            <SearchBar
-              value={searchText}
-              onChangeText={setSearchText}
-              placeholder={t('common.search') ?? undefined}
+    <Screen edges={['top']} style={{ backgroundColor: colors.surface1 }}>
+      <View style={[styles.header, { paddingHorizontal: spacing.md, gap: spacing.sm }]}>
+        <View style={[styles.titleRow, { gap: spacing.ms }]}>
+          {currentWorkspace ? (
+            <WorkspaceAvatarButton
+              name={currentWorkspace.name}
+              logo={currentWorkspace.logo}
+              onPress={() => workspaceSwitcherSheetRef.current?.expand()}
             />
-          </View>
+          ) : null}
+          <Animated.View style={[styles.titleSlot, reducedMotion ? undefined : titleStyle]}>
+            <ConnectionTitle title={t('conversations.inboxTitle')} variant="display" />
+          </Animated.View>
           <IconButton
             accessibilityLabel={t('conversations.filters')}
             icon="list-filter"
@@ -204,11 +244,21 @@ export default function ConversationsScreen() {
             onPress={() => filterSheetRef.current?.expand()}
           />
         </View>
+        <SearchBar
+          pill
+          value={searchText}
+          onChangeText={setSearchText}
+          placeholder={t('common.search') ?? undefined}
+        />
       </View>
 
-      <ConnectionBanner state={connectionState} />
-
       <FilterChipsRow />
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.hairline, { backgroundColor: colors.borderSubtle }, hairlineStyle]}
+      />
+
+      <ConnectionErrorCard />
 
       {query.isError ? (
         <View style={{ paddingHorizontal: spacing.md, paddingTop: spacing.sm }}>
@@ -231,6 +281,8 @@ export default function ConversationsScreen() {
           data={conversations}
           keyExtractor={(item) => item.id}
           getItemType={conversationRowItemType}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           renderItem={({ item }) => (
             <ConversationRow
               conversation={item}
@@ -275,13 +327,19 @@ export default function ConversationsScreen() {
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'column',
+    paddingTop: 8,
+    paddingBottom: 12,
   },
-  searchRow: {
+  titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
-  searchInput: {
+  titleSlot: {
     flex: 1,
+    // Anchor the shrink at the start edge so the title tucks toward the workspace avatar.
+    transformOrigin: 'left center',
+  },
+  hairline: {
+    height: StyleSheet.hairlineWidth,
   },
 });

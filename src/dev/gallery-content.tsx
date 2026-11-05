@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, Surface } from '@/components/ui/surface';
 import { Chip } from '@/components/ui/chip';
-import { ConnectionBanner, type ConnectionState } from '@/components/ui/connection-banner';
+import { ConnectionTitle } from '@/components/ui/connection-title';
 import { CountPill } from '@/components/ui/count-pill';
 import { DateSeparator } from '@/components/ui/date-separator';
 import { Divider } from '@/components/ui/divider';
@@ -26,6 +26,10 @@ import { Skeleton, SkeletonRow } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
 import { ToggleRow } from '@/components/ui/toggle-row';
 import { useToast } from '@/components/ui/toast';
+import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
+import { ConversationRow } from '@/features/conversations/components/conversation-row';
+import { ConnectionErrorCard } from '@/realtime/connection-error-card';
+import { resetConnectionStore, useConnectionStore } from '@/realtime/use-connection-store';
 import { useSettingsStore } from '@/stores/use-settings-store';
 import { useTheme } from '@/theme/use-theme';
 
@@ -36,6 +40,111 @@ import { useTheme } from '@/theme/use-theme';
  * are only pulled into the bundle via the lazy `require()` in that route's `__DEV__` branch,
  * instead of shipping in every production build's static import graph.
  */
+const CONNECTION_PREVIEWS: { label: string; apply: () => void }[] = [
+  { label: 'online', apply: () => useConnectionStore.getState().markOpened() },
+  {
+    label: 'connecting',
+    apply: () => {
+      resetConnectionStore();
+      useConnectionStore.getState().setNetworkReachable(true);
+    },
+  },
+  {
+    label: 'updating',
+    apply: () => {
+      useConnectionStore.getState().markOpened();
+      useConnectionStore.getState().setStatus('closed');
+    },
+  },
+  {
+    label: 'no network',
+    apply: () => {
+      useConnectionStore.getState().setStatus('closed');
+      useConnectionStore.getState().setNetworkReachable(false);
+    },
+  },
+  { label: 'failed', apply: () => useConnectionStore.getState().markFailed('revoked') },
+];
+
+const GALLERY_NOW = Date.now();
+const minutesAgo = (minutes: number) => new Date(GALLERY_NOW - minutes * 60_000).toISOString();
+
+function galleryConversation(
+  id: string,
+  name: string,
+  overrides: Record<string, unknown>,
+  message: Record<string, unknown>,
+): ConversationListItem {
+  return {
+    id,
+    botEnabled: false,
+    botResumeAt: null,
+    archivedAt: null,
+    followed: false,
+    lastActivityAt: minutesAgo(5),
+    agentLastReadAt: minutesAgo(5),
+    awaitingHumanReplySince: null,
+    responseSlaBreachingAt: null,
+    contactInboxes: [{ channel: 'messenger' }],
+    contact: { fullName: name, avatar: null, blockedAt: null },
+    assignedUser: null,
+    assignedInboxTeam: null,
+    messages: [{ text: null, senderType: 'contact', sendError: null, deletedAt: null, ...message }],
+    ...overrides,
+  } as unknown as ConversationListItem;
+}
+
+const GALLERY_CONVERSATIONS: ConversationListItem[] = [
+  galleryConversation(
+    'g-unread',
+    'Unread contact',
+    { agentLastReadAt: minutesAgo(90) },
+    { text: 'Is this still available?' },
+  ),
+  galleryConversation(
+    'g-bot-on',
+    'Bot on',
+    { botEnabled: true },
+    { text: 'Your order ships today', senderType: 'bot' },
+  ),
+  galleryConversation(
+    'g-bot-paused',
+    'Bot paused',
+    { botResumeAt: minutesAgo(-600) },
+    { text: 'Thanks, we will reply soon', senderType: 'user' },
+  ),
+  galleryConversation(
+    'g-awaiting',
+    'Awaiting reply',
+    { awaitingHumanReplySince: minutesAgo(130) },
+    { text: 'Can someone call me?' },
+  ),
+  galleryConversation(
+    'g-sla',
+    'SLA breach',
+    { awaitingHumanReplySince: minutesAgo(400), responseSlaBreachingAt: minutesAgo(30) },
+    { text: 'Still waiting…' },
+  ),
+  galleryConversation(
+    'g-failed',
+    'Failed send',
+    {},
+    { text: 'Hello', senderType: 'user', sendError: 'network' },
+  ),
+  galleryConversation(
+    'g-photo',
+    'Attachment',
+    { lastActivityAt: minutesAgo(60 * 30) },
+    { attachmentCount: 1, attachments: [{ fileType: 'image' }] },
+  ),
+  galleryConversation(
+    'g-deleted',
+    'Deleted message',
+    { lastActivityAt: minutesAgo(60 * 24 * 4) },
+    { deletedAt: minutesAgo(10) },
+  ),
+];
+
 export function GalleryContent() {
   const { colors, spacing } = useTheme();
   const themePreference = useSettingsStore((state) => state.themePreference);
@@ -46,7 +155,6 @@ export function GalleryContent() {
   const [tab, setTab] = useState<'all' | 'unread' | 'bot'>('all');
   const [chipSelected, setChipSelected] = useState(true);
   const [toggleValue, setToggleValue] = useState(true);
-  const [connectionState, setConnectionState] = useState<ConnectionState>('offline');
   const sheetRef = useRef<BottomSheet>(null);
   // Lazy-init so `Date.now()` runs once (at first render) instead of being called fresh on every
   // render, which the react-compiler lint rule flags as an impure render-time call.
@@ -273,21 +381,26 @@ export function GalleryContent() {
           <DateSeparator date={yesterdayIso} />
         </Section>
 
-        <Section title="ConnectionBanner">
-          <ConnectionBanner state={connectionState} />
+        <Section title="ConnectionTitle (1.5s grace before a degraded state shows)">
+          <ConnectionTitle title="Inbox" variant="display" />
+          <ConnectionErrorCard />
           <View style={styles.row}>
-            {(['online', 'connecting', 'reconnecting', 'offline'] as ConnectionState[]).map(
-              (state) => (
-                <Button
-                  key={state}
-                  label={state}
-                  size="sm"
-                  variant="secondary"
-                  onPress={() => setConnectionState(state)}
-                />
-              ),
-            )}
+            {CONNECTION_PREVIEWS.map((preview) => (
+              <Button
+                key={preview.label}
+                label={preview.label}
+                size="sm"
+                variant="secondary"
+                onPress={preview.apply}
+              />
+            ))}
           </View>
+        </Section>
+
+        <Section title="ConversationRow">
+          {GALLERY_CONVERSATIONS.map((conversation) => (
+            <ConversationRow key={conversation.id} conversation={conversation} onPress={() => {}} />
+          ))}
         </Section>
 
         <Section title="Toast">
