@@ -39,7 +39,11 @@
     "hidePassword": "Hide password",
     "signInSubtitle": "Sign in to keep every conversation moving.",
     "forgotPasswordSubtitle": "Enter your email and we'll send you a link to reset your password.",
-    "backToSignIn": "Back to sign in"
+    "backToSignIn": "Back to sign in",
+    "welcomeBack": "Bine ai revenit",
+    "heroTagline": "Toate conversațiile, într-o singură căsuță.",
+    "or": "sau",
+    "emailPlaceholder": "name@company.com"
   },
   "workspaces": {
     "title": "Spații de lucru",

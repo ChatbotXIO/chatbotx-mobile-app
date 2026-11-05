@@ -1,29 +1,35 @@
+import Constants from 'expo-constants';
 import { Link, router, type Href } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TextInputInstance } from 'react-native';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { signInWithEmail } from '@/api/auth-endpoints';
 import { Button } from '@/components/ui/button';
 import { Divider } from '@/components/ui/divider';
 import { ErrorBanner } from '@/components/ui/error-banner';
-import { Icon } from '@/components/ui/icon';
+import { BrandLogo } from '@/components/ui/brand-logo';
 import { Screen } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
 import { TextField } from '@/components/ui/text-field';
 import { SocialButtons } from '@/features/auth/social-buttons';
 import { consumePendingDeepLink } from '@/lib/pending-deep-link';
 import { useAuthStore } from '@/stores/use-auth-store';
+import { withAlpha } from '@/theme/color-utils';
 import { useReducedMotion } from '@/theme/motion';
 import { useTheme } from '@/theme/use-theme';
 
 const LOGO_SIZE = 72;
+const SHEET_RADIUS = 28;
+const SHEET_OVERLAP = 24;
 
 export default function SignInScreen() {
   const { t } = useTranslation();
-  const { colors, spacing } = useTheme();
+  const { colors, spacing, elevation } = useTheme();
   const reducedMotion = useReducedMotion();
   const setSignedIn = useAuthStore((state) => state.setSignedIn);
 
@@ -60,36 +66,37 @@ export default function SignInScreen() {
   const canSubmit = email.trim().length > 0 && password.length > 0 && !isSubmitting;
 
   return (
-    <Screen>
+    <Screen edges={['bottom']} style={{ backgroundColor: colors.surface1 }}>
+      <StatusBar style="light" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
       >
         <ScrollView
-          contentContainerStyle={[styles.scrollContent, { padding: spacing.lg }]}
+          bounces={false}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={[styles.form, { gap: spacing.md }]}>
-            <Animated.View
-              entering={reducedMotion ? undefined : FadeInUp.duration(400)}
-              style={[styles.logoWrap, { marginBottom: spacing.sm }]}
-            >
-              <View
-                style={[
-                  styles.logoCircle,
-                  { backgroundColor: colors.brandSoft, borderRadius: LOGO_SIZE / 2 },
-                ]}
-              >
-                <Icon name="messages-square" size={32} color={colors.brand} />
-              </View>
-            </Animated.View>
-
-            <Text variant="display" style={styles.centered}>
-              {t('auth.signIn')}
-            </Text>
-            <Text variant="body" color="secondary" style={styles.centered}>
-              {t('auth.signInSubtitle')}
-            </Text>
+          <SignInHero />
+          <Animated.View
+            entering={reducedMotion ? undefined : FadeInDown.springify()}
+            style={[
+              styles.sheet,
+              elevation[3],
+              {
+                backgroundColor: colors.surface1,
+                padding: spacing.lg,
+                gap: spacing.md,
+                marginTop: -SHEET_OVERLAP,
+              },
+            ]}
+          >
+            <View style={{ gap: spacing.xs }}>
+              <Text variant="heading">{t('auth.welcomeBack')}</Text>
+              <Text variant="body" color="secondary">
+                {t('auth.signInSubtitle')}
+              </Text>
+            </View>
 
             {error ? <ErrorBanner message={error} /> : null}
 
@@ -97,6 +104,8 @@ export default function SignInScreen() {
               label={t('auth.email')}
               value={email}
               onChangeText={setEmail}
+              leadingIcon="mail"
+              placeholder={t('auth.emailPlaceholder')}
               autoCapitalize="none"
               autoComplete="email"
               keyboardType="email-address"
@@ -105,24 +114,32 @@ export default function SignInScreen() {
               blurOnSubmit={false}
               onSubmitEditing={() => passwordInputRef.current?.focus()}
             />
-            <TextField
-              ref={passwordInputRef}
-              label={t('auth.password')}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!isPasswordVisible}
-              autoCapitalize="none"
-              autoComplete="password"
-              textContentType="password"
-              returnKeyType="go"
-              blurOnSubmit
-              onSubmitEditing={handleSubmit}
-              trailingIcon={isPasswordVisible ? 'eye-off' : 'eye'}
-              trailingIconAccessibilityLabel={
-                isPasswordVisible ? t('auth.hidePassword') : t('auth.showPassword')
-              }
-              onTrailingIconPress={() => setIsPasswordVisible((visible) => !visible)}
-            />
+            <View style={{ gap: spacing.xs }}>
+              <TextField
+                ref={passwordInputRef}
+                label={t('auth.password')}
+                value={password}
+                onChangeText={setPassword}
+                leadingIcon="lock"
+                secureTextEntry={!isPasswordVisible}
+                autoCapitalize="none"
+                autoComplete="password"
+                textContentType="password"
+                returnKeyType="go"
+                blurOnSubmit
+                onSubmitEditing={handleSubmit}
+                trailingIcon={isPasswordVisible ? 'eye-off' : 'eye'}
+                trailingIconAccessibilityLabel={
+                  isPasswordVisible ? t('auth.hidePassword') : t('auth.showPassword')
+                }
+                onTrailingIconPress={() => setIsPasswordVisible((visible) => !visible)}
+              />
+              <Link href="/(auth)/forgot-password" style={styles.forgotLink}>
+                <Text variant="callout" color="brand">
+                  {t('auth.forgotPassword')}
+                </Text>
+              </Link>
+            </View>
 
             <Button
               label={t('auth.signIn')}
@@ -133,28 +150,71 @@ export default function SignInScreen() {
               fullWidth
             />
 
-            <Link href="/(auth)/forgot-password" style={styles.link}>
-              <Text variant="callout" color="brand">
-                {t('auth.forgotPassword')}
-              </Text>
-            </Link>
-
             <View style={[styles.dividerRow, { gap: spacing.sm }]}>
               <View style={styles.dividerLine}>
                 <Divider />
               </View>
               <Text variant="caption" color="secondary">
-                {t('auth.orContinueWith')}
+                {t('auth.or')}
               </Text>
               <View style={styles.dividerLine}>
                 <Divider />
               </View>
             </View>
             <SocialButtons />
-          </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
+  );
+}
+
+/** Brand-colored hero: logo tile, app name and tagline over soft decorative rings. */
+function SignInHero() {
+  const { t } = useTranslation();
+  const { colors, spacing, radius } = useTheme();
+  const reducedMotion = useReducedMotion();
+  const insets = useSafeAreaInsets();
+  const appName = Constants.expoConfig?.name ?? 'ChatbotX';
+  const ringColor = withAlpha(colors.onBrand, 0.08);
+
+  return (
+    <Animated.View
+      entering={reducedMotion ? undefined : FadeIn.duration(400)}
+      style={[
+        styles.hero,
+        {
+          backgroundColor: colors.brand,
+          paddingTop: insets.top + spacing.xl,
+          paddingBottom: spacing.xxl + SHEET_OVERLAP,
+          paddingHorizontal: spacing.lg,
+          gap: spacing.sm,
+        },
+      ]}
+    >
+      <View
+        pointerEvents="none"
+        style={[styles.ring, styles.ringLarge, { borderColor: ringColor }]}
+      />
+      <View
+        pointerEvents="none"
+        style={[styles.ring, styles.ringSmall, { borderColor: ringColor }]}
+      />
+      <View
+        style={[
+          styles.logoTile,
+          { backgroundColor: colors.onBrand, borderRadius: radius.xl, marginBottom: spacing.xs },
+        ]}
+      >
+        <BrandLogo size={LOGO_SIZE * 0.6} color={colors.brand} />
+      </View>
+      <Text variant="heading" color="onBrand">
+        {appName}
+      </Text>
+      <Text variant="callout" color="onBrand" style={styles.tagline}>
+        {t('auth.heroTagline')}
+      </Text>
+    </Animated.View>
   );
 }
 
@@ -164,22 +224,45 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
   },
-  form: {
-    width: '100%',
-  },
-  logoWrap: {
+  hero: {
     alignItems: 'center',
+    overflow: 'hidden',
   },
-  logoCircle: {
+  ring: {
+    position: 'absolute',
+    borderWidth: 1,
+    borderRadius: 999,
+  },
+  ringLarge: {
+    width: 320,
+    height: 320,
+    top: -120,
+    end: -100,
+  },
+  ringSmall: {
+    width: 180,
+    height: 180,
+    bottom: -40,
+    start: -60,
+  },
+  logoTile: {
     width: LOGO_SIZE,
     height: LOGO_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  link: {
-    alignSelf: 'center',
+  tagline: {
+    opacity: 0.8,
+    textAlign: 'center',
+  },
+  sheet: {
+    flex: 1,
+    borderTopStartRadius: SHEET_RADIUS,
+    borderTopEndRadius: SHEET_RADIUS,
+  },
+  forgotLink: {
+    alignSelf: 'flex-end',
   },
   dividerRow: {
     flexDirection: 'row',
@@ -187,8 +270,5 @@ const styles = StyleSheet.create({
   },
   dividerLine: {
     flex: 1,
-  },
-  centered: {
-    textAlign: 'center',
   },
 });

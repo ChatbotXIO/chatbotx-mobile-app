@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet } from 'react-native';
 
@@ -18,6 +18,8 @@ interface ButtonProps extends Omit<ComponentProps<typeof PressableScale>, 'style
   loading?: boolean;
   disabled?: boolean;
   icon?: IconName;
+  /** Custom node (e.g. an SVG brand logo) rendered in place of `icon`. */
+  leading?: ReactNode;
   fullWidth?: boolean;
 }
 
@@ -37,6 +39,7 @@ export function Button({
   loading = false,
   disabled = false,
   icon,
+  leading,
   fullWidth = false,
   ...rest
 }: ButtonProps) {
@@ -102,7 +105,8 @@ export function Button({
         <ActivityIndicator color={iconColor} />
       ) : (
         <>
-          {icon ? (
+          {leading ?? null}
+          {!leading && icon ? (
             <Icon
               name={icon}
               size={sizeStyle.textVariant === 'subtitle' ? 22 : 18}
