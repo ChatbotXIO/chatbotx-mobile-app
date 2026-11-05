@@ -156,7 +156,9 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
       <BotStatusPill
         state={botTriState}
         resumeAt={conversation?.botResumeAt ?? null}
-        accessibilityLabel={botActive ? t('conversations.disableBot') : t('conversations.enableBot')}
+        accessibilityLabel={
+          botActive ? t('conversations.disableBot') : t('conversations.enableBot')
+        }
         onPress={handleToggleBot}
       />
 

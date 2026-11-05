@@ -284,7 +284,10 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
       ) : null}
 
       {pausedResumeAt ? (
-        <BotPausedBar resumeAt={pausedResumeAt} onResume={() => enableBot.mutate([conversationId])} />
+        <BotPausedBar
+          resumeAt={pausedResumeAt}
+          onResume={() => enableBot.mutate([conversationId])}
+        />
       ) : null}
 
       {isEditing || isReplying || messagingWindow.status === 'closed' ? null : (
@@ -336,87 +339,87 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
       {messagingWindow.status === 'closed' ? (
         <WindowClosedBar onSendFlow={handleOpenFlowPicker} />
       ) : (
-      <View
-        style={[
-          styles.row,
-          { padding: spacing.sm, gap: spacing.xs, borderTopColor: colors.borderSubtle },
-        ]}
-      >
-        <IconButton
-          accessibilityLabel={t('chat.attach')}
-          icon="circle-plus"
-          size="lg"
-          variant="ghost"
-          onPress={() => actionsSheetRef.current?.present()}
-          disabled={Boolean(quotaBlocked)}
-        />
-
-        <IconButton
-          accessibilityLabel={t('chat.camera')}
-          icon="camera"
-          size="lg"
-          variant="ghost"
-          onPress={handleInlineCamera}
-          disabled={Boolean(quotaBlocked)}
-        />
-
-        <TextInput
-          value={draft}
-          onChangeText={handleChangeText}
-          onContentSizeChange={handleContentSizeChange}
-          placeholder={t('chat.typeAMessage')}
-          placeholderTextColor={colors.textSecondary}
-          keyboardAppearance={scheme}
-          multiline
-          maxLength={MAX_MESSAGE_TEXT_LENGTH}
-          editable={!quotaBlocked}
+        <View
           style={[
-            styles.input,
-            {
-              height: inputHeight,
-              backgroundColor: colors.surface0,
-              borderRadius: radius.md,
-              color: colors.textPrimary,
-              paddingHorizontal: spacing.sm,
-            },
+            styles.row,
+            { padding: spacing.sm, gap: spacing.xs, borderTopColor: colors.borderSubtle },
           ]}
-        />
-
-        {hasContent ? null : (
+        >
           <IconButton
-            accessibilityLabel={t('chat.savedReplies')}
-            icon="message-square-more"
+            accessibilityLabel={t('chat.attach')}
+            icon="circle-plus"
             size="lg"
             variant="ghost"
-            onPress={handleOpenSavedReplies}
+            onPress={() => actionsSheetRef.current?.present()}
             disabled={Boolean(quotaBlocked)}
           />
-        )}
 
-        <Animated.View style={sendButtonStyle}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('chat.send')}
-            onPress={handleSend}
-            disabled={!hasContent || Boolean(quotaBlocked)}
+          <IconButton
+            accessibilityLabel={t('chat.camera')}
+            icon="camera"
+            size="lg"
+            variant="ghost"
+            onPress={handleInlineCamera}
+            disabled={Boolean(quotaBlocked)}
+          />
+
+          <TextInput
+            value={draft}
+            onChangeText={handleChangeText}
+            onContentSizeChange={handleContentSizeChange}
+            placeholder={t('chat.typeAMessage')}
+            placeholderTextColor={colors.textSecondary}
+            keyboardAppearance={scheme}
+            multiline
+            maxLength={MAX_MESSAGE_TEXT_LENGTH}
+            editable={!quotaBlocked}
             style={[
-              styles.sendButton,
+              styles.input,
               {
-                backgroundColor: hasContent ? colors.brand : colors.surface0,
-                borderRadius: radius.full,
+                height: inputHeight,
+                backgroundColor: colors.surface0,
+                borderRadius: radius.md,
+                color: colors.textPrimary,
+                paddingHorizontal: spacing.sm,
               },
-              (!hasContent || quotaBlocked) && styles.sendButtonDisabled,
             ]}
-          >
-            <Icon
-              name={isEditing ? 'check' : 'send-horizontal'}
-              size={24}
-              color={hasContent ? colors.onBrand : colors.textTertiary}
-              flipRTL={!isEditing}
+          />
+
+          {hasContent ? null : (
+            <IconButton
+              accessibilityLabel={t('chat.savedReplies')}
+              icon="message-square-more"
+              size="lg"
+              variant="ghost"
+              onPress={handleOpenSavedReplies}
+              disabled={Boolean(quotaBlocked)}
             />
-          </Pressable>
-        </Animated.View>
-      </View>
+          )}
+
+          <Animated.View style={sendButtonStyle}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('chat.send')}
+              onPress={handleSend}
+              disabled={!hasContent || Boolean(quotaBlocked)}
+              style={[
+                styles.sendButton,
+                {
+                  backgroundColor: hasContent ? colors.brand : colors.surface0,
+                  borderRadius: radius.full,
+                },
+                (!hasContent || quotaBlocked) && styles.sendButtonDisabled,
+              ]}
+            >
+              <Icon
+                name={isEditing ? 'check' : 'send-horizontal'}
+                size={24}
+                color={hasContent ? colors.onBrand : colors.textTertiary}
+                flipRTL={!isEditing}
+              />
+            </Pressable>
+          </Animated.View>
+        </View>
       )}
 
       <ComposerActionsSheet

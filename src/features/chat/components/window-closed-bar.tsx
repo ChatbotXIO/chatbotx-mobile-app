@@ -38,10 +38,7 @@ export function WindowClosedBar({ onSendFlow }: WindowClosedBarProps) {
         <Pressable
           accessibilityRole="button"
           onPress={onSendFlow}
-          style={[
-            styles.action,
-            { backgroundColor: colors.brand, borderRadius: radius.full },
-          ]}
+          style={[styles.action, { backgroundColor: colors.brand, borderRadius: radius.full }]}
         >
           <Text variant="bodyStrong" color="onBrand">
             {t('chat.sendFlow')}

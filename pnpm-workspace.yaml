@@ -2,6 +2,7 @@ allowBuilds:
   '@parcel/watcher': true
   dtrace-provider: false
   esbuild: true
+  lefthook: true
   unrs-resolver: true
 # Expo SDK 58's compatibility check expects TypeScript 6; openapi-typescript's v7 peer range has not caught up.
 peerDependencyRules:

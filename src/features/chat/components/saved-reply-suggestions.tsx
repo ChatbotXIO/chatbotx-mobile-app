@@ -15,7 +15,11 @@ interface SavedReplySuggestionsProps {
 
 /** Typing "/" in the composer shows matching saved replies inline above the input (Slack/Intercom
  * style). Tapping one fills the draft so the agent can edit before sending. */
-export function SavedReplySuggestions({ workspaceId, draft, onSelect }: SavedReplySuggestionsProps) {
+export function SavedReplySuggestions({
+  workspaceId,
+  draft,
+  onSelect,
+}: SavedReplySuggestionsProps) {
   const { colors, radius, spacing } = useTheme();
   const active = draft.startsWith('/');
   const { data: replies } = useSavedReplies(active ? workspaceId : '');

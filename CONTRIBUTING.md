@@ -15,15 +15,13 @@ See the [README](README.md) for the full quick start and available scripts.
 ## Before opening a PR
 
 ```bash
-pnpm typecheck
-pnpm lint
-pnpm format:check
+pnpm check
 pnpm test
 npx expo-doctor
 ```
 
-CI runs all of these on every push/PR — please run them locally first so review cycles aren't
-spent on failures these would have caught.
+CI also verifies the prebuild for each managed brand. The `pnpm check` static checks run before
+each commit; use it locally first to catch type, lint, and formatting failures.
 
 ## Code style
 
