@@ -16,6 +16,7 @@ import { normalizeApiError } from '@/api/errors';
 import { describeApiError } from '@/lib/describe-api-error';
 import { useMarkConversationRead } from '@/features/conversations/api/use-conversation-actions';
 import { findConversationInListCache } from '@/features/conversations/lib/find-conversation-in-cache';
+import { useConversationDetail } from '@/features/conversations/api/use-conversation-detail';
 import { isUnread } from '@/features/conversations/lib/conversation-status';
 import { ChatHeader } from '@/features/chat/components/chat-header';
 import { Composer } from '@/features/chat/components/composer';
@@ -51,6 +52,21 @@ export default function ChatScreen() {
   // order. Memoized on `messages` itself (not recomputed inline) so downstream `messagesById`/
   // `rows` memos that depend on this array's identity don't invalidate on every render.
   const chronologicalMessages = useMemo(() => [...messages].reverse(), [messages]);
+
+  // Same query (and cache placeholder) as the chat header, so no extra request.
+  const { data: conversation } = useConversationDetail(workspaceId, conversationId ?? null, {
+    placeholderData: () =>
+      workspaceId && conversationId
+        ? findConversationInListCache(queryClient, workspaceId, conversationId)
+        : undefined,
+  });
+  const contact = useMemo(
+    () =>
+      conversation?.contact
+        ? { name: conversation.contact.fullName ?? '', avatarUri: conversation.contact.avatar }
+        : undefined,
+    [conversation],
+  );
 
   const markRead = useMarkConversationRead(workspaceId ?? '');
   const sendMessage = useSendMessage(workspaceId ?? '', conversationId ?? '');
@@ -200,6 +216,7 @@ export default function ChatScreen() {
         <MessageList
           ref={messageListRef}
           messages={chronologicalMessages}
+          contact={contact}
           isLoading={messagesQuery.isPending}
           hasNextPage={Boolean(messagesQuery.hasNextPage)}
           isFetchingNextPage={messagesQuery.isFetchingNextPage}

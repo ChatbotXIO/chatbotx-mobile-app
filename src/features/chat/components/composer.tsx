@@ -14,6 +14,9 @@ import { useToast } from '@/components/ui/toast';
 import { normalizeApiError } from '@/api/errors';
 import { FEATURES } from '@/config/features';
 import { useConversationDetail } from '@/features/conversations/api/use-conversation-detail';
+import { useEnableBot } from '@/features/conversations/api/use-conversation-actions';
+import { botState } from '@/features/conversations/lib/conversation-status';
+import { useMessagingWindow } from '@/features/chat/api/use-messaging-window';
 import type { FlowListItem } from '@/features/flows/api/use-flows';
 import { useEditMessage } from '@/features/chat/api/use-message-actions';
 import {
@@ -33,7 +36,10 @@ import { useTheme } from '@/theme/use-theme';
 
 import { ComposerActionsSheet } from './composer-actions-sheet';
 import { FlowPickerSheet } from './flow-picker-sheet';
+import { BotPausedBar } from './bot-paused-bar';
 import { QuotaBanner } from './quota-banner';
+import { SavedReplySuggestions } from './saved-reply-suggestions';
+import { WindowClosedBar } from './window-closed-bar';
 import { SavedRepliesSheet } from './saved-replies-sheet';
 
 interface ComposerProps {
@@ -78,6 +84,15 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
     FEATURES.sendSequence ? workspaceId : null,
     FEATURES.sendSequence ? conversationId : null,
   );
+
+  // Same query key as the chat header's, so this is a cache hit rather than a second request.
+  const { data: conversation } = useConversationDetail(workspaceId, conversationId);
+  const messagingWindow = useMessagingWindow(conversation);
+  const enableBot = useEnableBot(workspaceId);
+  const pausedResumeAt =
+    conversation && botState(conversation.botEnabled, conversation.botResumeAt) === 'paused'
+      ? conversation.botResumeAt
+      : null;
 
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [inputHeight, setInputHeight] = useState(MIN_INPUT_HEIGHT);
@@ -268,6 +283,21 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
         </View>
       ) : null}
 
+      {pausedResumeAt ? (
+        <BotPausedBar
+          resumeAt={pausedResumeAt}
+          onResume={() => enableBot.mutate([conversationId])}
+        />
+      ) : null}
+
+      {isEditing || isReplying || messagingWindow.status === 'closed' ? null : (
+        <SavedReplySuggestions
+          workspaceId={workspaceId}
+          draft={draft}
+          onSelect={(text) => setDraft(conversationId, text)}
+        />
+      )}
+
       {modeBarLabel ? (
         <View
           style={[
@@ -306,87 +336,91 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
         </View>
       ) : null}
 
-      <View
-        style={[
-          styles.row,
-          { padding: spacing.sm, gap: spacing.xs, borderTopColor: colors.borderSubtle },
-        ]}
-      >
-        <IconButton
-          accessibilityLabel={t('chat.attach')}
-          icon="circle-plus"
-          size="lg"
-          variant="ghost"
-          onPress={() => actionsSheetRef.current?.present()}
-          disabled={Boolean(quotaBlocked)}
-        />
-
-        <IconButton
-          accessibilityLabel={t('chat.camera')}
-          icon="camera"
-          size="lg"
-          variant="ghost"
-          onPress={handleInlineCamera}
-          disabled={Boolean(quotaBlocked)}
-        />
-
-        <TextInput
-          value={draft}
-          onChangeText={handleChangeText}
-          onContentSizeChange={handleContentSizeChange}
-          placeholder={t('chat.typeAMessage')}
-          placeholderTextColor={colors.textSecondary}
-          keyboardAppearance={scheme}
-          multiline
-          maxLength={MAX_MESSAGE_TEXT_LENGTH}
-          editable={!quotaBlocked}
+      {messagingWindow.status === 'closed' ? (
+        <WindowClosedBar onSendFlow={handleOpenFlowPicker} />
+      ) : (
+        <View
           style={[
-            styles.input,
-            {
-              height: inputHeight,
-              backgroundColor: colors.surface0,
-              borderRadius: radius.md,
-              color: colors.textPrimary,
-              paddingHorizontal: spacing.sm,
-            },
+            styles.row,
+            { padding: spacing.sm, gap: spacing.xs, borderTopColor: colors.borderSubtle },
           ]}
-        />
-
-        {hasContent ? null : (
+        >
           <IconButton
-            accessibilityLabel={t('chat.savedReplies')}
-            icon="message-square-more"
+            accessibilityLabel={t('chat.attach')}
+            icon="circle-plus"
             size="lg"
             variant="ghost"
-            onPress={handleOpenSavedReplies}
+            onPress={() => actionsSheetRef.current?.present()}
             disabled={Boolean(quotaBlocked)}
           />
-        )}
 
-        <Animated.View style={sendButtonStyle}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('chat.send')}
-            onPress={handleSend}
-            disabled={!hasContent || Boolean(quotaBlocked)}
+          <IconButton
+            accessibilityLabel={t('chat.camera')}
+            icon="camera"
+            size="lg"
+            variant="ghost"
+            onPress={handleInlineCamera}
+            disabled={Boolean(quotaBlocked)}
+          />
+
+          <TextInput
+            value={draft}
+            onChangeText={handleChangeText}
+            onContentSizeChange={handleContentSizeChange}
+            placeholder={t('chat.typeAMessage')}
+            placeholderTextColor={colors.textSecondary}
+            keyboardAppearance={scheme}
+            multiline
+            maxLength={MAX_MESSAGE_TEXT_LENGTH}
+            editable={!quotaBlocked}
             style={[
-              styles.sendButton,
+              styles.input,
               {
-                backgroundColor: hasContent ? colors.brand : colors.surface0,
-                borderRadius: radius.full,
+                height: inputHeight,
+                backgroundColor: colors.surface0,
+                borderRadius: radius.md,
+                color: colors.textPrimary,
+                paddingHorizontal: spacing.sm,
               },
-              (!hasContent || quotaBlocked) && styles.sendButtonDisabled,
             ]}
-          >
-            <Icon
-              name={isEditing ? 'check' : 'send-horizontal'}
-              size={24}
-              color={hasContent ? colors.onBrand : colors.textTertiary}
-              flipRTL={!isEditing}
+          />
+
+          {hasContent ? null : (
+            <IconButton
+              accessibilityLabel={t('chat.savedReplies')}
+              icon="message-square-more"
+              size="lg"
+              variant="ghost"
+              onPress={handleOpenSavedReplies}
+              disabled={Boolean(quotaBlocked)}
             />
-          </Pressable>
-        </Animated.View>
-      </View>
+          )}
+
+          <Animated.View style={sendButtonStyle}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('chat.send')}
+              onPress={handleSend}
+              disabled={!hasContent || Boolean(quotaBlocked)}
+              style={[
+                styles.sendButton,
+                {
+                  backgroundColor: hasContent ? colors.brand : colors.surface0,
+                  borderRadius: radius.full,
+                },
+                (!hasContent || quotaBlocked) && styles.sendButtonDisabled,
+              ]}
+            >
+              <Icon
+                name={isEditing ? 'check' : 'send-horizontal'}
+                size={24}
+                color={hasContent ? colors.onBrand : colors.textTertiary}
+                flipRTL={!isEditing}
+              />
+            </Pressable>
+          </Animated.View>
+        </View>
+      )}
 
       <ComposerActionsSheet
         ref={actionsSheetRef}

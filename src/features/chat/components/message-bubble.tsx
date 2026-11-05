@@ -3,6 +3,7 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Avatar } from '@/components/ui/avatar';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import type { Message } from '@/features/chat/api/use-messages-infinite';
@@ -15,6 +16,8 @@ import { LocationView } from './location-view';
 import { getOptimisticStatus } from './optimistic-message';
 import { RichContentView } from './rich-content-view';
 
+const AVATAR_SIZE = 28;
+
 type SenderVariant = 'contact' | 'agent' | 'bot' | 'system';
 
 interface MessageBubbleProps {
@@ -24,6 +27,8 @@ interface MessageBubbleProps {
   /** Lookup for resolving `parentId` into the quoted reply preview — built once by MessageList
    * from the full loaded message set, not refetched per bubble. */
   messagesById: Map<string, Message>;
+  /** Contact identity for the inbound avatar shown on the last bubble of a group. */
+  contact?: { name: string; avatarUri?: string | null };
   onLongPress?: () => void;
   onRetry?: () => void;
 }
@@ -48,6 +53,7 @@ function MessageBubbleImpl({
   position,
   showMeta,
   messagesById,
+  contact,
   onLongPress,
   onRetry,
 }: MessageBubbleProps) {
@@ -112,20 +118,27 @@ function MessageBubbleImpl({
     status: statusLabel,
   });
 
-  return (
+  const column = (
     <View
       style={[
         styles.row,
         outbound ? styles.rowOutbound : styles.rowInbound,
-        { marginTop: showMeta ? spacing.sm : spacing.xxs },
+        outbound ? null : styles.rowInboundInShell,
+        { marginTop: showMeta ? spacing.base : spacing.xxs },
       ]}
     >
-      {variant === 'bot' && showMeta ? (
+      {outbound && showMeta ? (
         <Text
           variant="micro"
-          style={[styles.botLabel, { color: colors.bubbleBotAccent, marginStart: spacing.xs }]}
+          style={[
+            styles.senderLabel,
+            {
+              color: variant === 'bot' ? colors.bubbleBotAccent : colors.textSecondary,
+              marginHorizontal: spacing.xs,
+            },
+          ]}
         >
-          {t('chat.senderBot')}
+          {senderLabel}
         </Text>
       ) : null}
 
@@ -140,7 +153,8 @@ function MessageBubbleImpl({
           {
             backgroundColor: bubbleColor,
             borderRadius: radius.bubble,
-            padding: spacing.ms,
+            paddingVertical: spacing.sm,
+            paddingHorizontal: spacing.base,
             opacity: optimistic?.status === 'pending' ? 0.6 : 1,
           },
         ]}
@@ -180,38 +194,56 @@ function MessageBubbleImpl({
           <RichContentView contentType={message.contentType} outbound={outbound} />
         ) : null}
 
-        {bubbleText ? (
-          <Text
-            style={{
-              color: isDeleted ? colors.textTertiary : textColor,
-              fontStyle: isDeleted ? 'italic' : 'normal',
-            }}
-            variant="body"
-          >
-            {bubbleText}
-          </Text>
-        ) : null}
-
-        {isGroupEnd ? (
-          <View style={[styles.metaRow, { gap: spacing.xxs }]}>
-            {optimistic?.status === 'failed' ? (
-              <Icon name="circle-alert" size={12} color={colors.danger} />
-            ) : optimistic?.status === 'pending' ? (
-              <Icon name="clock" size={12} color={textColor} />
-            ) : outbound ? (
-              <Icon name="check" size={12} color={textColor} />
-            ) : null}
-            <Text variant="micro" numeric style={{ color: textColor, opacity: 0.75 }}>
-              {timeLabel}
+        <View style={styles.textRow}>
+          {bubbleText ? (
+            <Text
+              style={[
+                styles.textFlex,
+                {
+                  color: isDeleted ? colors.textTertiary : textColor,
+                  fontStyle: isDeleted ? 'italic' : 'normal',
+                },
+              ]}
+              variant="body"
+            >
+              {bubbleText}
             </Text>
-          </View>
-        ) : null}
+          ) : null}
+
+          {isGroupEnd ? (
+            <View style={[styles.metaRow, { gap: spacing.xxs, marginStart: spacing.sm }]}>
+              <Text variant="micro" numeric style={{ color: textColor, opacity: 0.75 }}>
+                {timeLabel}
+              </Text>
+              {optimistic?.status === 'failed' ? (
+                <Icon name="circle-alert" size={12} color={colors.danger} />
+              ) : optimistic?.status === 'pending' ? (
+                <Icon name="clock" size={12} color={textColor} />
+              ) : outbound ? (
+                <Icon name="check" size={12} color={textColor} />
+              ) : null}
+            </View>
+          ) : null}
+        </View>
       </Pressable>
       {optimistic?.status === 'failed' ? (
         <Text variant="caption" color="danger" style={styles.failedLabel}>
           {optimistic.errorMessage ?? t('chat.failedToSendTapRetry')}
         </Text>
       ) : null}
+    </View>
+  );
+
+  if (outbound) return column;
+
+  return (
+    <View style={[styles.inboundShell, { gap: spacing.xs, paddingStart: spacing.base }]}>
+      <View style={styles.avatarSlot}>
+        {isGroupEnd && contact ? (
+          <Avatar uri={contact.avatarUri} name={contact.name} size={AVATAR_SIZE} />
+        ) : null}
+      </View>
+      {column}
     </View>
   );
 }
@@ -226,7 +258,9 @@ function messagesEqual(prev: MessageBubbleProps, next: MessageBubbleProps): bool
     prev.position === next.position &&
     prev.showMeta === next.showMeta &&
     prevOptimistic?.status === nextOptimistic?.status &&
-    prev.messagesById === next.messagesById
+    prev.messagesById === next.messagesById &&
+    prev.contact?.name === next.contact?.name &&
+    prev.contact?.avatarUri === next.contact?.avatarUri
   );
 }
 
@@ -236,6 +270,13 @@ const styles = StyleSheet.create({
   row: {
     paddingHorizontal: 12,
   },
+  inboundShell: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  avatarSlot: {
+    width: AVATAR_SIZE,
+  },
   // Intentionally left as flex-start/flex-end (not left/right) so RTL auto-mirrors bubble side —
   // conventional RTL chat layout (e.g. WhatsApp Arabic still puts outbound bubbles on the left).
   rowOutbound: {
@@ -244,13 +285,28 @@ const styles = StyleSheet.create({
   rowInbound: {
     alignItems: 'flex-start',
   },
+  rowInboundInShell: {
+    paddingStart: 0,
+    flexShrink: 1,
+  },
   bubble: {
-    maxWidth: '78%',
+    maxWidth: '76%',
+    minWidth: 44,
     gap: 4,
   },
-  botLabel: {
+  senderLabel: {
     fontWeight: '700',
     marginBottom: 2,
+  },
+  // Time sits inline after the text when it fits and wraps below it when it doesn't.
+  textRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+  },
+  textFlex: {
+    flexShrink: 1,
   },
   replyQuote: {
     borderStartWidth: 2,
