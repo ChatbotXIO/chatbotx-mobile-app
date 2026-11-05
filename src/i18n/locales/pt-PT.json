@@ -39,7 +39,11 @@
     "hidePassword": "Hide password",
     "signInSubtitle": "Sign in to keep every conversation moving.",
     "forgotPasswordSubtitle": "Enter your email and we'll send you a link to reset your password.",
-    "backToSignIn": "Back to sign in"
+    "backToSignIn": "Back to sign in",
+    "welcomeBack": "Bem-vindo de volta",
+    "heroTagline": "Todas as conversas numa só caixa de entrada.",
+    "or": "ou",
+    "emailPlaceholder": "name@company.com"
   },
   "workspaces": {
     "title": "Espaços de trabalho",

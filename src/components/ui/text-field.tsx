@@ -4,13 +4,18 @@ import { StyleSheet, TextInput, View } from 'react-native';
 
 import { useTheme } from '@/theme/use-theme';
 
+import { Icon } from './icon';
 import { IconButton } from './icon-button';
 import type { IconName } from './icon';
 import { Text } from './text';
 
+const LEADING_ICON_SIZE = 18;
+
 interface TextFieldProps extends React.ComponentProps<typeof TextInput> {
   label?: string;
   error?: string;
+  /** Decorative icon at the field's leading edge (e.g. mail / lock). */
+  leadingIcon?: IconName;
   /** Renders an IconButton inside the field's trailing edge (e.g. a password show/hide toggle).
    * Purely additive to the base field — omit both props for the original single-input layout. */
   trailingIcon?: IconName;
@@ -24,6 +29,7 @@ export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function 
   {
     label,
     error,
+    leadingIcon,
     trailingIcon,
     trailingIconAccessibilityLabel,
     onTrailingIconPress,
@@ -66,12 +72,20 @@ export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function 
               color: colors.textPrimary,
               fontSize: typography.body.fontSize,
               paddingHorizontal: spacing.base,
+              paddingStart: leadingIcon
+                ? spacing.base + LEADING_ICON_SIZE + spacing.sm
+                : spacing.base,
               paddingEnd: trailingIcon ? spacing.xl + spacing.sm : spacing.base,
             },
             style,
           ]}
           {...rest}
         />
+        {leadingIcon ? (
+          <View pointerEvents="none" style={[styles.leadingIcon, { start: spacing.base }]}>
+            <Icon name={leadingIcon} size={LEADING_ICON_SIZE} color={colors.textSecondary} />
+          </View>
+        ) : null}
         {trailingIcon ? (
           <View style={styles.trailingIcon}>
             <IconButton
@@ -106,6 +120,9 @@ const styles = StyleSheet.create({
   input: {
     height: 48,
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  leadingIcon: {
+    position: 'absolute',
   },
   trailingIcon: {
     position: 'absolute',

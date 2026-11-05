@@ -39,7 +39,11 @@
     "hidePassword": "Hide password",
     "signInSubtitle": "Sign in to keep every conversation moving.",
     "forgotPasswordSubtitle": "Enter your email and we'll send you a link to reset your password.",
-    "backToSignIn": "Back to sign in"
+    "backToSignIn": "Back to sign in",
+    "welcomeBack": "欢迎回来",
+    "heroTagline": "所有对话，尽在一个收件箱。",
+    "or": "或",
+    "emailPlaceholder": "name@company.com"
   },
   "workspaces": {
     "title": "工作区",
