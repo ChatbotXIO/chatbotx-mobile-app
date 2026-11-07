@@ -218,6 +218,10 @@
     "enrollSelected": "Add ({{count}})",
     "sequenceEnrolled": "Contact enrolled in sequence",
     "sequenceEnrollFailed": "Couldn't enroll contact in sequence",
+    "unenrollSequence": "Unsubscribe",
+    "unenrollConfirm": "Remove this contact from \"{{name}}\"?",
+    "sequenceUnenrolled": "Contact removed from sequence",
+    "sequenceUnenrollFailed": "Couldn't remove contact from sequence",
     "block": "Block contact",
     "unblock": "Unblock contact",
     "blockConfirm": "Block this contact? They won't be able to message this workspace.",
@@ -232,7 +236,18 @@
     "actions": "Contact actions",
     "inSequence": "In an active sequence",
     "tagsCount": "{{count}} tag",
-    "tagsCount_other": "{{count}} tags"
+    "tagsCount_other": "{{count}} tags",
+    "emptySearch": "Inga kontakter matchar din sökning",
+    "more": "Mer",
+    "searchPlaceholder": "Sök namn, e-post, telefon",
+    "customFieldInvalid": {
+      "number": "Enter a valid number",
+      "email": "Enter a valid email address",
+      "phoneNumber": "Enter a valid phone number",
+      "boolean": "Enter true or false",
+      "date": "Enter a date as YYYY-MM-DD",
+      "datetime": "Enter a date and time as YYYY-MM-DDTHH:MM"
+    }
   },
   "flows": {
     "title": "Flöden",

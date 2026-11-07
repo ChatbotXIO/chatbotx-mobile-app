@@ -3,7 +3,7 @@ import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshControl, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 
 import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorBanner } from '@/components/ui/error-banner';
@@ -11,7 +11,7 @@ import { ListFooterSpinner } from '@/components/ui/list-footer-spinner';
 import { Screen } from '@/components/ui/screen';
 import { SearchBar } from '@/components/ui/search-bar';
 import { SkeletonRow } from '@/components/ui/skeleton';
-import { useToast } from '@/components/ui/toast';
+import { Text } from '@/components/ui/text';
 import { WorkspaceBlockedGate } from '@/components/workspace-blocked-gate';
 import { normalizeApiError } from '@/api/errors';
 import { describeApiError } from '@/lib/describe-api-error';
@@ -21,20 +21,21 @@ import {
   useContactsInfinite,
   type ContactListItem,
 } from '@/features/contacts/api/use-contacts-infinite';
-import { useDeleteContact } from '@/features/contacts/api/use-delete-contact';
-import { useBlockContact, useUnblockContact } from '@/features/contacts/api/use-contact-block';
 import { ContactActionsSheet } from '@/features/contacts/components/contact-actions-sheet';
-import { ContactRow } from '@/features/contacts/contact-row';
+import { ContactRow, contactRowItemType } from '@/features/contacts/contact-row';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
 import { useTheme } from '@/theme/use-theme';
+
+const SEARCH_DEBOUNCE_MS = 350;
 
 export default function ContactsScreen() {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
   const router = useRouter();
-  const showToast = useToast();
   const workspaceId = useWorkspaceStore((state) => state.currentWorkspaceId);
+  const [searchText, setSearchText] = useState('');
   const [keyword, setKeyword] = useState('');
+  const [openRequest, setOpenRequest] = useState(0);
   const [selectedContact, setSelectedContact] = useState<ContactListItem | null>(null);
   const actionsSheetRef = useRef<BottomSheet>(null);
   // `ContactActionsSheet` only mounts once `selectedContactDetail` resolves (see the render guard
@@ -44,28 +45,35 @@ export default function ContactsScreen() {
   // has actually mounted. A ref (not state) so clearing it doesn't itself trigger another render.
   const pendingOpenRef = useRef(false);
 
+  useEffect(() => {
+    const timeout = setTimeout(() => setKeyword(searchText.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timeout);
+  }, [searchText]);
+
   const query = useContactsInfinite(workspaceId, keyword);
+  const totalCount = query.data?.pages[0]?.totalCount ?? null;
   const contacts = flattenContactPages(query.data?.pages);
   const normalizedError = query.error ? normalizeApiError(query.error) : null;
 
-  const blockContact = useBlockContact(workspaceId ?? '');
-  const unblockContact = useUnblockContact(workspaceId ?? '');
-  const deleteContact = useDeleteContact(workspaceId ?? '');
   const { data: selectedContactDetail } = useContactDetail(
     workspaceId,
     selectedContact?.id ?? null,
   );
 
+  // `openRequest` is bumped on every "More" tap so the effect re-runs even when the same contact is
+  // tapped again (same `selectedContact`, cached detail → no other dep would change).
   useEffect(() => {
-    if (pendingOpenRef.current && workspaceId && selectedContactDetail) {
-      actionsSheetRef.current?.expand();
-      pendingOpenRef.current = false;
-    }
-  }, [workspaceId, selectedContactDetail]);
+    if (!pendingOpenRef.current || !workspaceId || !selectedContactDetail) return;
+    pendingOpenRef.current = false;
+    // The sheet may have mounted in this very commit; @gorhom/bottom-sheet ignores `expand()` until
+    // its first layout pass, so defer one frame.
+    requestAnimationFrame(() => actionsSheetRef.current?.expand());
+  }, [workspaceId, selectedContactDetail, openRequest]);
 
   const openActions = useCallback((contact: ContactListItem) => {
     setSelectedContact(contact);
     pendingOpenRef.current = true;
+    setOpenRequest((n) => n + 1);
   }, []);
 
   // Stable per-action handlers (not per-item inline arrows) so `ContactRow`'s `memo` can actually
@@ -76,37 +84,12 @@ export default function ContactsScreen() {
     [router],
   );
 
-  const handleToggleBlock = useCallback(
+  const handleMessage = useCallback(
     (contact: ContactListItem) => {
-      const wasBlocked = Boolean(contact.blockedAt);
-      const mutation = wasBlocked ? unblockContact : blockContact;
-      mutation.mutate(contact.id, {
-        onSuccess: () => {
-          showToast({
-            message: wasBlocked ? t('contacts.unblockedSuccess') : t('contacts.blockedSuccess'),
-            tone: 'success',
-          });
-        },
-        onError: (error) => {
-          showToast({ message: describeApiError(error, t), tone: 'danger' });
-        },
-      });
+      const conversationId = contact.conversation?.id;
+      if (conversationId) router.push(`/(app)/conversations/${conversationId}`);
     },
-    [unblockContact, blockContact, showToast, t],
-  );
-
-  const handleDelete = useCallback(
-    (contact: ContactListItem) => {
-      deleteContact.mutate(contact.id, {
-        onSuccess: () => {
-          showToast({ message: t('contacts.deleted'), tone: 'success' });
-        },
-        onError: (error) => {
-          showToast({ message: describeApiError(error, t), tone: 'danger' });
-        },
-      });
-    },
-    [deleteContact, showToast, t],
+    [router],
   );
 
   if (normalizedError?.kind === 'workspaceBlocked') {
@@ -118,9 +101,24 @@ export default function ContactsScreen() {
   }
 
   return (
-    <Screen edges={['top']}>
-      <View style={{ padding: spacing.md, paddingBottom: spacing.sm }}>
-        <SearchBar value={keyword} onChangeText={setKeyword} placeholder={t('common.search')} />
+    <Screen edges={['top']} style={{ backgroundColor: colors.surface1 }}>
+      <View style={[styles.header, { paddingHorizontal: spacing.md, gap: spacing.sm }]}>
+        <View style={[styles.titleRow, { gap: spacing.sm }]}>
+          <Text variant="display" accessibilityRole="header">
+            {t('contacts.title')}
+          </Text>
+          {totalCount !== null ? (
+            <Text variant="caption" color="tertiary" numeric>
+              {totalCount.toLocaleString()}
+            </Text>
+          ) : null}
+        </View>
+        <SearchBar
+          pill
+          value={searchText}
+          onChangeText={setSearchText}
+          placeholder={t('contacts.searchPlaceholder')}
+        />
       </View>
 
       {normalizedError ? (
@@ -140,19 +138,22 @@ export default function ContactsScreen() {
           ))}
         </View>
       ) : contacts.length === 0 ? (
-        <EmptyState icon="users" title={t('contacts.empty')} />
+        <EmptyState
+          icon={keyword ? 'search' : 'users'}
+          title={keyword ? t('contacts.emptySearch') : t('contacts.empty')}
+        />
       ) : (
         <FlashList
           data={contacts}
           keyExtractor={(contact) => contact.id}
+          getItemType={contactRowItemType}
           renderItem={({ item }) => (
             <ContactRow
               contact={item}
               workspaceId={workspaceId}
               onPress={handlePress}
               onOpenActions={openActions}
-              onToggleBlock={handleToggleBlock}
-              onDelete={handleDelete}
+              onMessage={handleMessage}
             />
           )}
           onEndReachedThreshold={0.4}
@@ -177,9 +178,22 @@ export default function ContactsScreen() {
           ref={actionsSheetRef}
           workspaceId={workspaceId}
           contact={selectedContactDetail}
+          conversationId={selectedContact?.conversation?.id}
+          onDeleted={() => setSelectedContact(null)}
           onClose={() => actionsSheetRef.current?.close()}
         />
       ) : null}
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+});

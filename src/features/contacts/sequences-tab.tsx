@@ -7,7 +7,11 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Icon } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
+import { SwipeableRow } from '@/components/ui/swipeable-row';
+import { useToast } from '@/components/ui/toast';
 import type { ContactDetail } from '@/features/contacts/api/use-contact-detail';
+import { confirmDestructive } from '@/lib/confirm-destructive';
+import { useUnenrollContactFromSequences } from '@/features/sequences/api/use-unenroll-contact-from-sequences';
 import { SequencePickerSheet } from '@/features/sequences/components/sequence-picker-sheet';
 import { useTheme } from '@/theme/use-theme';
 
@@ -26,7 +30,25 @@ interface SequencesTabProps {
 export function SequencesTab({ contact, workspaceId }: SequencesTabProps) {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
+  const showToast = useToast();
   const pickerSheetRef = useRef<BottomSheetModal>(null);
+  const unenroll = useUnenrollContactFromSequences(workspaceId ?? '', contact.id);
+
+  function handleUnenroll(sequenceId: string, sequenceName: string) {
+    confirmDestructive({
+      title: t('contacts.unenrollSequence'),
+      message: t('contacts.unenrollConfirm', { name: sequenceName }),
+      confirmLabel: t('contacts.unenrollSequence'),
+      cancelLabel: t('common.cancel'),
+      onConfirm: () =>
+        unenroll.mutate(sequenceId, {
+          onSuccess: () =>
+            showToast({ message: t('contacts.sequenceUnenrolled'), tone: 'success' }),
+          onError: () =>
+            showToast({ message: t('contacts.sequenceUnenrollFailed'), tone: 'danger' }),
+        }),
+    });
+  }
 
   return (
     <View style={{ paddingBottom: spacing.md }}>
@@ -44,11 +66,29 @@ export function SequencesTab({ contact, workspaceId }: SequencesTabProps) {
         <EmptyState icon="layers-2" title={t('contacts.noSequences')} />
       ) : (
         contact.sequences.map((enrollment) => (
-          <ListItem
+          <SwipeableRow
             key={enrollment.sequenceId}
-            title={enrollment.sequenceName}
-            leading={<Icon name="layers-2" size={20} color={colors.textSecondary} />}
-          />
+            rightActions={
+              workspaceId
+                ? [
+                    {
+                      icon: 'circle-x',
+                      label: t('contacts.unenrollSequence'),
+                      color: colors.danger,
+                      destructive: true,
+                      onPress: () => handleUnenroll(enrollment.sequenceId, enrollment.sequenceName),
+                    },
+                  ]
+                : undefined
+            }
+          >
+            <View style={{ backgroundColor: colors.bg }}>
+              <ListItem
+                title={enrollment.sequenceName}
+                leading={<Icon name="layers-2" size={20} color={colors.textSecondary} />}
+              />
+            </View>
+          </SwipeableRow>
         ))
       )}
 

@@ -28,9 +28,13 @@ export type ContactListItem = ListContactsResponse['data'][number];
 
 const PER_PAGE = 30;
 
+/** Most recently active first. `id` is a free-form column name on the backend; `updatedAt` is the
+ * closest recency column on a contact. */
+const SORT = [{ id: 'updatedAt', desc: true }];
+
 export function useContactsInfinite(workspaceId: string | null, keyword: string) {
   return useInfiniteQuery({
-    queryKey: queryKeys.ws.contacts.list(workspaceId ?? '', { keyword }),
+    queryKey: queryKeys.ws.contacts.list(workspaceId ?? '', { keyword, sort: SORT }),
     enabled: workspaceId !== null,
     initialPageParam: 1,
     queryFn: async ({ pageParam }): Promise<ListContactsResponse> => {
@@ -39,6 +43,7 @@ export function useContactsInfinite(workspaceId: string | null, keyword: string)
           query: {
             page: pageParam,
             perPage: PER_PAGE,
+            sort: SORT,
             keyword: keyword || undefined,
             include: ['tags', 'inboxes', 'conversation'],
           },

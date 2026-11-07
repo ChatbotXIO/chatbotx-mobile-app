@@ -86,11 +86,12 @@ function ConversationRow() {
 function ContactRow() {
   return (
     <View style={rowStyles.row}>
-      <Skeleton width={44} height={44} borderRadius={22} />
+      <Skeleton width={48} height={48} borderRadius={24} />
       <View style={rowStyles.body}>
         <Skeleton width="50%" height={16} />
         <Skeleton width="70%" height={13} />
       </View>
+      <Skeleton width={28} height={11} />
     </View>
   );
 }

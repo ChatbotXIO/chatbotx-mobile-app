@@ -126,6 +126,7 @@ const styles = StyleSheet.create({
   segment: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     zIndex: 1,
   },
   label: {
