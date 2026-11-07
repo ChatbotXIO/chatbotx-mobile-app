@@ -2,10 +2,12 @@ import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { BottomSheetFlatList, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import type { RefObject } from 'react';
 import { useRef, useState } from 'react';
+import type { KeyboardTypeOptions } from 'react-native';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { ErrorBanner } from '@/components/ui/error-banner';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
 import { SheetHeader, SheetModal } from '@/components/ui/sheet';
@@ -15,6 +17,8 @@ import {
   useSetContactField,
   useWorkspaceCustomFields,
 } from '@/features/contacts/api/use-contact-fields';
+import { validateCustomFieldValue } from '@/features/contacts/lib/validate-custom-field-value';
+import { describeApiError } from '@/lib/describe-api-error';
 import { useTheme } from '@/theme/use-theme';
 
 type CustomFieldCatalogEntry = { id: string; name: string; type: string };
@@ -23,17 +27,31 @@ type CustomFieldCatalogEntry = { id: string; name: string; type: string };
  * customFieldIconsMap. Falls back to `type` (a generic text-field glyph) for any type this map
  * doesn't recognize, rather than throwing. */
 const FIELD_TYPE_ICONS: Record<string, IconName> = {
-  text: 'type',
+  shortText: 'type',
+  longText: 'type',
   number: 'hash',
   date: 'calendar-days',
   datetime: 'calendar-clock',
   boolean: 'check',
   email: 'mail',
-  phone: 'phone',
+  phoneNumber: 'phone',
 };
 
 function iconForFieldType(type: string): IconName {
   return FIELD_TYPE_ICONS[type] ?? 'type';
+}
+
+function keyboardTypeForField(type: string | undefined): KeyboardTypeOptions {
+  switch (type) {
+    case 'number':
+      return 'numbers-and-punctuation';
+    case 'email':
+      return 'email-address';
+    case 'phoneNumber':
+      return 'phone-pad';
+    default:
+      return 'default';
+  }
 }
 
 interface CustomFieldEditorSheetProps {
@@ -62,11 +80,14 @@ export function CustomFieldEditorSheet({
   const editorSheetRef = useRef<BottomSheetModal>(null);
   const [editingField, setEditingField] = useState<CustomFieldCatalogEntry | null>(null);
   const [draftValue, setDraftValue] = useState('');
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const isSaving = setField.isPending || deleteField.isPending;
 
   const setFieldValues = new Map(contact.customFields.map((field) => [field.id, field.value]));
 
   function openEditor(field: CustomFieldCatalogEntry) {
     setEditingField(field);
+    setSaveError(null);
     setDraftValue(setFieldValues.get(field.id) ?? '');
     sheetRef.current?.dismiss();
     editorSheetRef.current?.present();
@@ -75,17 +96,30 @@ export function CustomFieldEditorSheet({
   function closeEditor() {
     editorSheetRef.current?.dismiss();
     setEditingField(null);
+    setSaveError(null);
   }
 
-  function saveDraft() {
+  /** Keeps the editor open until the request succeeds; on failure the sheet stays up with the
+   * server's message so the agent can correct the value (e.g. a wrong type for a number field). */
+  async function saveDraft() {
     if (!editingField) return;
     const trimmed = draftValue.trim();
-    if (trimmed) {
-      setField.mutate({ customFieldId: editingField.id, value: trimmed });
-    } else if (setFieldValues.has(editingField.id)) {
-      deleteField.mutate(editingField.id);
+    const invalidType = validateCustomFieldValue(editingField.type, trimmed);
+    if (invalidType) {
+      setSaveError(t(`contacts.customFieldInvalid.${invalidType}`));
+      return;
     }
-    closeEditor();
+    setSaveError(null);
+    try {
+      if (trimmed) {
+        await setField.mutateAsync({ customFieldId: editingField.id, value: trimmed });
+      } else if (setFieldValues.has(editingField.id)) {
+        await deleteField.mutateAsync(editingField.id);
+      }
+      closeEditor();
+    } catch (error) {
+      setSaveError(describeApiError(error, t));
+    }
   }
 
   return (
@@ -116,7 +150,12 @@ export function CustomFieldEditorSheet({
         <View style={{ paddingHorizontal: 16, gap: 12 }}>
           <BottomSheetTextInput
             value={draftValue}
-            onChangeText={setDraftValue}
+            onChangeText={(text) => {
+              setDraftValue(text);
+              if (saveError) setSaveError(null);
+            }}
+            keyboardType={keyboardTypeForField(editingField?.type)}
+            autoCapitalize="none"
             autoFocus
             style={{
               borderWidth: 1,
@@ -126,7 +165,8 @@ export function CustomFieldEditorSheet({
               color: colors.textPrimary,
             }}
           />
-          <Button label={t('common.save')} onPress={saveDraft} fullWidth />
+          {saveError ? <ErrorBanner message={saveError} tone="danger" /> : null}
+          <Button label={t('common.save')} onPress={saveDraft} loading={isSaving} fullWidth />
         </View>
       </SheetModal>
     </>

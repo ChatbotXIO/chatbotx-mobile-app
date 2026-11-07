@@ -25,7 +25,7 @@ interface SwipeableRowProps {
   children: ReactNode;
 }
 
-const ACTION_WIDTH = 76;
+const ACTION_WIDTH = 84;
 
 function ActionButton({ action, width }: { action: SwipeAction; width: number }) {
   const { colors, spacing } = useTheme();
@@ -45,7 +45,11 @@ function ActionButton({ action, width }: { action: SwipeAction; width: number })
       ]}
     >
       <Icon name={action.icon} size={20} color={colors.onBrand} />
-      <Text variant="micro" style={{ color: colors.onBrand, fontWeight: '600' }} numberOfLines={1}>
+      <Text
+        variant="micro"
+        style={{ color: colors.onBrand, fontWeight: '600', textAlign: 'center' }}
+        numberOfLines={2}
+      >
         {action.label}
       </Text>
     </Pressable>

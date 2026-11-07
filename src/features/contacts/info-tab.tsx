@@ -29,7 +29,9 @@ function Field({ label, value }: { label: string; value: string | null }) {
       <Text variant="caption" color="secondary">
         {label}
       </Text>
-      <Text variant="body">{value}</Text>
+      <Text variant="body" numberOfLines={1} ellipsizeMode="tail">
+        {value}
+      </Text>
     </View>
   );
 }

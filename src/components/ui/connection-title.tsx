@@ -14,7 +14,8 @@ interface ConnectionTitleProps {
 
 /** Telegram/WhatsApp-style title slot: shows `title` while connected and swaps to a spinner plus
  * status text while the connection is degraded (after a grace period, see
- * `useConnectionPresentation`). Fades in on swap (instant with reduced motion) and announces
+ * `useConnectionPresentation`). The status text is always the smaller `callout` size so it reads
+ * as a transient state rather than a page title. Fades in on swap (instant with reduced motion) and announces
  * changes politely to screen readers. */
 export function ConnectionTitle({ title, variant = 'heading' }: ConnectionTitleProps) {
   const statusLabel = useConnectionStatusLabel();
@@ -27,7 +28,7 @@ export function ConnectionTitle({ title, variant = 'heading' }: ConnectionTitleP
       {statusLabel ? (
         <Animated.View key="status" entering={entering} style={styles.status}>
           <ActivityIndicator size="small" color={colors.textSecondary} />
-          <Text variant={variant} color="secondary" numberOfLines={1} style={styles.text}>
+          <Text variant="callout" color="secondary" numberOfLines={1} style={styles.text}>
             {statusLabel}
           </Text>
         </Animated.View>

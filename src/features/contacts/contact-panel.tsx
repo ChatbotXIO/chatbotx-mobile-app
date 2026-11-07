@@ -1,6 +1,7 @@
 import type BottomSheet from '@gorhom/bottom-sheet';
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl, ScrollView, View } from 'react-native';
@@ -175,6 +176,7 @@ export function ContactPanel({
             contact={contact}
             conversationId={conversationId}
             onClose={() => actionsSheetRef.current?.close()}
+            onDeleted={() => router.back()}
           />
         </>
       ) : null}

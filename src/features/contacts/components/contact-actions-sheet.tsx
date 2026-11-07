@@ -29,6 +29,9 @@ interface ContactActionsSheetProps {
    * disabled) otherwise, matching the composer-sheet "omit rather than disable" convention. */
   conversationId?: string | null;
   onClose: () => void;
+  /** Called after the user confirms deletion. Callers that sit on the deleted contact's own screen
+   * pass a navigation action (e.g. `router.back`); a list that simply drops the row omits it. */
+  onDeleted?: () => void;
 }
 
 /**
@@ -39,7 +42,7 @@ interface ContactActionsSheetProps {
  * use-delete-contact.ts for why — no session-auth backend route exists yet).
  */
 export const ContactActionsSheet = forwardRef<BottomSheet, ContactActionsSheetProps>(
-  function ContactActionsSheet({ workspaceId, contact, conversationId, onClose }, ref) {
+  function ContactActionsSheet({ workspaceId, contact, conversationId, onClose, onDeleted }, ref) {
     const { t } = useTranslation();
     const { colors } = useTheme();
     const showToast = useToast();
@@ -149,7 +152,7 @@ export const ContactActionsSheet = forwardRef<BottomSheet, ContactActionsSheetPr
             },
           });
           onClose();
-          router.back();
+          onDeleted?.();
         },
       });
     }
