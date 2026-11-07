@@ -5,7 +5,7 @@
   },
   "build": {
     "base": {
-      "node": "26",
+      "node": "26.13.0",
       "pnpm": "12.16.1",
       "env": {
         "BRAND": "chatbotx"
@@ -18,7 +18,8 @@
       "channel": "development",
       "environment": "development",
       "env": {
-        "APP_ENV": "development"
+        "APP_ENV": "development",
+        "ORG_GRADLE_PROJECT_reactNativeArchitectures": "arm64-v8a"
       }
     },
     "preview": {
@@ -27,7 +28,8 @@
       "channel": "preview",
       "environment": "preview",
       "env": {
-        "APP_ENV": "preview"
+        "APP_ENV": "preview",
+        "ORG_GRADLE_PROJECT_reactNativeArchitectures": "arm64-v8a"
       },
       "android": {
         "buildType": "apk"
