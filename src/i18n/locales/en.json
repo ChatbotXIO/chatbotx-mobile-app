@@ -312,6 +312,19 @@
     "notFoundTitle": "Page not found",
     "notFoundBody": "The page you're looking for doesn't exist.",
     "goHome": "Go to conversations",
-    "unknown": "Something went wrong. Please try again."
+    "unknown": "Something went wrong. Please try again.",
+    "tooManyRequests": "Too many requests. Please wait a moment and try again.",
+    "invalidRequest": "Some of the information is invalid. Please check it and try again.",
+    "imagesNotSupported": "Images are not supported on this channel.",
+    "network": "Can't connect. Check your internet connection and try again.",
+    "auth": {
+      "invalidEmailOrPassword": "Incorrect email or password.",
+      "invalidEmail": "Please enter a valid email address.",
+      "invalidPassword": "Incorrect password.",
+      "passwordTooShort": "Password is too short.",
+      "passwordTooLong": "Password is too long.",
+      "userNotFound": "No account found for this email.",
+      "emailNotVerified": "Please verify your email before signing in."
+    }
   }
 }

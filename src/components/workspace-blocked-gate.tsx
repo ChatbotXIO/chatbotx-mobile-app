@@ -10,7 +10,6 @@ import { Text } from './ui/text';
 
 interface WorkspaceBlockedGateProps {
   reason: 'mac' | 'trialExpired' | 'unknown';
-  message: string;
 }
 
 /**
@@ -19,7 +18,7 @@ interface WorkspaceBlockedGateProps {
  * handles the send-time case locally). Distinguishes MAC-limit vs trial-expired copy, with a
  * "switch workspace" escape hatch mirroring the settings screen's own switch flow.
  */
-export function WorkspaceBlockedGate({ reason, message }: WorkspaceBlockedGateProps) {
+export function WorkspaceBlockedGate({ reason }: WorkspaceBlockedGateProps) {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
   const switchWorkspace = useSwitchWorkspace();
@@ -29,7 +28,7 @@ export function WorkspaceBlockedGate({ reason, message }: WorkspaceBlockedGatePr
       ? t('errors.workspaceBlockedMac')
       : reason === 'trialExpired'
         ? t('errors.workspaceBlockedTrialExpired')
-        : message;
+        : t('errors.workspaceBlocked');
 
   function handleSwitchWorkspace() {
     switchWorkspace(null);

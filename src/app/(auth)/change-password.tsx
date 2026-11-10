@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { TextInputInstance } from 'react-native';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
+import { describeAuthError } from '@/lib/describe-auth-error';
 import { changePassword } from '@/api/auth-endpoints';
 import { Button } from '@/components/ui/button';
 import { ErrorBanner } from '@/components/ui/error-banner';
@@ -41,7 +42,7 @@ export default function ChangePasswordScreen() {
       setMustChangePassword(false);
       router.replace('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('errors.unknown'));
+      setError(describeAuthError(err, t));
     } finally {
       setIsSubmitting(false);
     }

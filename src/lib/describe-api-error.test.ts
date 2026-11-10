@@ -33,26 +33,42 @@ describe('describeApiError', () => {
     expect(describeApiError(error, t)).toBe('errors.workspaceBlockedTrialExpired');
   });
 
-  it('falls back to the server message for workspaceBlocked/unknown', () => {
+  it('maps workspaceBlocked/unknown to errors.workspaceBlocked, not the server text', () => {
     const error = new ApiError({ status: 402, message: 'Something else' });
-    expect(describeApiError(error, t)).toBe('Something else');
+    expect(describeApiError(error, t)).toBe('errors.workspaceBlocked');
   });
 
-  it("uses normalizeApiError's default message when workspaceBlocked/unknown has no server message", () => {
-    const error = new ApiError({ status: 402 });
-    expect(describeApiError(error, t)).toBe('This workspace is currently unavailable.');
+  it('maps tooManyRequests to errors.tooManyRequests', () => {
+    expect(describeApiError(new ApiError({ status: 429, message: 'Slow down' }), t)).toBe(
+      'errors.tooManyRequests',
+    );
   });
 
-  it('returns the server message for unknown ApiError with a message', () => {
+  it('maps invalidRequestData to errors.invalidRequest', () => {
+    expect(describeApiError(new ApiError({ status: 422, message: 'bad' }), t)).toBe(
+      'errors.invalidRequest',
+    );
+  });
+
+  it('maps imagesNotSupportedOnChannel to errors.imagesNotSupported', () => {
+    const error = new ApiError({ code: 'imagesNotSupportedOnChannel', message: 'nope' });
+    expect(describeApiError(error, t)).toBe('errors.imagesNotSupported');
+  });
+
+  it('never returns the server message for an unknown ApiError', () => {
     const error = new ApiError({ code: 'SOMETHING_ELSE', message: 'weird failure' });
-    expect(describeApiError(error, t)).toBe('weird failure');
+    expect(describeApiError(error, t)).toBe('errors.unknown');
+  });
+
+  it('maps a network TypeError to errors.network', () => {
+    expect(describeApiError(new TypeError('Network request failed'), t)).toBe('errors.network');
   });
 
   it('falls back to errors.unknown for a non-ApiError Error', () => {
     expect(describeApiError(new Error(''), t)).toBe('errors.unknown');
   });
 
-  it("uses normalizeApiError's default message for a non-Error thrown value", () => {
-    expect(describeApiError('not an error', t)).toBe('Unknown error');
+  it('falls back to errors.unknown for a non-Error thrown value', () => {
+    expect(describeApiError('not an error', t)).toBe('errors.unknown');
   });
 });

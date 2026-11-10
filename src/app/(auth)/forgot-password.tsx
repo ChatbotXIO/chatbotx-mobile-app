@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
+import { describeAuthError } from '@/lib/describe-auth-error';
 import { requestPasswordReset } from '@/api/auth-endpoints';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -28,7 +29,7 @@ export default function ForgotPasswordScreen() {
       await requestPasswordReset(email.trim());
       setIsSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('errors.unknown'));
+      setError(describeAuthError(err, t));
     } finally {
       setIsSubmitting(false);
     }

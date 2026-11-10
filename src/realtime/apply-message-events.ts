@@ -126,7 +126,7 @@ export function applyMessageFailed(
   event: RealtimeEventMessageFailed,
 ): InfiniteMessagesData {
   if (!current) return current;
-  const { messageId, clientId, error } = event.data;
+  const { messageId, clientId } = event.data;
 
   return {
     ...current,
@@ -140,7 +140,7 @@ export function applyMessageFailed(
         return {
           ...message,
           __optimisticStatus: 'failed',
-          __optimisticError: error ?? 'Failed to send',
+          __optimisticError: 'unknown',
         } as unknown as Message;
       }),
     })),

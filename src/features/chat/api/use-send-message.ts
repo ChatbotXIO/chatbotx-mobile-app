@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
 import { ApiError, normalizeApiError } from '@/api/errors';
 import { queryKeys } from '@/api/query-keys';
+import { getOptimisticErrorKind } from '@/features/chat/components/optimistic-message';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
 import { generateClientId } from './generate-client-id';
 import type { ListMessagesResponse, Message } from './use-messages-infinite';
@@ -277,7 +278,7 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
                 ? ({
                     ...message,
                     __optimisticStatus: 'failed',
-                    __optimisticError: error instanceof Error ? error.message : 'Failed to send',
+                    __optimisticError: getOptimisticErrorKind(error),
                   } as unknown as Message)
                 : message,
             ),
