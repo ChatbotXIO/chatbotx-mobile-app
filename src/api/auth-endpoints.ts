@@ -14,6 +14,20 @@ import { clearAuthToken, getAuthTokens, setAuthTokens, type AuthTokens } from '.
  */
 const AUTH_BASE_URL = `${env.apiBaseUrl}/api/auth`;
 
+/**
+ * Headers for every POST to better-auth. React Native's native fetch shares the OS cookie jar, so
+ * once the backend has set any cookie (e.g. the OAuth state cookie from `/sign-in/social`) later
+ * requests carry it — and better-auth's CSRF check rejects a cookie-bearing request without an
+ * `Origin` ("Missing or null Origin"). Native apps never send one, so we send the API's own
+ * origin, which better-auth always trusts. Derived by regex because React Native's `URL` polyfill
+ * doesn't implement `.origin`.
+ */
+const AUTH_ORIGIN = env.apiBaseUrl.match(/^[a-z][a-z0-9+.-]*:\/\/[^/?#]+/i)?.[0] ?? env.apiBaseUrl;
+const AUTH_POST_HEADERS: Readonly<Record<string, string>> = {
+  'Content-Type': 'application/json',
+  Origin: AUTH_ORIGIN,
+};
+
 export interface SessionUser {
   id: string;
   email: string;
@@ -55,7 +69,7 @@ async function throwIfError(response: Response): Promise<void> {
 export async function signInWithEmail(email: string, password: string): Promise<SessionUser> {
   const response = await fetch(`${AUTH_BASE_URL}/mobile/token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: AUTH_POST_HEADERS,
     body: JSON.stringify({
       deviceId: await getMobileDeviceId(),
       email,
@@ -95,7 +109,7 @@ export async function refreshAccessToken(): Promise<string> {
 
     const response = await fetch(`${AUTH_BASE_URL}/mobile/token`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: AUTH_POST_HEADERS,
       body: JSON.stringify({
         deviceId: await getMobileDeviceId(),
         grantType: 'refresh_token',
@@ -131,7 +145,7 @@ export async function getValidAccessToken(): Promise<string | null> {
 export async function requestPasswordReset(email: string): Promise<void> {
   const response = await fetch(`${AUTH_BASE_URL}/request-password-reset`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: AUTH_POST_HEADERS,
     body: JSON.stringify({ email, redirectTo: '/auth/reset-password' }),
   });
   await throwIfError(response);
@@ -160,7 +174,7 @@ export async function revokeMobileToken(): Promise<void> {
 
   await fetch(`${AUTH_BASE_URL}/mobile/revoke`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: AUTH_POST_HEADERS,
     body: JSON.stringify({
       deviceId: await getMobileDeviceId(),
       refreshToken: tokens.refreshToken,
@@ -209,7 +223,7 @@ export async function startSocialSignIn(provider: SocialProvider): Promise<Socia
 
   const response = await fetch(`${AUTH_BASE_URL}/sign-in/social`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: AUTH_POST_HEADERS,
     body: JSON.stringify({
       provider,
       callbackURL: callbackUrl,
@@ -226,7 +240,7 @@ export async function startSocialSignIn(provider: SocialProvider): Promise<Socia
 export async function exchangeSocialCode(code: string, codeVerifier: string): Promise<SessionUser> {
   const response = await fetch(`${AUTH_BASE_URL}/mobile/token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: AUTH_POST_HEADERS,
     body: JSON.stringify({
       code,
       codeVerifier,

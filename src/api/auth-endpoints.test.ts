@@ -112,6 +112,24 @@ describe('startSocialSignIn', () => {
     expect(verifier).toMatch(/^[A-Za-z0-9._~-]+$/);
     expect(callback.searchParams.get('code_challenge')).toMatch(/^[A-Za-z0-9_-]{43}$/);
   });
+
+  it('sends the API origin so better-auth accepts the request when the native cookie jar attached cookies', async () => {
+    jest.mocked(Crypto.randomUUID).mockReturnValue('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+    jest
+      .mocked(Crypto.digestStringAsync)
+      .mockResolvedValue('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=');
+    jest.mocked(getMobileDeviceId).mockResolvedValue('device-1');
+    global.fetch = jest.fn().mockResolvedValue(
+      new Response(JSON.stringify({ redirect: true, url: 'https://provider.example.test/login' }), {
+        status: 200,
+      }),
+    );
+
+    await startSocialSignIn('google');
+
+    const init = jest.mocked(global.fetch).mock.calls[0]![1]!;
+    expect((init.headers as Record<string, string>).Origin).toBe('https://api.example.test');
+  });
 });
 
 describe('requestPasswordReset', () => {
