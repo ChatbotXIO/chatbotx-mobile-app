@@ -1,7 +1,7 @@
 import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
 
-import { refreshAccessToken, startSocialSignIn } from '@/api/auth-endpoints';
+import { refreshAccessToken, requestPasswordReset, startSocialSignIn } from '@/api/auth-endpoints';
 import { getMobileDeviceId } from '@/api/auth-device';
 import { setAuthTokens } from '@/api/auth-token';
 
@@ -111,5 +111,21 @@ describe('startSocialSignIn', () => {
     expect(verifier).toHaveLength(64);
     expect(verifier).toMatch(/^[A-Za-z0-9._~-]+$/);
     expect(callback.searchParams.get('code_challenge')).toMatch(/^[A-Za-z0-9_-]{43}$/);
+  });
+});
+
+describe('requestPasswordReset', () => {
+  it('posts to the request-password-reset route with the web reset page as redirect', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await requestPasswordReset('a@b.test');
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toMatch(/\/request-password-reset$/);
+    expect(JSON.parse(init.body as string)).toEqual({
+      email: 'a@b.test',
+      redirectTo: '/auth/reset-password',
+    });
   });
 });

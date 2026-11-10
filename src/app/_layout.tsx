@@ -212,12 +212,14 @@ export default function RootLayout() {
  * render — without it, an uncaught error white-screens the app with no way back in. */
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const { t } = useTranslation();
+  // The message is English-only and may carry internals, so it is logged, never rendered.
+  if (__DEV__) console.error(error);
 
   return (
     <EmptyState
       icon="triangle-alert"
       title={t('common.error')}
-      description={error.message || t('errors.unknown')}
+      description={t('errors.unknown')}
       action={{ label: t('common.retry'), onPress: retry }}
     />
   );

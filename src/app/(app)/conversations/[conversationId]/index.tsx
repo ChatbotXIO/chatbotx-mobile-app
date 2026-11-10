@@ -181,7 +181,7 @@ export default function ChatScreen() {
   if (normalizedError?.kind === 'workspaceBlocked') {
     return (
       <Screen edges={['top']}>
-        <WorkspaceBlockedGate reason={normalizedError.reason} message={normalizedError.message} />
+        <WorkspaceBlockedGate reason={normalizedError.reason} />
       </Screen>
     );
   }

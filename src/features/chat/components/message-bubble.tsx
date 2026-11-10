@@ -8,6 +8,7 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import type { Message } from '@/features/chat/api/use-messages-infinite';
 import type { GroupPosition } from '@/features/chat/lib/message-groups';
+import { describeApiErrorKind } from '@/lib/describe-api-error';
 import { useTheme } from '@/theme/use-theme';
 
 import { ActivityMessage } from './activity-message';
@@ -228,7 +229,7 @@ function MessageBubbleImpl({
       </Pressable>
       {optimistic?.status === 'failed' ? (
         <Text variant="caption" color="danger" style={styles.failedLabel}>
-          {optimistic.errorMessage ?? t('chat.failedToSendTapRetry')}
+          {describeApiErrorKind(optimistic.errorKind, t) ?? t('chat.failedToSendTapRetry')}
         </Text>
       ) : null}
     </View>

@@ -100,7 +100,7 @@ export function ContactPanel({
     if (normalized.kind === 'workspaceBlocked') {
       return (
         <Screen>
-          <WorkspaceBlockedGate reason={normalized.reason} message={normalized.message} />
+          <WorkspaceBlockedGate reason={normalized.reason} />
         </Screen>
       );
     }

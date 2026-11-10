@@ -83,7 +83,7 @@ describe('MessageBubble', () => {
     const failedMessage = {
       ...fakeMessage({ text: 'oops' }),
       __optimisticStatus: 'failed',
-      __optimisticError: 'Network error',
+      __optimisticError: 'network',
     } as unknown as Message;
 
     await render(
@@ -97,7 +97,7 @@ describe('MessageBubble', () => {
       />,
     );
 
-    expect(screen.getByText('Network error')).toBeTruthy();
+    expect(screen.getByText(/Can't connect/)).toBeTruthy();
   });
 
   it('renders a quoted reply preview when parentId resolves in messagesById', async () => {
