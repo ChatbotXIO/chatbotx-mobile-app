@@ -6,17 +6,6 @@ import { defaultLanguage, resolveLocale } from '@/i18n/locales';
 import { defaultNamespace } from '@/i18n/namespace';
 import { resources } from '@/i18n/resources';
 
-export {
-  defaultLanguage,
-  isRTL,
-  isSupportedLanguage,
-  localeMeta,
-  resolveLocale,
-  supportedLanguages,
-} from '@/i18n/locales';
-export type { SupportedLanguage } from '@/i18n/locales';
-export { defaultNamespace } from '@/i18n/namespace';
-
 function resolveDeviceLanguage() {
   // `languageTag` is the full BCP-47 tag (e.g. `zh-Hant-TW`, `pt-PT`) — `languageCode` would only
   // give the primary subtag and lose the region info resolveLocale needs for zh/pt normalization.

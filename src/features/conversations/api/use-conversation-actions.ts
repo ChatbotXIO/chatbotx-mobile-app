@@ -14,7 +14,7 @@ import {
 
 /** Thrown when a multi-conversation action fails for some or all ids. `failedIds` lets callers
  * roll back and report only what actually failed. */
-export class BatchActionError extends Error {
+class BatchActionError extends Error {
   constructor(
     readonly failedIds: string[],
     readonly total: number,
