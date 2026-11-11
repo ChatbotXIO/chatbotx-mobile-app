@@ -1,12 +1,13 @@
-import type BottomSheet from '@gorhom/bottom-sheet';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import type { RefObject } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
 import { SegmentedTabs } from '@/components/ui/segmented-tabs';
-import { Sheet } from '@/components/ui/sheet';
+import { SheetModal } from '@/components/ui/sheet';
 import { Text } from '@/components/ui/text';
 import type {
   BotCategoryFilter,
@@ -59,7 +60,7 @@ const BOT_ENABLED_OPTIONS: { value: BotEnabledOption; labelKey: string }[] = [
 ];
 
 interface FilterSheetProps {
-  sheetRef: RefObject<BottomSheet | null>;
+  sheetRef: RefObject<BottomSheetModal | null>;
 }
 
 /** Filter sheet for the conversations list — form controls map 1:1 to the top-level fields
@@ -70,6 +71,7 @@ interface FilterSheetProps {
 export function FilterSheet({ sheetRef }: FilterSheetProps) {
   const { t } = useTranslation();
   const { spacing } = useTheme();
+  const insets = useSafeAreaInsets();
   const channel = useConversationFilters((state) => state.channel);
   const setChannel = useConversationFilters((state) => state.setChannel);
   const status = useConversationFilters((state) => state.status);
@@ -94,8 +96,14 @@ export function FilterSheet({ sheetRef }: FilterSheetProps) {
   }
 
   return (
-    <Sheet ref={sheetRef} snapPoints={['60%', '90%']}>
-      <BottomSheetScrollView contentContainerStyle={{ padding: spacing.md, gap: spacing.md }}>
+    <SheetModal ref={sheetRef} snapPoints={['90%']} scrollable>
+      <BottomSheetScrollView
+        contentContainerStyle={{
+          padding: spacing.md,
+          paddingBottom: insets.bottom + spacing.md,
+          gap: spacing.md,
+        }}
+      >
         <Text variant="title">{t('conversations.filters')}</Text>
 
         <View style={styles.section}>
@@ -168,10 +176,10 @@ export function FilterSheet({ sheetRef }: FilterSheetProps) {
         <Button
           label={t('common.done')}
           variant="primary"
-          onPress={() => sheetRef.current?.close()}
+          onPress={() => sheetRef.current?.dismiss()}
         />
       </BottomSheetScrollView>
-    </Sheet>
+    </SheetModal>
   );
 }
 
