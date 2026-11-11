@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Icon } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
-import { SwipeableRow } from '@/components/ui/swipeable-row';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { useToast } from '@/components/ui/toast';
 import type { ContactDetail } from '@/features/contacts/api/use-contact-detail';
 import { confirmDestructive } from '@/lib/confirm-destructive';
+import { triggerHaptic } from '@/lib/haptics';
 import { useUnenrollContactFromSequences } from '@/features/sequences/api/use-unenroll-contact-from-sequences';
 import { SequencePickerSheet } from '@/features/sequences/components/sequence-picker-sheet';
 import { useTheme } from '@/theme/use-theme';
@@ -25,6 +26,7 @@ interface SequencesTabProps {
  * needed for the read-only enrollment list below. No longer read-only overall, though: an "Add to
  * sequence" button opens `SequencePickerSheet` (flag-gated — see `src/config/features.ts` and
  * `sequence-picker-sheet.tsx`'s own "Coming soon" behavior while `FEATURES.sendSequence` is off).
+ * Long-pressing an enrollment (or its "Unsubscribe" accessibility action) asks to unenroll.
  * Renders inline (no own scroll container — `ContactPanel` owns the single scroll surface).
  */
 export function SequencesTab({ contact, workspaceId }: SequencesTabProps) {
@@ -66,29 +68,34 @@ export function SequencesTab({ contact, workspaceId }: SequencesTabProps) {
         <EmptyState icon="layers-2" title={t('contacts.noSequences')} />
       ) : (
         contact.sequences.map((enrollment) => (
-          <SwipeableRow
+          <PressableScale
             key={enrollment.sequenceId}
-            rightActions={
+            accessibilityLabel={enrollment.sequenceName}
+            accessibilityActions={
+              workspaceId ? [{ name: 'unenroll', label: t('contacts.unenrollSequence') }] : []
+            }
+            onAccessibilityAction={(event) => {
+              if (event.nativeEvent.actionName === 'unenroll') {
+                handleUnenroll(enrollment.sequenceId, enrollment.sequenceName);
+              }
+            }}
+            onLongPress={
               workspaceId
-                ? [
-                    {
-                      icon: 'circle-x',
-                      label: t('contacts.unenrollSequence'),
-                      color: colors.danger,
-                      destructive: true,
-                      onPress: () => handleUnenroll(enrollment.sequenceId, enrollment.sequenceName),
-                    },
-                  ]
+                ? () => {
+                    triggerHaptic('medium');
+                    handleUnenroll(enrollment.sequenceId, enrollment.sequenceName);
+                  }
                 : undefined
             }
+            disabled={!workspaceId}
+            haptic={false}
+            scaleTo={1}
           >
-            <View style={{ backgroundColor: colors.bg }}>
-              <ListItem
-                title={enrollment.sequenceName}
-                leading={<Icon name="layers-2" size={20} color={colors.textSecondary} />}
-              />
-            </View>
-          </SwipeableRow>
+            <ListItem
+              title={enrollment.sequenceName}
+              leading={<Icon name="layers-2" size={20} color={colors.textSecondary} />}
+            />
+          </PressableScale>
         ))
       )}
 

@@ -26,7 +26,7 @@ export type BotState = 'on' | 'paused' | 'off';
 /**
  * Three-state view of the bot for the UI: `on` (answering), `paused` (switched off by an agent but
  * scheduled to auto-resume), `off` (human-only). Built on `isBotActive`, so every indicator —
- * inline glyph, swipe action, chat header — agrees with the backend's rule.
+ * inline glyph, actions sheet, chat header — agrees with the backend's rule.
  */
 export function botState(
   botEnabled: boolean,

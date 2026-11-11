@@ -60,7 +60,7 @@ describe('ContactRow', () => {
     expect(onPress).toHaveBeenCalledWith(contact);
   });
 
-  it('paints an opaque background so swipe panels do not show through', async () => {
+  it('paints the surface background so the row matches the list', async () => {
     await render(<ContactRow contact={fakeContact()} workspaceId="ws-1" onPress={() => {}} />);
 
     const style = screen.getByLabelText(/Jane Doe/).props.style;

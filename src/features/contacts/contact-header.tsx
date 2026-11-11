@@ -79,8 +79,10 @@ export function ContactHeader({
         </View>
       ) : null}
 
-      <Avatar uri={contact.avatar} name={name} size={AVATAR_SIZE} />
-      <Text variant="heading" style={styles.centered}>
+      <View style={styles.avatarWrap}>
+        <Avatar uri={contact.avatar} name={name} size={AVATAR_SIZE} />
+      </View>
+      <Text variant="heading" style={styles.name} numberOfLines={2} ellipsizeMode="tail">
         {name}
       </Text>
 
@@ -141,8 +143,14 @@ const styles = StyleSheet.create({
   actionsAnchor: {
     alignSelf: 'flex-end',
   },
-  centered: {
+  avatarWrap: {
+    // Avatar's own wrapper is `alignSelf: flex-start`; centre it inside the header column.
+    alignSelf: 'center',
+  },
+  name: {
     textAlign: 'center',
+    alignSelf: 'stretch',
+    flexShrink: 1,
   },
   chipRow: {
     flexDirection: 'row',

@@ -208,7 +208,7 @@ export function useUnfollowConversation(workspaceId: string) {
 
 /** Batch actions (archive/unarchive/bot toggle) patch every affected id in cache — both the list
  * cache (every filter combination) and the detail cache — since the backend accepts a batch but
- * the UI here always calls with a single-id array (swipe/long-press actions) — batching UI is a
+ * the UI here always calls with a single-id array (long-press actions sheet) — batching UI is a
  * later concern if ever needed. `onSettledIds` runs after the mutation settles (success or
  * error) with the affected ids, for callers that need a side effect beyond the optimistic patch
  * (e.g. the bot toggles invalidating the detail query to resync with the server). */
