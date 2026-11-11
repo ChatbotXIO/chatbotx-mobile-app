@@ -3,7 +3,6 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type BottomSheet from '@gorhom/bottom-sheet';
-import type { LayoutChangeEvent } from 'react-native';
 import { KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -40,7 +39,6 @@ export default function ChatScreen() {
   const insets = useSafeAreaInsets();
 
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const actionsMenuRef = useRef<BottomSheet>(null);
   const messageListRef = useRef<MessageListHandle>(null);
@@ -186,23 +184,17 @@ export default function ChatScreen() {
     );
   }
 
-  function handleHeaderLayout(event: LayoutChangeEvent) {
-    setHeaderHeight(event.nativeEvent.layout.height);
-  }
-
   return (
     <Screen edges={['top']}>
       <ChatHeader
         workspaceId={workspaceId}
         conversationId={conversationId}
         onBack={() => router.back()}
-        onLayout={handleHeaderLayout}
       />
       <ConnectionErrorCard />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={headerHeight + insets.top}
       >
         {messagesQuery.isError ? (
           <ErrorBanner
