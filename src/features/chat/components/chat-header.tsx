@@ -3,7 +3,6 @@ import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { router } from 'expo-router';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { LayoutChangeEvent } from 'react-native';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/ui/avatar';
@@ -33,7 +32,6 @@ interface ChatHeaderProps {
   workspaceId: string;
   conversationId: string;
   onBack: () => void;
-  onLayout?: (event: LayoutChangeEvent) => void;
 }
 
 /** Resolves conversation identity via `useConversationDetail`, seeded with a synchronous
@@ -42,7 +40,7 @@ interface ChatHeaderProps {
  * either from the list cache the user navigated from, or (once it resolves) the dedicated detail
  * fetch, rather than only ever reading the list cache and falling back to a hardcoded string when
  * it's empty (e.g. cold deep link with no list query cached yet). */
-export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: ChatHeaderProps) {
+export function ChatHeader({ workspaceId, conversationId, onBack }: ChatHeaderProps) {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
   const queryClient = useQueryClient();
@@ -98,7 +96,6 @@ export function ChatHeader({ workspaceId, conversationId, onBack, onLayout }: Ch
 
   return (
     <View
-      onLayout={onLayout}
       style={[
         styles.container,
         {
