@@ -62,7 +62,11 @@ export function Avatar({ uri, name, size = 40, badge, ring = 'none' }: AvatarPro
     />
   ) : (
     <View style={[styles.fallback, dimensionStyle, { backgroundColor: fallbackColor }]}>
-      <Text variant="caption" color="primary" style={{ fontSize: size * 0.4, fontWeight: '700' }}>
+      <Text
+        variant="caption"
+        color="primary"
+        style={{ fontSize: size * 0.4, lineHeight: size * 0.5, fontWeight: '700' }}
+      >
         {initialsFor(name)}
       </Text>
     </View>

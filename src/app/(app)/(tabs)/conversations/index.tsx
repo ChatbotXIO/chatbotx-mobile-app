@@ -27,6 +27,7 @@ import { WorkspaceBlockedGate } from '@/components/workspace-blocked-gate';
 import { normalizeApiError } from '@/api/errors';
 import { describeApiError } from '@/lib/describe-api-error';
 import { AssignmentSheet } from '@/features/conversations/components/assignment-sheet';
+import { ConversationActionsSheet } from '@/features/conversations/components/conversation-actions-sheet';
 import {
   ConversationRow,
   conversationRowItemType,
@@ -104,7 +105,10 @@ export default function ConversationsScreen() {
     null,
   );
 
+  const [actionsConversation, setActionsConversation] = useState<ConversationListItem | null>(null);
+
   const filterSheetRef = useRef<BottomSheetModal>(null);
+  const actionsSheetRef = useRef<BottomSheetModal>(null);
   const assignmentSheetRef = useRef<BottomSheetModal>(null);
   const workspaceSwitcherSheetRef = useRef<BottomSheetModal>(null);
   const { data: workspaces } = useWorkspaces();
@@ -152,6 +156,14 @@ export default function ConversationsScreen() {
     setAssigningConversation(conversation);
     assignmentSheetRef.current?.present();
   }, []);
+
+  const openActions = useCallback((conversation: ConversationListItem) => {
+    setActionsConversation(conversation);
+    actionsSheetRef.current?.present();
+  }, []);
+
+  // Same dismiss-then-present chaining as the composer's actions sheet → flow picker.
+  const closeActions = useCallback(() => actionsSheetRef.current?.dismiss(), []);
 
   function handleAssign(userId: string | null) {
     if (!assigningConversation) return;
@@ -286,10 +298,7 @@ export default function ConversationsScreen() {
             <ConversationRow
               conversation={item}
               onPress={() => router.push(`/(app)/conversations/${item.id}`)}
-              onLongPress={() => openAssignmentSheet(item)}
-              onToggleRead={() => handleToggleRead(item)}
-              onToggleBot={() => handleToggleBot(item)}
-              onArchive={() => handleArchive(item)}
+              onOpenActions={() => openActions(item)}
             />
           )}
           onEndReachedThreshold={0.4}
@@ -318,6 +327,15 @@ export default function ConversationsScreen() {
           onAssign={handleAssign}
         />
       ) : null}
+      <ConversationActionsSheet
+        ref={actionsSheetRef}
+        conversation={actionsConversation}
+        onToggleRead={handleToggleRead}
+        onToggleBot={handleToggleBot}
+        onArchive={handleArchive}
+        onAssign={openAssignmentSheet}
+        onClose={closeActions}
+      />
       <WorkspaceSwitcherSheet ref={workspaceSwitcherSheetRef} />
     </Screen>
   );

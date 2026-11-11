@@ -78,17 +78,13 @@ describe('ConversationRow', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it('exposes accessibilityActions mirroring the wired swipe callbacks', async () => {
-    const onToggleRead = jest.fn();
-    const onToggleBot = jest.fn();
-    const onArchive = jest.fn();
+  it('exposes an openActions accessibility action that calls onOpenActions', async () => {
+    const onOpenActions = jest.fn();
     await render(
       <ConversationRow
         conversation={fakeConversation()}
         onPress={() => {}}
-        onToggleRead={onToggleRead}
-        onToggleBot={onToggleBot}
-        onArchive={onArchive}
+        onOpenActions={onOpenActions}
       />,
     );
 
@@ -96,10 +92,41 @@ describe('ConversationRow', () => {
     const actionNames = (button.props.accessibilityActions as { name: string }[]).map(
       (action) => action.name,
     );
-    expect(actionNames).toEqual(['toggleRead', 'toggleBot', 'archive']);
+    expect(actionNames).toEqual(['openActions']);
 
-    fireEvent(button, 'accessibilityAction', { nativeEvent: { actionName: 'archive' } });
-    expect(onArchive).toHaveBeenCalledTimes(1);
+    fireEvent(button, 'accessibilityAction', { nativeEvent: { actionName: 'openActions' } });
+    expect(onOpenActions).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens actions on long-press via onOpenActions', async () => {
+    const onOpenActions = jest.fn();
+    await render(
+      <ConversationRow
+        conversation={fakeConversation()}
+        onPress={() => {}}
+        onOpenActions={onOpenActions}
+      />,
+    );
+
+    fireEvent(screen.getByLabelText(/Jane Doe/), 'longPress');
+    expect(onOpenActions).toHaveBeenCalledTimes(1);
+  });
+
+  it('prefers onLongPress over onOpenActions on long-press', async () => {
+    const onLongPress = jest.fn();
+    const onOpenActions = jest.fn();
+    await render(
+      <ConversationRow
+        conversation={fakeConversation()}
+        onPress={() => {}}
+        onLongPress={onLongPress}
+        onOpenActions={onOpenActions}
+      />,
+    );
+
+    fireEvent(screen.getByLabelText(/Jane Doe/), 'longPress');
+    expect(onLongPress).toHaveBeenCalledTimes(1);
+    expect(onOpenActions).not.toHaveBeenCalled();
   });
 
   it('omits accessibilityActions that have no wired callback', async () => {
@@ -127,23 +154,6 @@ describe('ConversationRow', () => {
     await render(<ConversationRow conversation={fakeConversation()} onPress={() => {}} />);
 
     expect(screen.queryByLabelText('Open conversation actions')).toBeNull();
-  });
-
-  it('includes unarchive in the swipe/accessibility actions when the conversation is archived', async () => {
-    const onArchive = jest.fn();
-    await render(
-      <ConversationRow
-        conversation={fakeConversation({ archivedAt: '2026-01-01T00:00:00.000Z' })}
-        onPress={() => {}}
-        onArchive={onArchive}
-      />,
-    );
-
-    const button = screen.getByLabelText(/Jane Doe/);
-    const archiveAction = (
-      button.props.accessibilityActions as { name: string; label: string }[]
-    ).find((action) => action.name === 'archive');
-    expect(archiveAction?.label).toBe('Unarchive');
   });
 
   it('prefixes the preview with the sender for agent and bot messages', async () => {
