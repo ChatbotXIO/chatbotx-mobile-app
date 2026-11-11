@@ -289,7 +289,10 @@
     "notifications": "الإشعارات",
     "appearance": "المظهر",
     "workspace": "مساحة العمل",
-    "version": "الإصدار {{version}}"
+    "version": "الإصدار {{version}}",
+    "legal": "قانوني",
+    "termsOfService": "شروط الخدمة",
+    "privacyPolicy": "سياسة الخصوصية"
   },
   "profile": {
     "plan": "الخطة"

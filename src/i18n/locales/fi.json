@@ -284,7 +284,10 @@
     "notifications": "Ilmoitukset",
     "appearance": "Ulkoasu",
     "workspace": "Työtila",
-    "version": "Versio {{version}}"
+    "version": "Versio {{version}}",
+    "legal": "Lakitiedot",
+    "termsOfService": "Käyttöehdot",
+    "privacyPolicy": "Tietosuojakäytäntö"
   },
   "profile": {
     "plan": "Paketti"

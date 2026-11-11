@@ -297,7 +297,10 @@
     "notifications": "Notificări",
     "appearance": "Aspect",
     "workspace": "Spațiu de lucru",
-    "version": "Versiunea {{version}}"
+    "version": "Versiunea {{version}}",
+    "legal": "Juridic",
+    "termsOfService": "Termeni și condiții",
+    "privacyPolicy": "Politica de confidențialitate"
   },
   "profile": {
     "plan": "Plan"

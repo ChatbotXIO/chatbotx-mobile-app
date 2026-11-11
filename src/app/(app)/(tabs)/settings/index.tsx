@@ -2,6 +2,7 @@ import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
+import * as WebBrowser from 'expo-web-browser';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, ScrollView, View } from 'react-native';
@@ -15,6 +16,7 @@ import { Screen } from '@/components/ui/screen';
 import { SectionHeader } from '@/components/ui/section-header';
 import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 import { Text } from '@/components/ui/text';
+import { LEGAL_URLS } from '@/config/legal-urls';
 import { ToggleRow } from '@/components/ui/toggle-row';
 import { useSignOut } from '@/features/auth/use-sign-out';
 import {
@@ -100,8 +102,6 @@ export default function SettingsScreen() {
               leading={
                 <Avatar uri={user?.image} name={user?.name ?? user?.email ?? '?'} size={56} />
               }
-              onPress={() => router.push('/(app)/profile')}
-              showChevron
             />
           </Card>
 
@@ -164,6 +164,23 @@ export default function SettingsScreen() {
                 value={pushEnabled}
                 onValueChange={(value) => void handleTogglePush(value)}
                 disabled={registerDeviceToken.isPending || unregisterDeviceToken.isPending}
+              />
+            </Card>
+          </View>
+
+          <View>
+            <SectionHeader title={t('settings.legal')} />
+            <Card>
+              <ListItem
+                title={t('settings.termsOfService')}
+                onPress={() => void WebBrowser.openBrowserAsync(LEGAL_URLS.termsOfService)}
+                showChevron
+              />
+              <Divider inset />
+              <ListItem
+                title={t('settings.privacyPolicy')}
+                onPress={() => void WebBrowser.openBrowserAsync(LEGAL_URLS.privacyPolicy)}
+                showChevron
               />
             </Card>
           </View>

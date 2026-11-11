@@ -286,7 +286,10 @@
     "notifications": "התראות",
     "appearance": "מראה",
     "workspace": "סביבת עבודה",
-    "version": "גרסה {{version}}"
+    "version": "גרסה {{version}}",
+    "legal": "משפטי",
+    "termsOfService": "תנאי שימוש",
+    "privacyPolicy": "מדיניות פרטיות"
   },
   "profile": {
     "plan": "תוכנית"

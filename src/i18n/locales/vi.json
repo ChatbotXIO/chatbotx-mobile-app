@@ -294,7 +294,10 @@
     "notifications": "Thông báo",
     "appearance": "Giao diện",
     "workspace": "Không gian làm việc",
-    "version": "Phiên bản {{version}}"
+    "version": "Phiên bản {{version}}",
+    "legal": "Pháp lý",
+    "termsOfService": "Điều khoản dịch vụ",
+    "privacyPolicy": "Chính sách quyền riêng tư"
   },
   "profile": {
     "plan": "Gói"

@@ -294,7 +294,10 @@
     "notifications": "Aviseringar",
     "appearance": "Utseende",
     "workspace": "Arbetsyta",
-    "version": "Version {{version}}"
+    "version": "Version {{version}}",
+    "legal": "Juridiskt",
+    "termsOfService": "Användarvillkor",
+    "privacyPolicy": "Integritetspolicy"
   },
   "profile": {
     "plan": "Plan"

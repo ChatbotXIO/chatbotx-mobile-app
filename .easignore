@@ -1,2 +1,33 @@
+# EAS uses this file INSTEAD of .gitignore when it exists, so everything .gitignore excludes must be
+# repeated here — otherwise secrets (.env, .p8 keys) get uploaded in the build archive.
+
 # CodeGraph local index (contains a live daemon socket file that cannot be archived)
 .codegraph
+
+# dependencies / generated
+node_modules/
+.expo/
+dist/
+web-build/
+/ios
+/android
+
+# secrets & credentials (provided through EAS environment variables / credentials instead)
+.env
+.env.*
+!.env.example
+*.p8
+*.p12
+*.jks
+*.key
+*.pem
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+
+# brand overlays (white-label customer brands are cloned in by the release workflow)
+brands/*
+!brands/chatbotx/
+!brands/_template/
+
+.DS_Store

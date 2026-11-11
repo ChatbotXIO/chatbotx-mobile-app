@@ -294,7 +294,10 @@
     "notifications": "Bildirimler",
     "appearance": "Görünüm",
     "workspace": "Çalışma alanı",
-    "version": "Sürüm {{version}}"
+    "version": "Sürüm {{version}}",
+    "legal": "Yasal",
+    "termsOfService": "Hizmet Şartları",
+    "privacyPolicy": "Gizlilik Politikası"
   },
   "profile": {
     "plan": "Plan"

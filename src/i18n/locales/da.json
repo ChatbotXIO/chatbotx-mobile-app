@@ -284,7 +284,10 @@
     "notifications": "Notifikationer",
     "appearance": "Udseende",
     "workspace": "Workspace",
-    "version": "Version {{version}}"
+    "version": "Version {{version}}",
+    "legal": "Juridisk",
+    "termsOfService": "Servicevilkår",
+    "privacyPolicy": "Privatlivspolitik"
   },
   "profile": {
     "plan": "Plan"
