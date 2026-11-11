@@ -30,7 +30,7 @@ export const MAX_FILE_SIZE_BYTES = 5 * 1000 * 1000;
 /** Longest message text the public API accepts. */
 export const MAX_MESSAGE_TEXT_LENGTH = 1000;
 
-export class AttachmentTooLargeError extends Error {
+class AttachmentTooLargeError extends Error {
   constructor(fileName: string) {
     super(`"${fileName}" is larger than 5MB.`);
     this.name = 'AttachmentTooLargeError';

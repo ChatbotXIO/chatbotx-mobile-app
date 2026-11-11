@@ -2,8 +2,8 @@
  * after the contact's last inbound message. Other channels (webchat, email, ...) never lock. */
 const WINDOWED_CHANNELS: ReadonlySet<string> = new Set(['messenger', 'instagram', 'whatsapp']);
 
-export const MESSAGING_WINDOW_MS = 24 * 60 * 60 * 1000;
-export const MESSAGING_WINDOW_WARN_MS = 2 * 60 * 60 * 1000;
+const MESSAGING_WINDOW_MS = 24 * 60 * 60 * 1000;
+const MESSAGING_WINDOW_WARN_MS = 2 * 60 * 60 * 1000;
 
 export type MessagingWindow =
   | { status: 'none' }
