@@ -53,6 +53,11 @@ export const Sheet = forwardRef<BottomSheet, SheetProps>(function Sheet(
 interface SheetModalProps extends PropsWithChildren {
   snapPoints?: (string | number)[];
   onDismiss?: () => void;
+  /** Set when the child IS a `BottomSheetFlatList`/`BottomSheetScrollView`. The sheet's container
+   * is always as tall as its HIGHEST snap point, so a list wrapped in `BottomSheetView` runs past
+   * the visible area at lower snaps (end of list unreachable) and fights the wrapper for the pan
+   * gesture. Pass the scrollable straight through, and use a single snap point. */
+  scrollable?: boolean;
 }
 
 /** Modal variant using `@gorhom/bottom-sheet`'s `BottomSheetModal` — renders in a portal above
@@ -65,7 +70,7 @@ interface SheetModalProps extends PropsWithChildren {
  * `onDismiss` fires *after* the modal has unmounted and reset itself — never call `ref.dismiss()`
  * from it, or the modal gets stuck in a dismissing state and `present()` stops rendering. */
 export const SheetModal = forwardRef<BottomSheetModal, SheetModalProps>(function SheetModal(
-  { children, snapPoints = ['50%', '90%'], onDismiss },
+  { children, snapPoints = ['50%', '90%'], onDismiss, scrollable = false },
   ref,
 ) {
   const { colors, radius } = useTheme();
@@ -89,7 +94,7 @@ export const SheetModal = forwardRef<BottomSheetModal, SheetModalProps>(function
       backgroundStyle={{ backgroundColor: colors.surface1, borderRadius: radius.xl }}
       handleIndicatorStyle={{ backgroundColor: colors.borderSubtle }}
     >
-      <BottomSheetView style={{ flex: 1 }}>{children}</BottomSheetView>
+      {scrollable ? children : <BottomSheetView style={{ flex: 1 }}>{children}</BottomSheetView>}
     </BottomSheetModal>
   );
 });

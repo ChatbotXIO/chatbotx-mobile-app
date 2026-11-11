@@ -1,11 +1,12 @@
-import type BottomSheet from '@gorhom/bottom-sheet';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/ui/empty-state';
-import { Sheet } from '@/components/ui/sheet';
+import { SheetModal } from '@/components/ui/sheet';
 import { useSwitchWorkspace } from '@/features/workspaces/api/use-switch-workspace';
 import { useWorkspaces, type Workspace } from '@/features/workspaces/api/use-workspaces';
 import { WorkspaceRow } from '@/features/workspaces/workspace-row';
@@ -18,16 +19,17 @@ import { useWorkspaceStore } from '@/stores/use-workspace-store';
  * (switching drops every cached query for the current one), then switches and closes; picking the
  * already-active workspace just closes the sheet.
  */
-export const WorkspaceSwitcherSheet = forwardRef<BottomSheet>(
+export const WorkspaceSwitcherSheet = forwardRef<BottomSheetModal>(
   function WorkspaceSwitcherSheet(_props, ref) {
     const { t } = useTranslation();
+    const insets = useSafeAreaInsets();
     const { data: workspaces, isPending } = useWorkspaces();
     const currentWorkspaceId = useWorkspaceStore((state) => state.currentWorkspaceId);
     const switchWorkspace = useSwitchWorkspace();
 
     function closeSheet() {
       if (ref && 'current' in ref) {
-        ref.current?.close();
+        ref.current?.dismiss();
       }
     }
 
@@ -54,10 +56,11 @@ export const WorkspaceSwitcherSheet = forwardRef<BottomSheet>(
     }
 
     return (
-      <Sheet ref={ref} snapPoints={['50%', '80%']}>
+      <SheetModal ref={ref} snapPoints={['80%']} scrollable>
         <BottomSheetFlatList
           data={isPending ? [] : (workspaces ?? [])}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
           ListEmptyComponent={<EmptyState icon="building-2" title={t('workspaces.empty')} />}
           renderItem={({ item }) => (
             <WorkspaceRow
@@ -67,7 +70,7 @@ export const WorkspaceSwitcherSheet = forwardRef<BottomSheet>(
             />
           )}
         />
-      </Sheet>
+      </SheetModal>
     );
   },
 );

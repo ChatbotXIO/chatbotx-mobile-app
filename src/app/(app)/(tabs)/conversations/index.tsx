@@ -1,4 +1,3 @@
-import type BottomSheet from '@gorhom/bottom-sheet';
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
@@ -105,9 +104,9 @@ export default function ConversationsScreen() {
     null,
   );
 
-  const filterSheetRef = useRef<BottomSheet>(null);
+  const filterSheetRef = useRef<BottomSheetModal>(null);
   const assignmentSheetRef = useRef<BottomSheetModal>(null);
-  const workspaceSwitcherSheetRef = useRef<BottomSheet>(null);
+  const workspaceSwitcherSheetRef = useRef<BottomSheetModal>(null);
   const { data: workspaces } = useWorkspaces();
   const currentWorkspace = workspaces?.find((workspace) => workspace.id === workspaceId);
 
@@ -230,7 +229,7 @@ export default function ConversationsScreen() {
             <WorkspaceAvatarButton
               name={currentWorkspace.name}
               logo={currentWorkspace.logo}
-              onPress={() => workspaceSwitcherSheetRef.current?.expand()}
+              onPress={() => workspaceSwitcherSheetRef.current?.present()}
             />
           ) : null}
           <Animated.View style={[styles.titleSlot, reducedMotion ? undefined : titleStyle]}>
@@ -241,7 +240,7 @@ export default function ConversationsScreen() {
             icon="list-filter"
             variant="tonal"
             badgeCount={filterCount}
-            onPress={() => filterSheetRef.current?.expand()}
+            onPress={() => filterSheetRef.current?.present()}
           />
         </View>
         <SearchBar

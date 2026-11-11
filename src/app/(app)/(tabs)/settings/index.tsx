@@ -1,4 +1,4 @@
-import type BottomSheet from '@gorhom/bottom-sheet';
+import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
@@ -47,8 +47,8 @@ export default function SettingsScreen() {
   const setThemePreference = useSettingsStore((state) => state.setThemePreference);
   const language = useSettingsStore((state) => state.language);
 
-  const languageSheetRef = useRef<BottomSheet>(null);
-  const workspaceSwitcherSheetRef = useRef<BottomSheet>(null);
+  const languageSheetRef = useRef<BottomSheetModal>(null);
+  const workspaceSwitcherSheetRef = useRef<BottomSheetModal>(null);
 
   const currentWorkspaceId = useWorkspaceStore((state) => state.currentWorkspaceId);
   const { data: workspaces } = useWorkspaces();
@@ -97,7 +97,9 @@ export default function SettingsScreen() {
             <ListItem
               title={user?.name ?? user?.email ?? t('settings.profile')}
               subtitle={user?.name ? user.email : undefined}
-              leading={<Avatar name={user?.name ?? user?.email ?? '?'} size={56} />}
+              leading={
+                <Avatar uri={user?.image} name={user?.name ?? user?.email ?? '?'} size={56} />
+              }
               onPress={() => router.push('/(app)/profile')}
               showChevron
             />
@@ -114,7 +116,7 @@ export default function SettingsScreen() {
                     <Avatar uri={currentWorkspace.logo} name={currentWorkspace.name} size={36} />
                   ) : undefined
                 }
-                onPress={() => workspaceSwitcherSheetRef.current?.expand()}
+                onPress={() => workspaceSwitcherSheetRef.current?.present()}
                 showChevron
               />
               <Divider inset />
@@ -147,7 +149,7 @@ export default function SettingsScreen() {
               <ListItem
                 title={t('settings.language')}
                 value={localeMeta[language].nativeLabel}
-                onPress={() => languageSheetRef.current?.expand()}
+                onPress={() => languageSheetRef.current?.present()}
                 showChevron
               />
             </Card>

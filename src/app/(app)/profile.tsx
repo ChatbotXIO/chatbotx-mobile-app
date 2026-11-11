@@ -21,7 +21,7 @@ export default function ProfileScreen() {
   return (
     <Screen padded>
       <View style={{ alignItems: 'center', gap: spacing.sm, marginBottom: spacing.lg }}>
-        <Avatar name={user?.name ?? user?.email ?? '?'} size={72} />
+        <Avatar uri={user?.image} name={user?.name ?? user?.email ?? '?'} size={72} />
         <Text variant="title">{user?.name ?? user?.email}</Text>
         {user?.name ? (
           <Text variant="caption" color="secondary">
