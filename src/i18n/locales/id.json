@@ -284,7 +284,10 @@
     "notifications": "Notifikasi",
     "appearance": "Tampilan",
     "workspace": "Ruang kerja",
-    "version": "Versi {{version}}"
+    "version": "Versi {{version}}",
+    "legal": "Hukum",
+    "termsOfService": "Ketentuan Layanan",
+    "privacyPolicy": "Kebijakan Privasi"
   },
   "profile": {
     "plan": "Paket"

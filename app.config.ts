@@ -152,6 +152,11 @@ if (!process.env.JEST_WORKER_ID) {
 
 const hasEasProject = brand.eas.projectId.length > 0;
 
+function resolveGoogleServicesFile(): string | undefined {
+  const candidates = [process.env.GOOGLE_SERVICES_JSON, './google-services.json'];
+  return candidates.find((path): path is string => Boolean(path) && existsSync(path as string));
+}
+
 const config: ExpoConfig = {
   name: `${brand.displayName}${envConfig.nameSuffix}`,
   slug: brand.slug,
@@ -166,7 +171,9 @@ const config: ExpoConfig = {
   ios: {
     // Brand icon (not the stock Expo template `.icon` bundle) so white-label builds ship their own.
     icon: `${assetsDir}/icon.png`,
-    supportsTablet: true,
+    // iPhone-only: the UI isn't designed for iPad, and `true` would make the App Store require
+    // iPad screenshots.
+    supportsTablet: false,
     bundleIdentifier: `${brand.ios.bundleIdentifier}${envConfig.idSuffix}`,
     // Only OS-provided TLS/Keychain + random UUIDs — no custom crypto, so export-compliance exempt.
     // Skips the App Store Connect "App Encryption Documentation" prompt on every upload.
@@ -188,7 +195,9 @@ const config: ExpoConfig = {
     // not committed). Conditional on the file actually existing locally: it's a per-developer/CI
     // secret (see docs/deploy.md for the EAS file-secret setup), and an unconditional reference here
     // fails every clean checkout's Android build/prebuild before that secret is provisioned.
-    googleServicesFile: existsSync('./google-services.json') ? './google-services.json' : undefined,
+    // On EAS the file secret is exposed as a path in `GOOGLE_SERVICES_JSON`; locally it lives at
+    // the repo root.
+    googleServicesFile: resolveGoogleServicesFile(),
   },
   plugins: [
     'expo-router',

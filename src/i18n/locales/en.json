@@ -294,7 +294,10 @@
     "notifications": "Notifications",
     "appearance": "Appearance",
     "workspace": "Workspace",
-    "version": "Version {{version}}"
+    "version": "Version {{version}}",
+    "legal": "Legal",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy"
   },
   "profile": {
     "plan": "Plan"

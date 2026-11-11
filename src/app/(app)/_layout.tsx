@@ -24,10 +24,6 @@ export default function AppLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="workspace-picker" />
-      <Stack.Screen
-        name="profile"
-        options={{ presentation: 'modal', headerShown: true, title: t('settings.profile') }}
-      />
       <Stack.Screen name="conversations/[conversationId]/index" />
       <Stack.Screen
         name="conversations/[conversationId]/contact"

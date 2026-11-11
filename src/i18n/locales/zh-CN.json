@@ -294,7 +294,10 @@
     "notifications": "通知",
     "appearance": "外观",
     "workspace": "工作区",
-    "version": "版本 {{version}}"
+    "version": "版本 {{version}}",
+    "legal": "法律信息",
+    "termsOfService": "服务条款",
+    "privacyPolicy": "隐私政策"
   },
   "profile": {
     "plan": "套餐"

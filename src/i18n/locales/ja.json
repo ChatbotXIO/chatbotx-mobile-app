@@ -294,7 +294,10 @@
     "notifications": "通知",
     "appearance": "外観",
     "workspace": "ワークスペース",
-    "version": "バージョン {{version}}"
+    "version": "バージョン {{version}}",
+    "legal": "法的情報",
+    "termsOfService": "利用規約",
+    "privacyPolicy": "プライバシーポリシー"
   },
   "profile": {
     "plan": "プラン"

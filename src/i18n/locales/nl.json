@@ -294,7 +294,10 @@
     "notifications": "Meldingen",
     "appearance": "Weergave",
     "workspace": "Workspace",
-    "version": "Versie {{version}}"
+    "version": "Versie {{version}}",
+    "legal": "Juridisch",
+    "termsOfService": "Servicevoorwaarden",
+    "privacyPolicy": "Privacybeleid"
   },
   "profile": {
     "plan": "Abonnement"
