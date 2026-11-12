@@ -297,7 +297,9 @@
     "version": "Version {{version}}",
     "legal": "Juridiskt",
     "termsOfService": "Användarvillkor",
-    "privacyPolicy": "Integritetspolicy"
+    "privacyPolicy": "Integritetspolicy",
+    "deleteAccount": "Radera konto",
+    "deleteAccountWarning": "Radera ditt konto och dina data permanent. Du fortsätter på vår webbplats."
   },
   "profile": {
     "plan": "Plan"

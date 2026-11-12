@@ -297,7 +297,9 @@
     "version": "版本 {{version}}",
     "legal": "法律資訊",
     "termsOfService": "服務條款",
-    "privacyPolicy": "隱私權政策"
+    "privacyPolicy": "隱私權政策",
+    "deleteAccount": "刪除帳號",
+    "deleteAccountWarning": "永久刪除你的帳號和資料。你將在我們的網站上繼續完成。"
   },
   "profile": {
     "plan": "方案"

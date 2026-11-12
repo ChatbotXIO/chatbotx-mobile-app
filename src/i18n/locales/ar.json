@@ -292,7 +292,9 @@
     "version": "الإصدار {{version}}",
     "legal": "قانوني",
     "termsOfService": "شروط الخدمة",
-    "privacyPolicy": "سياسة الخصوصية"
+    "privacyPolicy": "سياسة الخصوصية",
+    "deleteAccount": "حذف الحساب",
+    "deleteAccountWarning": "احذف حسابك وبياناتك نهائيًا. ستتابع على موقعنا الإلكتروني."
   },
   "profile": {
     "plan": "الخطة"

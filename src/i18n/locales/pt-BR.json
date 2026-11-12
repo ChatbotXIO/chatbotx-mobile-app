@@ -297,7 +297,9 @@
     "version": "Versão {{version}}",
     "legal": "Informações legais",
     "termsOfService": "Termos de Serviço",
-    "privacyPolicy": "Política de Privacidade"
+    "privacyPolicy": "Política de Privacidade",
+    "deleteAccount": "Excluir conta",
+    "deleteAccountWarning": "Exclua sua conta e seus dados permanentemente. Você continuará em nosso site."
   },
   "profile": {
     "plan": "Plano"

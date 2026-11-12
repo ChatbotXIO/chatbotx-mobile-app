@@ -287,7 +287,9 @@
     "version": "Versio {{version}}",
     "legal": "Lakitiedot",
     "termsOfService": "Käyttöehdot",
-    "privacyPolicy": "Tietosuojakäytäntö"
+    "privacyPolicy": "Tietosuojakäytäntö",
+    "deleteAccount": "Poista tili",
+    "deleteAccountWarning": "Poista tilisi ja tietosi pysyvästi. Jatkat verkkosivustollamme."
   },
   "profile": {
     "plan": "Paketti"

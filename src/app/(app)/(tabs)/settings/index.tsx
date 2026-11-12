@@ -23,6 +23,7 @@ import {
   useRegisterDeviceToken,
   useUnregisterDeviceToken,
 } from '@/features/settings/api/use-device-token';
+import { DeleteAccountCard } from '@/features/settings/components/delete-account-card';
 import { LanguageSheet } from '@/features/settings/components/language-sheet';
 import { WorkspaceSwitcherSheet } from '@/features/workspaces/components/workspace-switcher-sheet';
 import { useWorkspaces } from '@/features/workspaces/api/use-workspaces';
@@ -188,6 +189,8 @@ export default function SettingsScreen() {
           <Card>
             <ListItem title={t('auth.signOut')} onPress={signOut} destructive />
           </Card>
+
+          <DeleteAccountCard />
 
           {appVersion ? (
             <Text

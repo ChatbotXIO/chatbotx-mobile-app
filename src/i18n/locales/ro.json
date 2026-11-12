@@ -300,7 +300,9 @@
     "version": "Versiunea {{version}}",
     "legal": "Juridic",
     "termsOfService": "Termeni și condiții",
-    "privacyPolicy": "Politica de confidențialitate"
+    "privacyPolicy": "Politica de confidențialitate",
+    "deleteAccount": "Șterge contul",
+    "deleteAccountWarning": "Șterge definitiv contul și datele tale. Vei continua pe site-ul nostru."
   },
   "profile": {
     "plan": "Plan"

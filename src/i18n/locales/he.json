@@ -289,7 +289,9 @@
     "version": "גרסה {{version}}",
     "legal": "משפטי",
     "termsOfService": "תנאי שימוש",
-    "privacyPolicy": "מדיניות פרטיות"
+    "privacyPolicy": "מדיניות פרטיות",
+    "deleteAccount": "מחיקת חשבון",
+    "deleteAccountWarning": "מחק לצמיתות את החשבון והנתונים שלך. תמשיך באתר שלנו."
   },
   "profile": {
     "plan": "תוכנית"
