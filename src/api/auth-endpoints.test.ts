@@ -1,7 +1,14 @@
 import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
 
-import { refreshAccessToken, requestPasswordReset, startSocialSignIn } from '@/api/auth-endpoints';
+import {
+  AuthApiError,
+  createAppleNonce,
+  refreshAccessToken,
+  requestPasswordReset,
+  signInWithAppleIdToken,
+  startSocialSignIn,
+} from '@/api/auth-endpoints';
 import { getMobileDeviceId } from '@/api/auth-device';
 import { setAuthTokens } from '@/api/auth-token';
 
@@ -145,5 +152,110 @@ describe('requestPasswordReset', () => {
       email: 'a@b.test',
       redirectTo: '/auth/reset-password',
     });
+  });
+});
+
+describe('createAppleNonce', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns a dashless raw nonce and its SHA-256 hex digest', async () => {
+    jest
+      .mocked(Crypto.randomUUID)
+      .mockReturnValueOnce('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')
+      .mockReturnValueOnce('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+    jest.mocked(Crypto.digestStringAsync).mockResolvedValue('deadbeef');
+
+    const nonce = await createAppleNonce();
+
+    expect(nonce.raw).toBe('aaaaaaaaaaaa4aaa8aaaaaaaaaaaaaaabbbbbbbbbbbb4bbb8bbbbbbbbbbbbbbb');
+    expect(nonce.hashed).toBe('deadbeef');
+    expect(Crypto.digestStringAsync).toHaveBeenCalledWith('SHA-256', nonce.raw);
+  });
+});
+
+describe('signInWithAppleIdToken', () => {
+  const tokens = {
+    accessToken: 'access',
+    expiresAt: Date.now() + 10 * 60_000,
+    refreshToken: 'refresh',
+  };
+  const me = { id: 'u1', email: 'a@b.test', name: 'Ada Lovelace', mustChangePassword: false };
+
+  function mockSuccessfulFetch() {
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(tokens), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(me), { status: 200 }));
+    global.fetch = fetchMock;
+    return fetchMock;
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.mocked(getMobileDeviceId).mockResolvedValue('device-1');
+    jest.mocked(SecureStore.setItemAsync).mockResolvedValue();
+    jest.mocked(SecureStore.getItemAsync).mockResolvedValue(JSON.stringify(tokens));
+  });
+
+  it('posts the id_token grant with the raw nonce and device id', async () => {
+    const fetchMock = mockSuccessfulFetch();
+
+    await signInWithAppleIdToken({
+      idToken: 'id-token',
+      nonce: 'raw-nonce',
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+    });
+
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe('https://api.example.test/api/auth/mobile/token');
+    expect(JSON.parse(init.body as string)).toEqual({
+      deviceId: 'device-1',
+      grantType: 'id_token',
+      idToken: 'id-token',
+      nonce: 'raw-nonce',
+      provider: 'apple',
+      user: { name: { firstName: 'Ada', lastName: 'Lovelace' } },
+    });
+  });
+
+  it('omits user when Apple sent no name', async () => {
+    const fetchMock = mockSuccessfulFetch();
+
+    await signInWithAppleIdToken({
+      idToken: 'id-token',
+      nonce: 'raw-nonce',
+      firstName: null,
+      lastName: '',
+    });
+
+    const body = JSON.parse(fetchMock.mock.calls[0]![1].body as string) as Record<string, unknown>;
+    expect(body).not.toHaveProperty('user');
+  });
+
+  it('stores the tokens and returns the current user', async () => {
+    mockSuccessfulFetch();
+
+    const user = await signInWithAppleIdToken({ idToken: 'id-token', nonce: 'raw-nonce' });
+
+    expect(user).toEqual(me);
+    expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+      'test-brand.authTokens',
+      expect.stringContaining('access'),
+    );
+  });
+
+  it('surfaces the backend error code', async () => {
+    global.fetch = jest.fn().mockResolvedValue(
+      new Response(JSON.stringify({ message: 'Bad token', code: 'INVALID_ID_TOKEN' }), {
+        status: 401,
+      }),
+    );
+
+    await expect(
+      signInWithAppleIdToken({ idToken: 'id-token', nonce: 'raw-nonce' }),
+    ).rejects.toEqual(expect.objectContaining<Partial<AuthApiError>>({ code: 'INVALID_ID_TOKEN' }));
   });
 });

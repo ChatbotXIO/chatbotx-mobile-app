@@ -178,6 +178,10 @@ const config: ExpoConfig = {
     // Only OS-provided TLS/Keychain + random UUIDs — no custom crypto, so export-compliance exempt.
     // Skips the App Store Connect "App Encryption Documentation" prompt on every upload.
     infoPlist: { ITSAppUsesNonExemptEncryption: false },
+    // Adds the `com.apple.developer.applesignin` entitlement (native Sign in with Apple, required
+    // by App Store guideline 4.8 because the app offers other social logins). EAS syncs the
+    // capability to the App ID on the next build.
+    usesAppleSignIn: true,
   },
   android: {
     package: `${brand.android.package}${envConfig.idSuffix}`,
@@ -213,6 +217,8 @@ const config: ExpoConfig = {
     ],
     'expo-image',
     'expo-web-browser',
+    // Native Sign in with Apple button/credential API (pairs with `ios.usesAppleSignIn`).
+    'expo-apple-authentication',
     'expo-secure-store',
     [
       'expo-image-picker',
