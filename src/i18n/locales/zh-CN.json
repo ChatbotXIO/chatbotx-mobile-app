@@ -297,7 +297,9 @@
     "version": "版本 {{version}}",
     "legal": "法律信息",
     "termsOfService": "服务条款",
-    "privacyPolicy": "隐私政策"
+    "privacyPolicy": "隐私政策",
+    "deleteAccount": "删除账号",
+    "deleteAccountWarning": "永久删除你的账号和数据。你将在我们的网站上继续完成。"
   },
   "profile": {
     "plan": "套餐"

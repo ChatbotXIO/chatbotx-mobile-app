@@ -297,7 +297,9 @@
     "version": "Versie {{version}}",
     "legal": "Juridisch",
     "termsOfService": "Servicevoorwaarden",
-    "privacyPolicy": "Privacybeleid"
+    "privacyPolicy": "Privacybeleid",
+    "deleteAccount": "Account verwijderen",
+    "deleteAccountWarning": "Verwijder je account en gegevens definitief. Je gaat verder op onze website."
   },
   "profile": {
     "plan": "Abonnement"

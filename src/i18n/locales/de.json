@@ -287,7 +287,9 @@
     "version": "Version {{version}}",
     "legal": "Rechtliches",
     "termsOfService": "Nutzungsbedingungen",
-    "privacyPolicy": "Datenschutzerklärung"
+    "privacyPolicy": "Datenschutzerklärung",
+    "deleteAccount": "Konto löschen",
+    "deleteAccountWarning": "Konto und Daten dauerhaft löschen. Du machst auf unserer Website weiter."
   },
   "profile": {
     "plan": "Tarif"

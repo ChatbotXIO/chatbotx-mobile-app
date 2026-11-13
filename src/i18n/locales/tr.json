@@ -297,7 +297,9 @@
     "version": "Sürüm {{version}}",
     "legal": "Yasal",
     "termsOfService": "Hizmet Şartları",
-    "privacyPolicy": "Gizlilik Politikası"
+    "privacyPolicy": "Gizlilik Politikası",
+    "deleteAccount": "Hesabı sil",
+    "deleteAccountWarning": "Hesabını ve verilerini kalıcı olarak sil. Web sitemizde devam edeceksin."
   },
   "profile": {
     "plan": "Plan"

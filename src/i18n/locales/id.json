@@ -287,7 +287,9 @@
     "version": "Versi {{version}}",
     "legal": "Hukum",
     "termsOfService": "Ketentuan Layanan",
-    "privacyPolicy": "Kebijakan Privasi"
+    "privacyPolicy": "Kebijakan Privasi",
+    "deleteAccount": "Hapus akun",
+    "deleteAccountWarning": "Hapus akun dan data Anda secara permanen. Anda akan melanjutkan di situs web kami."
   },
   "profile": {
     "plan": "Paket"

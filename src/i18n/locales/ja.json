@@ -297,7 +297,9 @@
     "version": "バージョン {{version}}",
     "legal": "法的情報",
     "termsOfService": "利用規約",
-    "privacyPolicy": "プライバシーポリシー"
+    "privacyPolicy": "プライバシーポリシー",
+    "deleteAccount": "アカウントを削除",
+    "deleteAccountWarning": "アカウントとデータを完全に削除します。続きは当社のウェブサイトで行います。"
   },
   "profile": {
     "plan": "プラン"

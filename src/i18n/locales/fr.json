@@ -287,7 +287,9 @@
     "version": "Version {{version}}",
     "legal": "Mentions légales",
     "termsOfService": "Conditions d'utilisation",
-    "privacyPolicy": "Politique de confidentialité"
+    "privacyPolicy": "Politique de confidentialité",
+    "deleteAccount": "Supprimer le compte",
+    "deleteAccountWarning": "Supprimez définitivement votre compte et vos données. Vous continuerez sur notre site web."
   },
   "profile": {
     "plan": "Forfait"

@@ -297,7 +297,9 @@
     "version": "Phiên bản {{version}}",
     "legal": "Pháp lý",
     "termsOfService": "Điều khoản dịch vụ",
-    "privacyPolicy": "Chính sách quyền riêng tư"
+    "privacyPolicy": "Chính sách quyền riêng tư",
+    "deleteAccount": "Xóa tài khoản",
+    "deleteAccountWarning": "Xóa vĩnh viễn tài khoản và dữ liệu của bạn. Bạn sẽ tiếp tục trên trang web của chúng tôi."
   },
   "profile": {
     "plan": "Gói"
