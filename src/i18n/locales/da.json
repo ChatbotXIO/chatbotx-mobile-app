@@ -51,7 +51,8 @@
     "current": "Nuværende workspace",
     "switch": "Skift",
     "switchConfirmTitle": "Skift workspace?",
-    "switchConfirmBody": "Skift til {{name}}? Du forlader dit nuværende workspace."
+    "switchConfirmBody": "Skift til {{name}}? Du forlader dit nuværende workspace.",
+    "defaultName": "{{name}}s arbejdsområde"
   },
   "inbox": {
     "title": "Indbakke"

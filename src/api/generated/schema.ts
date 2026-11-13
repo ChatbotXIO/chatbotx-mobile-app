@@ -6671,6 +6671,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/workspaces/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ensure my default workspace
+         * @description Idempotent. When the signed-in user belongs to no workspace, creates their first one and returns it; otherwise returns `workspace: null`.
+         */
+        post: operations["me.ensureDefaultWorkspace"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me/device-tokens": {
         parameters: {
             query?: never;
@@ -162701,6 +162721,102 @@ export interface operations {
                         /** @constant */
                         status: 500;
                         /** @default An unexpected error occurred */
+                        message: string;
+                        data?: unknown;
+                    } | components["schemas"]["UndefinedError"];
+                };
+            };
+        };
+    };
+    "me.ensureDefaultWorkspace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /** @description Name for the new workspace. Defaults to "<user>'s workspace". */
+                    name?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        workspace: {
+                            id: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            name: string;
+                            defaultReply: string | null;
+                            /** @enum {string} */
+                            defaultReplyFrequency: "allTime" | "oncePerHour" | "oncePerDay";
+                            targetCountry: string | null;
+                            language: string;
+                            timezone: string;
+                            brandColor: string;
+                            developmentMode: boolean;
+                            smartResponseDelaySeconds: number | null;
+                            isActive: boolean;
+                            startTime: string | null;
+                            endTime: string | null;
+                            logo: string | null;
+                            scheduledDeletionAt: string | null;
+                            deletionRequestedById?: unknown | null;
+                            deletionRequestedAt: string | null;
+                            purgeStartedAt: string | null;
+                            supportAccessUntil: string | null;
+                            capiLimitedDataUse: boolean;
+                            ownerId?: unknown;
+                            tenantId?: unknown;
+                        } | null;
+                    };
+                };
+            };
+            /** @description 400 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        defined: true;
+                        /** @constant */
+                        code: "WORKSPACE_SELECTION_REQUIRED";
+                        /** @constant */
+                        status: 400;
+                        /** @default Workspace selection is required */
+                        message: string;
+                        data?: unknown;
+                    } | {
+                        /** @constant */
+                        defined: true;
+                        /** @constant */
+                        code: "systemError";
+                        /** @constant */
+                        status: 400;
+                        /** @default The request could not be processed */
+                        message: string;
+                        data?: unknown;
+                    } | {
+                        /** @constant */
+                        defined: true;
+                        /** @constant */
+                        code: "businessError";
+                        /** @constant */
+                        status: 400;
+                        /** @default An error occurred while processing your request */
                         message: string;
                         data?: unknown;
                     } | components["schemas"]["UndefinedError"];

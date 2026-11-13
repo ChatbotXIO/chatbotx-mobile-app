@@ -51,7 +51,8 @@
     "current": "Nykyinen työtila",
     "switch": "Vaihda",
     "switchConfirmTitle": "Vaihdetaanko työtilaa?",
-    "switchConfirmBody": "Vaihdetaanko työtilaan {{name}}? Poistut nykyisestä työtilastasi."
+    "switchConfirmBody": "Vaihdetaanko työtilaan {{name}}? Poistut nykyisestä työtilastasi.",
+    "defaultName": "Työtila: {{name}}"
   },
   "inbox": {
     "title": "Saapuneet"

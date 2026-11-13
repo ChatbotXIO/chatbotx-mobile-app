@@ -51,7 +51,8 @@
     "current": "مساحة العمل الحالية",
     "switch": "تبديل",
     "switchConfirmTitle": "تبديل مساحة العمل؟",
-    "switchConfirmBody": "هل تريد التبديل إلى {{name}}؟ ستغادر مساحة العمل الحالية."
+    "switchConfirmBody": "هل تريد التبديل إلى {{name}}؟ ستغادر مساحة العمل الحالية.",
+    "defaultName": "مساحة عمل {{name}}"
   },
   "inbox": {
     "title": "صندوق الوارد"

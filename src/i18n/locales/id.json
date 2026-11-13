@@ -51,7 +51,8 @@
     "current": "Ruang kerja saat ini",
     "switch": "Ganti",
     "switchConfirmTitle": "Ganti ruang kerja?",
-    "switchConfirmBody": "Beralih ke {{name}}? Anda akan meninggalkan ruang kerja saat ini."
+    "switchConfirmBody": "Beralih ke {{name}}? Anda akan meninggalkan ruang kerja saat ini.",
+    "defaultName": "Workspace milik {{name}}"
   },
   "inbox": {
     "title": "Kotak masuk"

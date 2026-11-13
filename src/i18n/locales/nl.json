@@ -61,7 +61,8 @@
     "current": "Huidige workspace",
     "switch": "Wisselen",
     "switchConfirmTitle": "Van workspace wisselen?",
-    "switchConfirmBody": "Overschakelen naar {{name}}? Je verlaat je huidige workspace."
+    "switchConfirmBody": "Overschakelen naar {{name}}? Je verlaat je huidige workspace.",
+    "defaultName": "Werkruimte van {{name}}"
   },
   "inbox": {
     "title": "Inbox"

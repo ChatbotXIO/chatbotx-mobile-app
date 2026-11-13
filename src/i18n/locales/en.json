@@ -61,7 +61,8 @@
     "current": "Current workspace",
     "switch": "Switch",
     "switchConfirmTitle": "Switch workspace?",
-    "switchConfirmBody": "Switch to {{name}}? You'll leave your current workspace."
+    "switchConfirmBody": "Switch to {{name}}? You'll leave your current workspace.",
+    "defaultName": "{{name}}'s workspace"
   },
   "inbox": {
     "title": "Inbox"

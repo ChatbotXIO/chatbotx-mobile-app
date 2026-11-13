@@ -61,7 +61,8 @@
     "current": "Aktuell arbetsyta",
     "switch": "Byt",
     "switchConfirmTitle": "Byta arbetsyta?",
-    "switchConfirmBody": "Byta till {{name}}? Du lämnar din nuvarande arbetsyta."
+    "switchConfirmBody": "Byta till {{name}}? Du lämnar din nuvarande arbetsyta.",
+    "defaultName": "{{name}}s arbetsyta"
   },
   "inbox": {
     "title": "Inkorg"

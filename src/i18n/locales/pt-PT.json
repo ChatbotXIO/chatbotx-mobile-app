@@ -61,7 +61,8 @@
     "current": "Espaço de trabalho atual",
     "switch": "Mudar",
     "switchConfirmTitle": "Mudar de espaço de trabalho?",
-    "switchConfirmBody": "Mudar para {{name}}? Vai sair do seu espaço de trabalho atual."
+    "switchConfirmBody": "Mudar para {{name}}? Vai sair do seu espaço de trabalho atual.",
+    "defaultName": "Workspace de {{name}}"
   },
   "inbox": {
     "title": "Caixa de entrada"
