@@ -108,6 +108,20 @@ offers to save credentials to your EAS project), or set them as environment vari
 (`EXPO_APPLE_ID`, etc. — see `eas submit --help` for the full list) before running non-interactively
 in CI.
 
+## Apple Sign In
+
+The iOS app offers native Sign in with Apple (App Store guideline 4.8, since Google/Facebook login
+exist). It is a native `id_token` grant on `POST /api/auth/mobile/token` — no browser redirect and no
+`.p8` key on the app side.
+
+- The capability comes from `ios.usesAppleSignIn` in `app.config.ts`; EAS syncs it to the App ID on
+  the next build. It is a native change, so a new dev client / binary is required (OTA is not enough).
+- The backend's `APPLE_APP_BUNDLE_IDS` must list every bundle ID that should sign in: each
+  `.dev` / `.preview` variant (see `idSuffix` in `app.config.ts`) and the production ID.
+- White-label brands (`brands/*/brand.json`) each have their own bundle ID, so each needs its own
+  entry in `APPLE_APP_BUNDLE_IDS` and the capability on its App ID.
+- Test on a real device signed into an Apple ID; the Simulator is unreliable for Sign in with Apple.
+
 ## Version bumping
 
 `eas.json`'s `"appVersionSource": "remote"` means EAS tracks the build number remotely — you don't

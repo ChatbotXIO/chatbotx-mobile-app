@@ -252,3 +252,49 @@ export async function exchangeSocialCode(code: string, codeVerifier: string): Pr
   await setAuthTokens((await response.json()) as MobileTokenResponse);
   return getCurrentUser();
 }
+
+export interface AppleNonce {
+  /** Sent to the backend, which hashes it and compares with the token's `nonce` claim. */
+  raw: string;
+  /** Lowercase SHA-256 hex of `raw`; this is what Apple embeds in the identity token. */
+  hashed: string;
+}
+
+/** Generates the replay-protection nonce pair for native Sign in with Apple (expo-crypto only —
+ * `crypto.subtle` doesn't exist on Hermes). */
+export async function createAppleNonce(): Promise<AppleNonce> {
+  const raw = `${Crypto.randomUUID()}${Crypto.randomUUID()}`.replaceAll('-', '');
+  const hashed = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, raw);
+  return { raw, hashed };
+}
+
+export interface AppleIdTokenInput {
+  idToken: string;
+  /** The RAW nonce (the hashed form went to Apple). */
+  nonce: string;
+  /** Apple only returns the name on the very first authorization, so forward it in that call. */
+  firstName?: string | null;
+  lastName?: string | null;
+}
+
+export async function signInWithAppleIdToken(input: AppleIdTokenInput): Promise<SessionUser> {
+  const firstName = input.firstName?.trim() ?? '';
+  const lastName = input.lastName?.trim() ?? '';
+  const hasName = firstName !== '' || lastName !== '';
+
+  const response = await fetch(`${AUTH_BASE_URL}/mobile/token`, {
+    method: 'POST',
+    headers: AUTH_POST_HEADERS,
+    body: JSON.stringify({
+      deviceId: await getMobileDeviceId(),
+      grantType: 'id_token',
+      idToken: input.idToken,
+      nonce: input.nonce,
+      provider: 'apple',
+      ...(hasName ? { user: { name: { firstName, lastName } } } : {}),
+    }),
+  });
+  await throwIfError(response);
+  await setAuthTokens((await response.json()) as MobileTokenResponse);
+  return getCurrentUser();
+}

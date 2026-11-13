@@ -4,14 +4,21 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { exchangeSocialCode, SOCIAL_CALLBACK_URL, startSocialSignIn } from '@/api/auth-endpoints';
+import {
+  exchangeSocialCode,
+  SOCIAL_CALLBACK_URL,
+  startSocialSignIn,
+  type SessionUser,
+} from '@/api/auth-endpoints';
 import { BrandIcon, GoogleLogo } from '@/components/ui/brand-icons';
 import { Button } from '@/components/ui/button';
 import { ErrorBanner } from '@/components/ui/error-banner';
 import { consumePendingDeepLink } from '@/lib/pending-deep-link';
 import { useAuthStore } from '@/stores/use-auth-store';
 
-type Provider = 'google' | 'facebook';
+import { AppleSignInButton } from './apple-sign-in-button';
+
+type Provider = 'google' | 'facebook' | 'apple';
 
 /**
  * Social sign-in uses the browser only for the provider interaction. The
@@ -24,7 +31,16 @@ export function SocialButtons() {
   const [error, setError] = useState<string | null>(null);
   const [loadingProvider, setLoadingProvider] = useState<Provider | null>(null);
 
-  const handleSignIn = async (provider: Provider) => {
+  const completeSignIn = (user: SessionUser) => {
+    setSignedIn(user);
+    const pendingDeepLink = user.mustChangePassword ? null : consumePendingDeepLink();
+    // A captured deep link is an arbitrary runtime string, not a route this app's typed-routes
+    // manifest can know statically — `Href` (rather than `as never`) is expo-router's own type
+    // for exactly this "any valid path string" case.
+    router.replace((pendingDeepLink ?? '/') as Href);
+  };
+
+  const handleSignIn = async (provider: 'google' | 'facebook') => {
     setError(null);
     setLoadingProvider(provider);
     try {
@@ -44,14 +60,7 @@ export function SocialButtons() {
         return;
       }
 
-      const user = await exchangeSocialCode(code, start.codeVerifier);
-
-      setSignedIn(user);
-      const pendingDeepLink = user.mustChangePassword ? null : consumePendingDeepLink();
-      // A captured deep link is an arbitrary runtime string, not a route this app's typed-routes
-      // manifest can know statically — `Href` (rather than `as never`) is expo-router's own type
-      // for exactly this "any valid path string" case.
-      router.replace((pendingDeepLink ?? '/') as Href);
+      completeSignIn(await exchangeSocialCode(code, start.codeVerifier));
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errors.unknown'));
     } finally {
@@ -62,6 +71,13 @@ export function SocialButtons() {
   return (
     <View style={styles.container}>
       {error ? <ErrorBanner message={error} /> : null}
+      {/* Apple first: guideline 4.8 wants it at least as prominent as the other providers. */}
+      <AppleSignInButton
+        disabled={loadingProvider !== null}
+        onBusyChange={(busy) => setLoadingProvider(busy ? 'apple' : null)}
+        onSignedIn={completeSignIn}
+        onError={setError}
+      />
       <Button
         label={t('auth.continueWithGoogle')}
         variant="secondary"
