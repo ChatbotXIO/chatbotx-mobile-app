@@ -51,7 +51,8 @@
     "current": "סביבת העבודה הנוכחית",
     "switch": "החלפה",
     "switchConfirmTitle": "להחליף סביבת עבודה?",
-    "switchConfirmBody": "לעבור אל {{name}}? תעזוב את סביבת העבודה הנוכחית."
+    "switchConfirmBody": "לעבור אל {{name}}? תעזוב את סביבת העבודה הנוכחית.",
+    "defaultName": "סביבת העבודה של {{name}}"
   },
   "inbox": {
     "title": "תיבת דואר נכנס"

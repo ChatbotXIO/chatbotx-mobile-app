@@ -61,7 +61,8 @@
     "current": "目前的工作區",
     "switch": "切換",
     "switchConfirmTitle": "切換工作區？",
-    "switchConfirmBody": "切換到 {{name}}？你將離開目前的工作區。"
+    "switchConfirmBody": "切換到 {{name}}？你將離開目前的工作區。",
+    "defaultName": "{{name}}的工作區"
   },
   "inbox": {
     "title": "收件匣"

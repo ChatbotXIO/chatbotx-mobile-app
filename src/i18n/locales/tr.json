@@ -61,7 +61,8 @@
     "current": "Geçerli çalışma alanı",
     "switch": "Değiştir",
     "switchConfirmTitle": "Çalışma alanı değiştirilsin mi?",
-    "switchConfirmBody": "{{name}} alanına geçilsin mi? Mevcut çalışma alanından ayrılacaksınız."
+    "switchConfirmBody": "{{name}} alanına geçilsin mi? Mevcut çalışma alanından ayrılacaksınız.",
+    "defaultName": "{{name}} çalışma alanı"
   },
   "inbox": {
     "title": "Gelen kutusu"

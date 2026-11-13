@@ -61,7 +61,8 @@
     "current": "現在のワークスペース",
     "switch": "切り替え",
     "switchConfirmTitle": "ワークスペースを切り替えますか？",
-    "switchConfirmBody": "{{name}}に切り替えますか？現在のワークスペースから移動します。"
+    "switchConfirmBody": "{{name}}に切り替えますか？現在のワークスペースから移動します。",
+    "defaultName": "{{name}}のワークスペース"
   },
   "inbox": {
     "title": "受信トレイ"

@@ -51,7 +51,8 @@
     "current": "Espace de travail actuel",
     "switch": "Changer",
     "switchConfirmTitle": "Changer d'espace de travail ?",
-    "switchConfirmBody": "Passer à {{name}} ? Vous quitterez votre espace de travail actuel."
+    "switchConfirmBody": "Passer à {{name}} ? Vous quitterez votre espace de travail actuel.",
+    "defaultName": "Espace de travail de {{name}}"
   },
   "inbox": {
     "title": "Boîte de réception"

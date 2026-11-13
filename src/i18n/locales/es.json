@@ -51,7 +51,8 @@
     "current": "Espacio de trabajo actual",
     "switch": "Cambiar",
     "switchConfirmTitle": "¿Cambiar de espacio de trabajo?",
-    "switchConfirmBody": "¿Cambiar a {{name}}? Saldrás de tu espacio de trabajo actual."
+    "switchConfirmBody": "¿Cambiar a {{name}}? Saldrás de tu espacio de trabajo actual.",
+    "defaultName": "Espacio de trabajo de {{name}}"
   },
   "inbox": {
     "title": "Bandeja de entrada"

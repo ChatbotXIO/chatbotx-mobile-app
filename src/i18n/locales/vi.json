@@ -61,7 +61,8 @@
     "current": "Không gian làm việc hiện tại",
     "switch": "Chuyển",
     "switchConfirmTitle": "Chuyển không gian làm việc?",
-    "switchConfirmBody": "Chuyển sang {{name}}? Bạn sẽ rời khỏi không gian làm việc hiện tại."
+    "switchConfirmBody": "Chuyển sang {{name}}? Bạn sẽ rời khỏi không gian làm việc hiện tại.",
+    "defaultName": "Workspace của {{name}}"
   },
   "inbox": {
     "title": "Hộp thư"

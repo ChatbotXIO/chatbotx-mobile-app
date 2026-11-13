@@ -61,7 +61,8 @@
     "current": "Spațiul de lucru curent",
     "switch": "Schimbă",
     "switchConfirmTitle": "Schimbi spațiul de lucru?",
-    "switchConfirmBody": "Treci la {{name}}? Vei părăsi spațiul de lucru curent."
+    "switchConfirmBody": "Treci la {{name}}? Vei părăsi spațiul de lucru curent.",
+    "defaultName": "Spațiul de lucru al lui {{name}}"
   },
   "inbox": {
     "title": "Mesaje primite"
