@@ -134,7 +134,10 @@ export function loadBrand(brandId: string, repoRoot: string): BrandConfig {
 }
 
 const brandId = process.env.BRAND ?? 'chatbotx';
-const brand = loadBrand(brandId, __dirname);
+// `process.cwd()` instead of `__dirname`: Node 26 loads this `.ts` natively as an ES module (no
+// `__dirname` there; `import.meta.dirname` would break under Jest's CJS transform). Expo CLI and
+// eas-cli always evaluate the config with cwd set to the project root.
+const brand = loadBrand(brandId, process.cwd());
 const appEnv = readAppEnv(process.env.APP_ENV);
 const envConfig = APP_ENV_CONFIG[appEnv];
 // Uses the BRAND folder name, not `brand.id` — the two commonly diverge for `_template` (folder
