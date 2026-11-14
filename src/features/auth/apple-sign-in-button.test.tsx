@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { Platform } from 'react-native';
 
-import { createAppleNonce, signInWithAppleIdToken } from '@/api/auth-endpoints';
+import { AuthApiError, createAppleNonce, signInWithAppleIdToken } from '@/api/auth-endpoints';
 import { initI18n } from '@/i18n';
 
 import { AppleSignInButton } from './apple-sign-in-button';
@@ -107,6 +107,36 @@ describe('AppleSignInButton', () => {
       lastName: 'Lovelace',
     });
     expect(props.onSignedIn).toHaveBeenCalledWith(user);
+  });
+
+  it('shows localized copy, not the server message, when the API rejects the token', async () => {
+    jest.mocked(AppleAuthentication.signInAsync).mockResolvedValue({
+      identityToken: 'id-token',
+      fullName: null,
+    } as AppleAuthentication.AppleAuthenticationCredential);
+    jest.mocked(signInWithAppleIdToken).mockRejectedValue(
+      Object.assign(new AuthApiError('Account deletion pending (EN)'), {
+        code: 'ACCOUNT_DELETION_PENDING',
+      }),
+    );
+    const { props } = await setup();
+
+    await press();
+
+    expect(props.onError).toHaveBeenLastCalledWith('This account is scheduled for deletion.');
+  });
+
+  it('keeps the sign-in-specific copy when the native Apple flow fails', async () => {
+    jest
+      .mocked(AppleAuthentication.signInAsync)
+      .mockRejectedValue(Object.assign(new Error('boom'), { code: 'ERR_REQUEST_FAILED' }));
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const { props } = await setup();
+
+    await press();
+
+    expect(props.onError).toHaveBeenLastCalledWith("Sign-in didn't complete. Please try again.");
+    warn.mockRestore();
   });
 
   it('reports an error when Apple returns no identity token', async () => {

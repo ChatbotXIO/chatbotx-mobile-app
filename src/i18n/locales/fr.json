@@ -290,7 +290,15 @@
     "termsOfService": "Conditions d'utilisation",
     "privacyPolicy": "Politique de confidentialité",
     "deleteAccount": "Supprimer le compte",
-    "deleteAccountWarning": "Supprimez définitivement votre compte et vos données. Vous continuerez sur notre site web."
+    "deleteAccountWarning": "Supprimez définitivement votre compte et vos données.",
+    "deleteAccountTitle": "Supprimer votre compte",
+    "deleteAccountBody": "Votre compte et tous les espaces de travail que vous possédez seront programmés pour suppression. Vous quitterez les espaces dont vous n'êtes que membre et serez déconnecté de tous vos appareils.",
+    "deleteAccountConfirmLabel": "Saisissez DELETE pour confirmer",
+    "deleteAccountSubmit": "Supprimer mon compte",
+    "deleteAccountSupportRequired": "Votre compte ne peut pas être supprimé depuis l'application. Veuillez contacter le support.",
+    "deleteAccountFailed": "Impossible de supprimer votre compte. Veuillez réessayer.",
+    "deleteAccountScheduled": "La suppression de votre compte est programmée.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "Forfait"
@@ -317,7 +325,8 @@
       "passwordTooShort": "Le mot de passe est trop court.",
       "passwordTooLong": "Le mot de passe est trop long.",
       "userNotFound": "Aucun compte n'est associé à cet e-mail.",
-      "emailNotVerified": "Veuillez vérifier votre e-mail avant de vous connecter."
+      "emailNotVerified": "Veuillez vérifier votre e-mail avant de vous connecter.",
+      "accountDeletionPending": "La suppression de ce compte est programmée."
     }
   },
   "realtime": {

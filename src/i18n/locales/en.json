@@ -300,7 +300,15 @@
     "termsOfService": "Terms of Service",
     "privacyPolicy": "Privacy Policy",
     "deleteAccount": "Delete account",
-    "deleteAccountWarning": "Permanently delete your account and data. You'll continue on our website."
+    "deleteAccountWarning": "Permanently delete your account and data.",
+    "deleteAccountTitle": "Delete your account",
+    "deleteAccountBody": "Your account and every workspace you own will be scheduled for deletion. You'll leave the workspaces you only belong to, and you'll be signed out on all devices.",
+    "deleteAccountConfirmLabel": "Type DELETE to confirm",
+    "deleteAccountSubmit": "Delete my account",
+    "deleteAccountSupportRequired": "Your account can't be deleted from the app. Please contact support.",
+    "deleteAccountFailed": "We couldn't delete your account. Please try again.",
+    "deleteAccountScheduled": "Your account is scheduled for deletion.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "Plan"
@@ -330,7 +338,8 @@
       "passwordTooShort": "Password is too short.",
       "passwordTooLong": "Password is too long.",
       "userNotFound": "No account found for this email.",
-      "emailNotVerified": "Please verify your email before signing in."
+      "emailNotVerified": "Please verify your email before signing in.",
+      "accountDeletionPending": "This account is scheduled for deletion."
     }
   }
 }

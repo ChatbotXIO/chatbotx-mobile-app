@@ -6645,7 +6645,11 @@ export interface paths {
         get: operations["me.get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete my account
+         * @description Schedules deletion of the signed-in user's account. Requires `confirmation: "DELETE"`.
+         */
+        delete: operations["me.requestAccountDeletion"];
         options?: never;
         head?: never;
         patch?: never;
@@ -162253,6 +162257,50 @@ export interface operations {
                         message: string;
                         data?: unknown;
                     } | components["schemas"]["UndefinedError"];
+                };
+            };
+        };
+    };
+    "me.requestAccountDeletion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @constant */
+                    confirmation: "DELETE";
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        scheduledDeletionAt: string;
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        defined?: boolean;
+                        code: string;
+                        status: number;
+                        message: string;
+                        data?: unknown;
+                    };
                 };
             };
         };

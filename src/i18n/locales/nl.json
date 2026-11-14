@@ -300,7 +300,15 @@
     "termsOfService": "Servicevoorwaarden",
     "privacyPolicy": "Privacybeleid",
     "deleteAccount": "Account verwijderen",
-    "deleteAccountWarning": "Verwijder je account en gegevens definitief. Je gaat verder op onze website."
+    "deleteAccountWarning": "Verwijder je account en gegevens permanent.",
+    "deleteAccountTitle": "Je account verwijderen",
+    "deleteAccountBody": "Je account en alle workspaces waarvan je eigenaar bent, worden gepland voor verwijdering. Je verlaat workspaces waarvan je alleen lid bent en wordt op alle apparaten uitgelogd.",
+    "deleteAccountConfirmLabel": "Typ DELETE om te bevestigen",
+    "deleteAccountSubmit": "Mijn account verwijderen",
+    "deleteAccountSupportRequired": "Je account kan niet via de app worden verwijderd. Neem contact op met support.",
+    "deleteAccountFailed": "We konden je account niet verwijderen. Probeer het opnieuw.",
+    "deleteAccountScheduled": "Je account is gepland voor verwijdering.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "Abonnement"
@@ -330,7 +338,8 @@
       "passwordTooShort": "Wachtwoord is te kort.",
       "passwordTooLong": "Wachtwoord is te lang.",
       "userNotFound": "Geen account gevonden voor dit e-mailadres.",
-      "emailNotVerified": "Verifieer je e-mailadres voordat je inlogt."
+      "emailNotVerified": "Verifieer je e-mailadres voordat je inlogt.",
+      "accountDeletionPending": "Dit account is gepland voor verwijdering."
     }
   }
 }

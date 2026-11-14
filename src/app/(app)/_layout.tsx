@@ -21,7 +21,7 @@ export default function AppLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, headerBackButtonDisplayMode: 'minimal' }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="workspace-picker" />
       <Stack.Screen name="conversations/[conversationId]/index" />
@@ -32,6 +32,10 @@ export default function AppLayout() {
       <Stack.Screen
         name="settings/members"
         options={{ headerShown: true, title: t('settings.members') }}
+      />
+      <Stack.Screen
+        name="settings/delete-account"
+        options={{ headerShown: true, title: t('settings.deleteAccount') }}
       />
     </Stack>
   );

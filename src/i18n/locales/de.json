@@ -290,7 +290,15 @@
     "termsOfService": "Nutzungsbedingungen",
     "privacyPolicy": "Datenschutzerklärung",
     "deleteAccount": "Konto löschen",
-    "deleteAccountWarning": "Konto und Daten dauerhaft löschen. Du machst auf unserer Website weiter."
+    "deleteAccountWarning": "Konto und Daten dauerhaft löschen.",
+    "deleteAccountTitle": "Konto löschen",
+    "deleteAccountBody": "Dein Konto und alle Workspaces, die dir gehören, werden zur Löschung vorgemerkt. Du verlässt Workspaces, in denen du nur Mitglied bist, und wirst auf allen Geräten abgemeldet.",
+    "deleteAccountConfirmLabel": "Gib zur Bestätigung DELETE ein",
+    "deleteAccountSubmit": "Mein Konto löschen",
+    "deleteAccountSupportRequired": "Dein Konto kann nicht in der App gelöscht werden. Bitte kontaktiere den Support.",
+    "deleteAccountFailed": "Dein Konto konnte nicht gelöscht werden. Bitte versuche es erneut.",
+    "deleteAccountScheduled": "Dein Konto ist zur Löschung vorgemerkt.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "Tarif"
@@ -317,7 +325,8 @@
       "passwordTooShort": "Das Passwort ist zu kurz.",
       "passwordTooLong": "Das Passwort ist zu lang.",
       "userNotFound": "Für diese E-Mail-Adresse wurde kein Konto gefunden.",
-      "emailNotVerified": "Bitte bestätige deine E-Mail-Adresse, bevor du dich anmeldest."
+      "emailNotVerified": "Bitte bestätige deine E-Mail-Adresse, bevor du dich anmeldest.",
+      "accountDeletionPending": "Dieses Konto ist zur Löschung vorgemerkt."
     }
   },
   "realtime": {

@@ -300,7 +300,15 @@
     "termsOfService": "Hizmet Şartları",
     "privacyPolicy": "Gizlilik Politikası",
     "deleteAccount": "Hesabı sil",
-    "deleteAccountWarning": "Hesabını ve verilerini kalıcı olarak sil. Web sitemizde devam edeceksin."
+    "deleteAccountWarning": "Hesabınızı ve verilerinizi kalıcı olarak silin.",
+    "deleteAccountTitle": "Hesabınızı silin",
+    "deleteAccountBody": "Hesabınız ve sahibi olduğunuz tüm çalışma alanları silinmek üzere planlanacak. Yalnızca üyesi olduğunuz çalışma alanlarından ayrılacak ve tüm cihazlardaki oturumlarınız kapatılacak.",
+    "deleteAccountConfirmLabel": "Onaylamak için DELETE yazın",
+    "deleteAccountSubmit": "Hesabımı sil",
+    "deleteAccountSupportRequired": "Hesabınız uygulamadan silinemiyor. Lütfen destekle iletişime geçin.",
+    "deleteAccountFailed": "Hesabınız silinemedi. Lütfen tekrar deneyin.",
+    "deleteAccountScheduled": "Hesabınızın silinmesi planlandı.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "Plan"
@@ -330,7 +338,8 @@
       "passwordTooShort": "Parola çok kısa.",
       "passwordTooLong": "Parola çok uzun.",
       "userNotFound": "Bu e-posta için hesap bulunamadı.",
-      "emailNotVerified": "Giriş yapmadan önce lütfen e-postanızı doğrulayın."
+      "emailNotVerified": "Giriş yapmadan önce lütfen e-postanızı doğrulayın.",
+      "accountDeletionPending": "Bu hesabın silinmesi planlandı."
     }
   }
 }

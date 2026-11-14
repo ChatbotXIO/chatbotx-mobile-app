@@ -11,6 +11,7 @@ const AUTH_ERROR_KEYS: Record<string, string> = {
   PASSWORD_TOO_LONG: 'errors.auth.passwordTooLong',
   USER_NOT_FOUND: 'errors.auth.userNotFound',
   EMAIL_NOT_VERIFIED: 'errors.auth.emailNotVerified',
+  ACCOUNT_DELETION_PENDING: 'errors.auth.accountDeletionPending',
   UNAUTHORIZED: 'errors.unauthorized',
 };
 

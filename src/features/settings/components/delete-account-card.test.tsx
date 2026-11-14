@@ -1,14 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import * as WebBrowser from 'expo-web-browser';
+import { router } from 'expo-router';
 
 import { initI18n } from '@/i18n';
 
 import { DeleteAccountCard } from './delete-account-card';
 
-jest.mock('expo-web-browser', () => ({ openBrowserAsync: jest.fn() }));
-jest.mock('@/config/account-urls', () => ({
-  ACCOUNT_DELETE_URL: 'https://app.example.test/account/delete',
-}));
+jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
 
 beforeAll(() => {
   initI18n();
@@ -22,13 +19,11 @@ describe('DeleteAccountCard', () => {
     expect(screen.getByRole('button', { name: /delete account/i })).toBeTruthy();
   });
 
-  it('opens the web delete-account page when pressed', async () => {
+  it('opens the in-app delete-account screen when pressed', async () => {
     await render(<DeleteAccountCard />);
 
     fireEvent.press(screen.getByRole('button', { name: /delete account/i }));
 
-    expect(WebBrowser.openBrowserAsync).toHaveBeenCalledWith(
-      'https://app.example.test/account/delete',
-    );
+    expect(router.push).toHaveBeenCalledWith('/(app)/settings/delete-account');
   });
 });

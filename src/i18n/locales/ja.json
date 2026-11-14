@@ -300,7 +300,15 @@
     "termsOfService": "利用規約",
     "privacyPolicy": "プライバシーポリシー",
     "deleteAccount": "アカウントを削除",
-    "deleteAccountWarning": "アカウントとデータを完全に削除します。続きは当社のウェブサイトで行います。"
+    "deleteAccountWarning": "アカウントとデータを完全に削除します。",
+    "deleteAccountTitle": "アカウントを削除",
+    "deleteAccountBody": "アカウントと所有しているすべてのワークスペースは削除が予約されます。メンバーとして参加しているだけのワークスペースからは退出し、すべてのデバイスからサインアウトされます。",
+    "deleteAccountConfirmLabel": "確認のため DELETE と入力してください",
+    "deleteAccountSubmit": "アカウントを削除する",
+    "deleteAccountSupportRequired": "アプリからはアカウントを削除できません。サポートにお問い合わせください。",
+    "deleteAccountFailed": "アカウントを削除できませんでした。もう一度お試しください。",
+    "deleteAccountScheduled": "アカウントの削除が予約されました。",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "プラン"
@@ -330,7 +338,8 @@
       "passwordTooShort": "パスワードが短すぎます。",
       "passwordTooLong": "パスワードが長すぎます。",
       "userNotFound": "このメールアドレスのアカウントが見つかりません。",
-      "emailNotVerified": "サインインする前にメールアドレスを確認してください。"
+      "emailNotVerified": "サインインする前にメールアドレスを確認してください。",
+      "accountDeletionPending": "このアカウントは削除が予約されています。"
     }
   }
 }

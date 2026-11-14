@@ -32,6 +32,7 @@ const ALLOWED_SAME_AS_EN = new Set([
   'auth.email',
   'auth.emailPlaceholder',
   'auth.password',
+  'settings.deleteAccountConfirmHint',
   'chat.botStatusOn',
   'chat.bubbleA11yLabel',
   'chat.camera',

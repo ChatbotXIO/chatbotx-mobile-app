@@ -303,7 +303,15 @@
     "termsOfService": "Termeni și condiții",
     "privacyPolicy": "Politica de confidențialitate",
     "deleteAccount": "Șterge contul",
-    "deleteAccountWarning": "Șterge definitiv contul și datele tale. Vei continua pe site-ul nostru."
+    "deleteAccountWarning": "Șterge definitiv contul și datele tale.",
+    "deleteAccountTitle": "Șterge-ți contul",
+    "deleteAccountBody": "Contul tău și toate workspace-urile pe care le deții vor fi programate pentru ștergere. Vei părăsi workspace-urile în care ești doar membru și vei fi deconectat de pe toate dispozitivele.",
+    "deleteAccountConfirmLabel": "Scrie DELETE pentru confirmare",
+    "deleteAccountSubmit": "Șterge contul meu",
+    "deleteAccountSupportRequired": "Contul tău nu poate fi șters din aplicație. Contactează asistența.",
+    "deleteAccountFailed": "Nu am putut șterge contul. Încearcă din nou.",
+    "deleteAccountScheduled": "Contul tău este programat pentru ștergere.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "Plan"
@@ -333,7 +341,8 @@
       "passwordTooShort": "Parola este prea scurtă.",
       "passwordTooLong": "Parola este prea lungă.",
       "userNotFound": "Nu există niciun cont pentru acest e-mail.",
-      "emailNotVerified": "Verifică-ți adresa de e-mail înainte de a te conecta."
+      "emailNotVerified": "Verifică-ți adresa de e-mail înainte de a te conecta.",
+      "accountDeletionPending": "Acest cont este programat pentru ștergere."
     }
   }
 }

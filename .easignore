@@ -27,7 +27,9 @@ GoogleService-Info.plist
 
 # brand overlays (white-label customer brands are cloned in by the release workflow)
 brands/*
-!brands/chatbotx/
-!brands/_template/
+# No trailing slash on the negations: eas-cli tests directories as "brands/chatbotx", so
+# "!brands/chatbotx/" never matches and the brand gets dropped from the upload archive.
+!brands/chatbotx
+!brands/_template
 
 .DS_Store

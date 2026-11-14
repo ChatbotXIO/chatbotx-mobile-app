@@ -300,7 +300,15 @@
     "termsOfService": "服务条款",
     "privacyPolicy": "隐私政策",
     "deleteAccount": "删除账号",
-    "deleteAccountWarning": "永久删除你的账号和数据。你将在我们的网站上继续完成。"
+    "deleteAccountWarning": "永久删除您的账户和数据。",
+    "deleteAccountTitle": "删除您的账户",
+    "deleteAccountBody": "您的账户及您拥有的所有工作区将被安排删除。您将退出仅作为成员的工作区，并在所有设备上退出登录。",
+    "deleteAccountConfirmLabel": "输入 DELETE 以确认",
+    "deleteAccountSubmit": "删除我的账户",
+    "deleteAccountSupportRequired": "无法在应用内删除您的账户。请联系支持团队。",
+    "deleteAccountFailed": "无法删除您的账户，请重试。",
+    "deleteAccountScheduled": "您的账户已安排删除。",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "套餐"
@@ -330,7 +338,8 @@
       "passwordTooShort": "密码太短。",
       "passwordTooLong": "密码太长。",
       "userNotFound": "未找到使用此邮箱的账号。",
-      "emailNotVerified": "请先验证邮箱再登录。"
+      "emailNotVerified": "请先验证邮箱再登录。",
+      "accountDeletionPending": "此账户已安排删除。"
     }
   }
 }

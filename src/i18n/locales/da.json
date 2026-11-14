@@ -290,7 +290,15 @@
     "termsOfService": "Servicevilkår",
     "privacyPolicy": "Privatlivspolitik",
     "deleteAccount": "Slet konto",
-    "deleteAccountWarning": "Slet din konto og dine data permanent. Du fortsætter på vores hjemmeside."
+    "deleteAccountWarning": "Slet din konto og dine data permanent.",
+    "deleteAccountTitle": "Slet din konto",
+    "deleteAccountBody": "Din konto og alle workspaces, du ejer, bliver planlagt til sletning. Du forlader de workspaces, du kun er medlem af, og du bliver logget ud på alle enheder.",
+    "deleteAccountConfirmLabel": "Skriv DELETE for at bekræfte",
+    "deleteAccountSubmit": "Slet min konto",
+    "deleteAccountSupportRequired": "Din konto kan ikke slettes fra appen. Kontakt support.",
+    "deleteAccountFailed": "Vi kunne ikke slette din konto. Prøv igen.",
+    "deleteAccountScheduled": "Din konto er planlagt til sletning.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "Plan"
@@ -317,7 +325,8 @@
       "passwordTooShort": "Adgangskoden er for kort.",
       "passwordTooLong": "Adgangskoden er for lang.",
       "userNotFound": "Der blev ikke fundet nogen konto for denne email.",
-      "emailNotVerified": "Bekræft din email, før du logger ind."
+      "emailNotVerified": "Bekræft din email, før du logger ind.",
+      "accountDeletionPending": "Denne konto er planlagt til sletning."
     }
   },
   "realtime": {
