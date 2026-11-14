@@ -123,9 +123,20 @@ describe('AppleSignInButton', () => {
 
     await press();
 
-    const message = props.onError.mock.calls.at(-1)?.[0] as string;
-    expect(message).toBeTruthy();
-    expect(message).not.toContain('(EN)');
+    expect(props.onError).toHaveBeenLastCalledWith('This account is scheduled for deletion.');
+  });
+
+  it('keeps the sign-in-specific copy when the native Apple flow fails', async () => {
+    jest
+      .mocked(AppleAuthentication.signInAsync)
+      .mockRejectedValue(Object.assign(new Error('boom'), { code: 'ERR_REQUEST_FAILED' }));
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const { props } = await setup();
+
+    await press();
+
+    expect(props.onError).toHaveBeenLastCalledWith("Sign-in didn't complete. Please try again.");
+    warn.mockRestore();
   });
 
   it('reports an error when Apple returns no identity token', async () => {

@@ -21,13 +21,17 @@ export function useSignOutLocally() {
   const setCurrentWorkspaceId = useWorkspaceStore((state) => state.setCurrentWorkspaceId);
 
   return async function signOutLocally({ revokeToken = true }: SignOutLocallyOptions = {}) {
-    if (revokeToken) {
-      await revokeMobileToken().catch(() => {});
+    try {
+      if (revokeToken) {
+        await revokeMobileToken().catch(() => {});
+      }
+      await clearAuthToken();
+    } finally {
+      // Always drop the in-memory session, even if clearing secure storage threw.
+      queryClient.clear();
+      setCurrentWorkspaceId(null);
+      setSignedOut();
     }
-    await clearAuthToken();
-    queryClient.clear();
-    setCurrentWorkspaceId(null);
-    setSignedOut();
   };
 }
 

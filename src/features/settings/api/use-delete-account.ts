@@ -23,6 +23,12 @@ export function useDeleteAccount() {
 
   return useMutation({
     mutationFn: deleteAccountRequest,
-    onSuccess: () => signOutLocally({ revokeToken: false }),
+    // The deletion already happened server-side: a local teardown failure (e.g. SecureStore) must
+    // not flip the mutation to error and invite a retry. The in-memory session is cleared
+    // regardless, and the stored token is already revoked, so the next launch signs out too.
+    onSuccess: () =>
+      signOutLocally({ revokeToken: false }).catch((error: unknown) => {
+        if (__DEV__) console.warn('[delete-account] local sign-out failed', error);
+      }),
   });
 }

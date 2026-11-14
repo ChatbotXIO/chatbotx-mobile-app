@@ -23,6 +23,7 @@ function wrapper({ children }: PropsWithChildren) {
 describe('useDeleteAccount', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSignOutLocally.mockResolvedValue(undefined);
   });
 
   it('sends DELETE /v1/me with the DELETE confirmation, then signs out locally without revoking', async () => {
@@ -37,6 +38,21 @@ describe('useDeleteAccount', () => {
 
     expect(apiClient.DELETE).toHaveBeenCalledWith('/v1/me', { body: { confirmation: 'DELETE' } });
     expect(mockSignOutLocally).toHaveBeenCalledWith({ revokeToken: false });
+  });
+
+  it('still resolves when the local teardown fails after the server deleted the account', async () => {
+    (apiClient.DELETE as jest.Mock).mockResolvedValue({
+      data: { scheduledDeletionAt: '2026-11-20T00:00:00.000Z' },
+    });
+    mockSignOutLocally.mockRejectedValueOnce(new Error('SecureStore unavailable'));
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const { result } = await renderHook(() => useDeleteAccount(), { wrapper });
+
+    await act(async () => {
+      await expect(result.current.mutateAsync()).resolves.toBeUndefined();
+    });
+
+    warn.mockRestore();
   });
 
   it('throws ApiError and keeps the session when the server rejects', async () => {
