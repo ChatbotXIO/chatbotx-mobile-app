@@ -1,15 +1,13 @@
-import * as WebBrowser from 'expo-web-browser';
+import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Icon } from '@/components/ui/icon';
 import { ListItem } from '@/components/ui/list-item';
 import { Text } from '@/components/ui/text';
-import { ACCOUNT_DELETE_URL } from '@/config/account-urls';
 import { useTheme } from '@/theme/use-theme';
 
-/** Warning block at the bottom of Settings. Account deletion is finished on the web, so this only
- * explains that and hands off to the browser. */
+/** Warning block at the bottom of Settings; opens the in-app delete-account confirmation. */
 export function DeleteAccountCard() {
   const { t } = useTranslation();
   const { colors, spacing, radius } = useTheme();
@@ -32,7 +30,7 @@ export function DeleteAccountCard() {
       </View>
       <ListItem
         title={t('settings.deleteAccount')}
-        onPress={() => void WebBrowser.openBrowserAsync(ACCOUNT_DELETE_URL)}
+        onPress={() => router.push('/(app)/settings/delete-account')}
         showChevron
         destructive
       />

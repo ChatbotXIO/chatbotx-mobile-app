@@ -300,7 +300,15 @@
     "termsOfService": "服務條款",
     "privacyPolicy": "隱私權政策",
     "deleteAccount": "刪除帳號",
-    "deleteAccountWarning": "永久刪除你的帳號和資料。你將在我們的網站上繼續完成。"
+    "deleteAccountWarning": "永久刪除您的帳戶和資料。",
+    "deleteAccountTitle": "刪除您的帳戶",
+    "deleteAccountBody": "您的帳戶及您擁有的所有工作區將排程刪除。您將退出僅為成員的工作區，並在所有裝置上登出。",
+    "deleteAccountConfirmLabel": "輸入 DELETE 以確認",
+    "deleteAccountSubmit": "刪除我的帳戶",
+    "deleteAccountSupportRequired": "無法在應用程式內刪除您的帳戶。請聯絡支援團隊。",
+    "deleteAccountFailed": "無法刪除您的帳戶，請再試一次。",
+    "deleteAccountScheduled": "您的帳戶已排程刪除。",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "方案"
@@ -330,7 +338,8 @@
       "passwordTooShort": "密碼太短。",
       "passwordTooLong": "密碼太長。",
       "userNotFound": "找不到使用此電子郵件的帳號。",
-      "emailNotVerified": "請先驗證電子郵件再登入。"
+      "emailNotVerified": "請先驗證電子郵件再登入。",
+      "accountDeletionPending": "此帳戶已排程刪除。"
     }
   }
 }

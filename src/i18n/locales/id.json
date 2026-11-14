@@ -290,7 +290,15 @@
     "termsOfService": "Ketentuan Layanan",
     "privacyPolicy": "Kebijakan Privasi",
     "deleteAccount": "Hapus akun",
-    "deleteAccountWarning": "Hapus akun dan data Anda secara permanen. Anda akan melanjutkan di situs web kami."
+    "deleteAccountWarning": "Hapus akun dan data Anda secara permanen.",
+    "deleteAccountTitle": "Hapus akun Anda",
+    "deleteAccountBody": "Akun Anda dan semua workspace milik Anda akan dijadwalkan untuk dihapus. Anda akan keluar dari workspace yang hanya Anda ikuti, dan keluar dari semua perangkat.",
+    "deleteAccountConfirmLabel": "Ketik DELETE untuk mengonfirmasi",
+    "deleteAccountSubmit": "Hapus akun saya",
+    "deleteAccountSupportRequired": "Akun Anda tidak dapat dihapus dari aplikasi. Silakan hubungi dukungan.",
+    "deleteAccountFailed": "Kami tidak dapat menghapus akun Anda. Silakan coba lagi.",
+    "deleteAccountScheduled": "Akun Anda dijadwalkan untuk dihapus.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "Paket"
@@ -317,7 +325,8 @@
       "passwordTooShort": "Kata sandi terlalu pendek.",
       "passwordTooLong": "Kata sandi terlalu panjang.",
       "userNotFound": "Tidak ada akun untuk email ini.",
-      "emailNotVerified": "Harap verifikasi email Anda sebelum masuk."
+      "emailNotVerified": "Harap verifikasi email Anda sebelum masuk.",
+      "accountDeletionPending": "Akun ini dijadwalkan untuk dihapus."
     }
   },
   "realtime": {

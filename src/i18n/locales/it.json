@@ -300,7 +300,15 @@
     "termsOfService": "Termini di servizio",
     "privacyPolicy": "Informativa sulla privacy",
     "deleteAccount": "Elimina account",
-    "deleteAccountWarning": "Elimina definitivamente il tuo account e i tuoi dati. Continuerai sul nostro sito web."
+    "deleteAccountWarning": "Elimina definitivamente il tuo account e i tuoi dati.",
+    "deleteAccountTitle": "Elimina il tuo account",
+    "deleteAccountBody": "Il tuo account e tutti i workspace di cui sei proprietario saranno programmati per l'eliminazione. Uscirai dai workspace di cui sei solo membro e verrai disconnesso da tutti i dispositivi.",
+    "deleteAccountConfirmLabel": "Digita DELETE per confermare",
+    "deleteAccountSubmit": "Elimina il mio account",
+    "deleteAccountSupportRequired": "Il tuo account non può essere eliminato dall'app. Contatta l'assistenza.",
+    "deleteAccountFailed": "Impossibile eliminare il tuo account. Riprova.",
+    "deleteAccountScheduled": "L'eliminazione del tuo account è programmata.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "Piano"
@@ -330,7 +338,8 @@
       "passwordTooShort": "La password è troppo corta.",
       "passwordTooLong": "La password è troppo lunga.",
       "userNotFound": "Nessun account trovato per questa e-mail.",
-      "emailNotVerified": "Verifica la tua e-mail prima di accedere."
+      "emailNotVerified": "Verifica la tua e-mail prima di accedere.",
+      "accountDeletionPending": "L'eliminazione di questo account è programmata."
     }
   }
 }

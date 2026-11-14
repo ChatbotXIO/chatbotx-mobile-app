@@ -300,7 +300,15 @@
     "termsOfService": "Termos de Serviço",
     "privacyPolicy": "Política de Privacidade",
     "deleteAccount": "Excluir conta",
-    "deleteAccountWarning": "Exclua sua conta e seus dados permanentemente. Você continuará em nosso site."
+    "deleteAccountWarning": "Exclua sua conta e seus dados permanentemente.",
+    "deleteAccountTitle": "Excluir sua conta",
+    "deleteAccountBody": "Sua conta e todos os workspaces que você possui serão agendados para exclusão. Você sairá dos workspaces dos quais é apenas membro e será desconectado de todos os dispositivos.",
+    "deleteAccountConfirmLabel": "Digite DELETE para confirmar",
+    "deleteAccountSubmit": "Excluir minha conta",
+    "deleteAccountSupportRequired": "Sua conta não pode ser excluída pelo app. Entre em contato com o suporte.",
+    "deleteAccountFailed": "Não foi possível excluir sua conta. Tente novamente.",
+    "deleteAccountScheduled": "Sua conta está agendada para exclusão.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "Plano"
@@ -330,7 +338,8 @@
       "passwordTooShort": "A senha é muito curta.",
       "passwordTooLong": "A senha é muito longa.",
       "userNotFound": "Nenhuma conta encontrada para este e-mail.",
-      "emailNotVerified": "Verifique seu e-mail antes de entrar."
+      "emailNotVerified": "Verifique seu e-mail antes de entrar.",
+      "accountDeletionPending": "Esta conta está agendada para exclusão."
     }
   }
 }

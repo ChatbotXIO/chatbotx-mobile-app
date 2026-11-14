@@ -3,12 +3,8 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, StyleSheet } from 'react-native';
 
-import {
-  AuthApiError,
-  createAppleNonce,
-  signInWithAppleIdToken,
-  type SessionUser,
-} from '@/api/auth-endpoints';
+import { createAppleNonce, signInWithAppleIdToken, type SessionUser } from '@/api/auth-endpoints';
+import { describeAuthError } from '@/lib/describe-auth-error';
 import { radiusTokens } from '@/theme/tokens';
 import { useResolvedScheme } from '@/theme/use-theme';
 
@@ -91,7 +87,8 @@ export function AppleSignInButton({
       // Backing out of the Apple sheet isn't an error.
       if (isCanceled(error)) return;
       if (__DEV__) console.warn('[apple-sign-in] failed', error);
-      onError(error instanceof AuthApiError ? error.message : t('auth.socialSignInFailed'));
+      // The server's `message` is English-only; map by `code` to localized copy instead.
+      onError(describeAuthError(error, t));
     } finally {
       onBusyChange(false);
     }

@@ -300,7 +300,15 @@
     "termsOfService": "Điều khoản dịch vụ",
     "privacyPolicy": "Chính sách quyền riêng tư",
     "deleteAccount": "Xóa tài khoản",
-    "deleteAccountWarning": "Xóa vĩnh viễn tài khoản và dữ liệu của bạn. Bạn sẽ tiếp tục trên trang web của chúng tôi."
+    "deleteAccountWarning": "Xóa vĩnh viễn tài khoản và dữ liệu của bạn.",
+    "deleteAccountTitle": "Xóa tài khoản của bạn",
+    "deleteAccountBody": "Tài khoản và mọi workspace bạn sở hữu sẽ được lên lịch xóa. Bạn sẽ rời khỏi các workspace chỉ là thành viên và bị đăng xuất trên mọi thiết bị.",
+    "deleteAccountConfirmLabel": "Nhập DELETE để xác nhận",
+    "deleteAccountSubmit": "Xóa tài khoản của tôi",
+    "deleteAccountSupportRequired": "Không thể xóa tài khoản này từ ứng dụng. Vui lòng liên hệ bộ phận hỗ trợ.",
+    "deleteAccountFailed": "Không thể xóa tài khoản của bạn. Vui lòng thử lại.",
+    "deleteAccountScheduled": "Tài khoản của bạn đã được lên lịch xóa.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "Gói"
@@ -330,7 +338,8 @@
       "passwordTooShort": "Mật khẩu quá ngắn.",
       "passwordTooLong": "Mật khẩu quá dài.",
       "userNotFound": "Không tìm thấy tài khoản với email này.",
-      "emailNotVerified": "Vui lòng xác minh email trước khi đăng nhập."
+      "emailNotVerified": "Vui lòng xác minh email trước khi đăng nhập.",
+      "accountDeletionPending": "Tài khoản này đã được lên lịch xóa."
     }
   }
 }

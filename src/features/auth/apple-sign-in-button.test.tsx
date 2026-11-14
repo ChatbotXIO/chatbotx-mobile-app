@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { Platform } from 'react-native';
 
-import { createAppleNonce, signInWithAppleIdToken } from '@/api/auth-endpoints';
+import { AuthApiError, createAppleNonce, signInWithAppleIdToken } from '@/api/auth-endpoints';
 import { initI18n } from '@/i18n';
 
 import { AppleSignInButton } from './apple-sign-in-button';
@@ -107,6 +107,25 @@ describe('AppleSignInButton', () => {
       lastName: 'Lovelace',
     });
     expect(props.onSignedIn).toHaveBeenCalledWith(user);
+  });
+
+  it('shows localized copy, not the server message, when the API rejects the token', async () => {
+    jest.mocked(AppleAuthentication.signInAsync).mockResolvedValue({
+      identityToken: 'id-token',
+      fullName: null,
+    } as AppleAuthentication.AppleAuthenticationCredential);
+    jest.mocked(signInWithAppleIdToken).mockRejectedValue(
+      Object.assign(new AuthApiError('Account deletion pending (EN)'), {
+        code: 'ACCOUNT_DELETION_PENDING',
+      }),
+    );
+    const { props } = await setup();
+
+    await press();
+
+    const message = props.onError.mock.calls.at(-1)?.[0] as string;
+    expect(message).toBeTruthy();
+    expect(message).not.toContain('(EN)');
   });
 
   it('reports an error when Apple returns no identity token', async () => {

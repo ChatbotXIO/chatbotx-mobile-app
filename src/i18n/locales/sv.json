@@ -300,7 +300,15 @@
     "termsOfService": "Användarvillkor",
     "privacyPolicy": "Integritetspolicy",
     "deleteAccount": "Radera konto",
-    "deleteAccountWarning": "Radera ditt konto och dina data permanent. Du fortsätter på vår webbplats."
+    "deleteAccountWarning": "Radera ditt konto och dina data permanent.",
+    "deleteAccountTitle": "Radera ditt konto",
+    "deleteAccountBody": "Ditt konto och alla workspaces du äger schemaläggs för radering. Du lämnar de workspaces där du bara är medlem och loggas ut på alla enheter.",
+    "deleteAccountConfirmLabel": "Skriv DELETE för att bekräfta",
+    "deleteAccountSubmit": "Radera mitt konto",
+    "deleteAccountSupportRequired": "Ditt konto kan inte raderas från appen. Kontakta supporten.",
+    "deleteAccountFailed": "Vi kunde inte radera ditt konto. Försök igen.",
+    "deleteAccountScheduled": "Ditt konto är schemalagt för radering.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "Plan"
@@ -330,7 +338,8 @@
       "passwordTooShort": "Lösenordet är för kort.",
       "passwordTooLong": "Lösenordet är för långt.",
       "userNotFound": "Inget konto hittades för den här e-postadressen.",
-      "emailNotVerified": "Verifiera din e-postadress innan du loggar in."
+      "emailNotVerified": "Verifiera din e-postadress innan du loggar in.",
+      "accountDeletionPending": "Det här kontot är schemalagt för radering."
     }
   }
 }

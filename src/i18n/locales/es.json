@@ -290,7 +290,15 @@
     "termsOfService": "Términos del servicio",
     "privacyPolicy": "Política de privacidad",
     "deleteAccount": "Eliminar cuenta",
-    "deleteAccountWarning": "Elimina tu cuenta y tus datos de forma permanente. Continuarás en nuestro sitio web."
+    "deleteAccountWarning": "Elimina tu cuenta y tus datos de forma permanente.",
+    "deleteAccountTitle": "Eliminar tu cuenta",
+    "deleteAccountBody": "Tu cuenta y todos los espacios de trabajo que posees se programarán para su eliminación. Saldrás de los espacios de los que solo eres miembro y se cerrará tu sesión en todos los dispositivos.",
+    "deleteAccountConfirmLabel": "Escribe DELETE para confirmar",
+    "deleteAccountSubmit": "Eliminar mi cuenta",
+    "deleteAccountSupportRequired": "Tu cuenta no se puede eliminar desde la app. Ponte en contacto con soporte.",
+    "deleteAccountFailed": "No pudimos eliminar tu cuenta. Inténtalo de nuevo.",
+    "deleteAccountScheduled": "Tu cuenta está programada para eliminarse.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "Plan"
@@ -317,7 +325,8 @@
       "passwordTooShort": "La contraseña es demasiado corta.",
       "passwordTooLong": "La contraseña es demasiado larga.",
       "userNotFound": "No se encontró ninguna cuenta con este correo.",
-      "emailNotVerified": "Verifica tu correo electrónico antes de iniciar sesión."
+      "emailNotVerified": "Verifica tu correo electrónico antes de iniciar sesión.",
+      "accountDeletionPending": "Esta cuenta está programada para eliminarse."
     }
   },
   "realtime": {

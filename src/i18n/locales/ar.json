@@ -295,7 +295,15 @@
     "termsOfService": "شروط الخدمة",
     "privacyPolicy": "سياسة الخصوصية",
     "deleteAccount": "حذف الحساب",
-    "deleteAccountWarning": "احذف حسابك وبياناتك نهائيًا. ستتابع على موقعنا الإلكتروني."
+    "deleteAccountWarning": "احذف حسابك وبياناتك نهائيًا.",
+    "deleteAccountTitle": "حذف حسابك",
+    "deleteAccountBody": "سيتم جدولة حذف حسابك وكل مساحة عمل تملكها. ستغادر مساحات العمل التي أنت عضو فيها فقط، وسيتم تسجيل خروجك من جميع الأجهزة.",
+    "deleteAccountConfirmLabel": "اكتب DELETE للتأكيد",
+    "deleteAccountSubmit": "حذف حسابي",
+    "deleteAccountSupportRequired": "لا يمكن حذف حسابك من التطبيق. يرجى التواصل مع الدعم.",
+    "deleteAccountFailed": "تعذّر حذف حسابك. يرجى المحاولة مرة أخرى.",
+    "deleteAccountScheduled": "تمت جدولة حذف حسابك.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "الخطة"
@@ -322,7 +330,8 @@
       "passwordTooShort": "كلمة المرور قصيرة جدًا.",
       "passwordTooLong": "كلمة المرور طويلة جدًا.",
       "userNotFound": "لم يتم العثور على حساب لهذا البريد الإلكتروني.",
-      "emailNotVerified": "يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول."
+      "emailNotVerified": "يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول.",
+      "accountDeletionPending": "تمت جدولة حذف هذا الحساب."
     }
   },
   "realtime": {

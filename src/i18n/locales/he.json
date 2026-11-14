@@ -292,7 +292,15 @@
     "termsOfService": "תנאי שימוש",
     "privacyPolicy": "מדיניות פרטיות",
     "deleteAccount": "מחיקת חשבון",
-    "deleteAccountWarning": "מחק לצמיתות את החשבון והנתונים שלך. תמשיך באתר שלנו."
+    "deleteAccountWarning": "מחק את החשבון והנתונים שלך לצמיתות.",
+    "deleteAccountTitle": "מחיקת החשבון",
+    "deleteAccountBody": "החשבון שלך וכל סביבות העבודה שבבעלותך יתוזמנו למחיקה. תעזוב סביבות עבודה שבהן אתה רק חבר, ותנותק מכל המכשירים.",
+    "deleteAccountConfirmLabel": "הקלד DELETE כדי לאשר",
+    "deleteAccountSubmit": "מחק את החשבון שלי",
+    "deleteAccountSupportRequired": "לא ניתן למחוק את חשבונך מהאפליקציה. אנא פנה לתמיכה.",
+    "deleteAccountFailed": "לא הצלחנו למחוק את חשבונך. נסה שוב.",
+    "deleteAccountScheduled": "החשבון שלך מתוזמן למחיקה.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "תוכנית"
@@ -319,7 +327,8 @@
       "passwordTooShort": "הסיסמה קצרה מדי.",
       "passwordTooLong": "הסיסמה ארוכה מדי.",
       "userNotFound": "לא נמצא חשבון עבור אימייל זה.",
-      "emailNotVerified": "אמת את האימייל שלך לפני ההתחברות."
+      "emailNotVerified": "אמת את האימייל שלך לפני ההתחברות.",
+      "accountDeletionPending": "חשבון זה מתוזמן למחיקה."
     }
   },
   "realtime": {

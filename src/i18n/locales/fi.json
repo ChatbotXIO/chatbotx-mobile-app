@@ -290,7 +290,15 @@
     "termsOfService": "Käyttöehdot",
     "privacyPolicy": "Tietosuojakäytäntö",
     "deleteAccount": "Poista tili",
-    "deleteAccountWarning": "Poista tilisi ja tietosi pysyvästi. Jatkat verkkosivustollamme."
+    "deleteAccountWarning": "Poista tilisi ja tietosi pysyvästi.",
+    "deleteAccountTitle": "Poista tilisi",
+    "deleteAccountBody": "Tilisi ja kaikki omistamasi työtilat ajastetaan poistettavaksi. Poistut työtiloista, joissa olet vain jäsen, ja sinut kirjataan ulos kaikilta laitteilta.",
+    "deleteAccountConfirmLabel": "Vahvista kirjoittamalla DELETE",
+    "deleteAccountSubmit": "Poista tilini",
+    "deleteAccountSupportRequired": "Tiliäsi ei voi poistaa sovelluksesta. Ota yhteyttä tukeen.",
+    "deleteAccountFailed": "Tilin poistaminen epäonnistui. Yritä uudelleen.",
+    "deleteAccountScheduled": "Tilisi on ajastettu poistettavaksi.",
+    "deleteAccountConfirmHint": "DELETE"
   },
   "profile": {
     "plan": "Paketti"
@@ -317,7 +325,8 @@
       "passwordTooShort": "Salasana on liian lyhyt.",
       "passwordTooLong": "Salasana on liian pitkä.",
       "userNotFound": "Tällä sähköpostiosoitteella ei löytynyt tiliä.",
-      "emailNotVerified": "Vahvista sähköpostiosoitteesi ennen kirjautumista."
+      "emailNotVerified": "Vahvista sähköpostiosoitteesi ennen kirjautumista.",
+      "accountDeletionPending": "Tämä tili on ajastettu poistettavaksi."
     }
   },
   "realtime": {
