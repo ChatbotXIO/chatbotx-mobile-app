@@ -314,7 +314,11 @@
     "plan": "Plan"
   },
   "notifications": {
-    "androidChannelName": "Standard"
+    "androidChannelName": "Standard",
+    "promptTitle": "Missa aldrig ett kundmeddelande",
+    "promptBody": "Aktivera aviseringar för att bli varnad om nya meddelanden, även när appen är stängd.",
+    "promptEnable": "Aktivera aviseringar",
+    "promptLater": "Inte nu"
   },
   "errors": {
     "unauthorized": "Din session har gått ut. Logga in igen.",

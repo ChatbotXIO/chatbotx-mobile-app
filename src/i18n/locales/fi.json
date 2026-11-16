@@ -340,6 +340,10 @@
     "retry": "Yritä uudelleen"
   },
   "notifications": {
-    "androidChannelName": "Oletus"
+    "androidChannelName": "Oletus",
+    "promptTitle": "Älä missaa asiakkaan viestiä",
+    "promptBody": "Ota ilmoitukset käyttöön, niin saat hälytyksen uusista viesteistä, vaikka sovellus olisi suljettu.",
+    "promptEnable": "Ota ilmoitukset käyttöön",
+    "promptLater": "Ei nyt"
   }
 }

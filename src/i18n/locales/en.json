@@ -314,7 +314,11 @@
     "plan": "Plan"
   },
   "notifications": {
-    "androidChannelName": "Default"
+    "androidChannelName": "Default",
+    "promptTitle": "Never miss a customer message",
+    "promptBody": "Turn on notifications to get alerted about new messages, even when the app is closed.",
+    "promptEnable": "Turn on notifications",
+    "promptLater": "Not now"
   },
   "errors": {
     "unauthorized": "Your session has expired. Please sign in again.",

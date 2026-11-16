@@ -314,7 +314,11 @@
     "plan": "Plano"
   },
   "notifications": {
-    "androidChannelName": "Predefinido"
+    "androidChannelName": "Predefinido",
+    "promptTitle": "Não perca nenhuma mensagem de cliente",
+    "promptBody": "Ative as notificações para ser avisado de novas mensagens, mesmo com a app fechada.",
+    "promptEnable": "Ativar notificações",
+    "promptLater": "Agora não"
   },
   "errors": {
     "unauthorized": "A sua sessão expirou. Inicie sessão novamente.",

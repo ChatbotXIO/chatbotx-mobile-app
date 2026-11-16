@@ -342,6 +342,10 @@
     "retry": "נסה שוב"
   },
   "notifications": {
-    "androidChannelName": "ברירת מחדל"
+    "androidChannelName": "ברירת מחדל",
+    "promptTitle": "אל תפספסו הודעה מלקוח",
+    "promptBody": "הפעילו התראות כדי לקבל עדכון על הודעות חדשות, גם כשהאפליקציה סגורה.",
+    "promptEnable": "הפעלת התראות",
+    "promptLater": "לא עכשיו"
   }
 }

@@ -314,7 +314,11 @@
     "plan": "Gói"
   },
   "notifications": {
-    "androidChannelName": "Mặc định"
+    "androidChannelName": "Mặc định",
+    "promptTitle": "Đừng bỏ lỡ tin nhắn của khách",
+    "promptBody": "Bật thông báo để nhận cảnh báo khi có tin nhắn mới, kể cả khi đã đóng ứng dụng.",
+    "promptEnable": "Bật thông báo",
+    "promptLater": "Để sau"
   },
   "errors": {
     "unauthorized": "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.",

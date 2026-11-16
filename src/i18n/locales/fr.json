@@ -340,6 +340,10 @@
     "retry": "Réessayer"
   },
   "notifications": {
-    "androidChannelName": "Par défaut"
+    "androidChannelName": "Par défaut",
+    "promptTitle": "Ne manquez aucun message client",
+    "promptBody": "Activez les notifications pour être alerté des nouveaux messages, même lorsque l'application est fermée.",
+    "promptEnable": "Activer les notifications",
+    "promptLater": "Plus tard"
   }
 }

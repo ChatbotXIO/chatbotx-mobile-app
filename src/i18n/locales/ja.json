@@ -314,7 +314,11 @@
     "plan": "プラン"
   },
   "notifications": {
-    "androidChannelName": "デフォルト"
+    "androidChannelName": "デフォルト",
+    "promptTitle": "お客様からのメッセージを見逃さない",
+    "promptBody": "通知をオンにすると、アプリを閉じていても新着メッセージをお知らせします。",
+    "promptEnable": "通知をオンにする",
+    "promptLater": "今はしない"
   },
   "errors": {
     "unauthorized": "セッションの有効期限が切れました。再度サインインしてください。",

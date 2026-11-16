@@ -314,7 +314,11 @@
     "plan": "Piano"
   },
   "notifications": {
-    "androidChannelName": "Predefinito"
+    "androidChannelName": "Predefinito",
+    "promptTitle": "Non perdere nessun messaggio dei clienti",
+    "promptBody": "Attiva le notifiche per essere avvisato dei nuovi messaggi, anche quando l'app è chiusa.",
+    "promptEnable": "Attiva le notifiche",
+    "promptLater": "Non ora"
   },
   "errors": {
     "unauthorized": "La sessione è scaduta. Accedi di nuovo.",
