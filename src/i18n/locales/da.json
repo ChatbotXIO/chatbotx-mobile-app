@@ -340,6 +340,10 @@
     "retry": "Prøv igen"
   },
   "notifications": {
-    "androidChannelName": "Standard"
+    "androidChannelName": "Standard",
+    "promptTitle": "Gå aldrig glip af en kundebesked",
+    "promptBody": "Slå notifikationer til for at få besked om nye beskeder, også når appen er lukket.",
+    "promptEnable": "Slå notifikationer til",
+    "promptLater": "Ikke nu"
   }
 }

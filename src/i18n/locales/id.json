@@ -340,6 +340,10 @@
     "retry": "Coba lagi"
   },
   "notifications": {
-    "androidChannelName": "Default"
+    "androidChannelName": "Default",
+    "promptTitle": "Jangan lewatkan pesan pelanggan",
+    "promptBody": "Aktifkan notifikasi untuk mendapat pemberitahuan pesan baru, bahkan saat aplikasi ditutup.",
+    "promptEnable": "Aktifkan notifikasi",
+    "promptLater": "Nanti saja"
   }
 }

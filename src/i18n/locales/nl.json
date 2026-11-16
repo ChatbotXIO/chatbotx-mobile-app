@@ -314,7 +314,11 @@
     "plan": "Abonnement"
   },
   "notifications": {
-    "androidChannelName": "Standaard"
+    "androidChannelName": "Standaard",
+    "promptTitle": "Mis geen klantbericht",
+    "promptBody": "Zet meldingen aan om op de hoogte te blijven van nieuwe berichten, ook als de app gesloten is.",
+    "promptEnable": "Meldingen aanzetten",
+    "promptLater": "Niet nu"
   },
   "errors": {
     "unauthorized": "Je sessie is verlopen. Log opnieuw in.",

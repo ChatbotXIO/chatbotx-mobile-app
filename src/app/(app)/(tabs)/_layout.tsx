@@ -5,6 +5,8 @@ import type { ColorValue } from 'react-native';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { useInboxUnreadCount } from '@/features/conversations/api/use-inbox-unread-count';
 import { usePushTokenRotation } from '@/features/settings/api/use-device-token';
+import { PushPermissionSheet } from '@/features/settings/components/push-permission-sheet';
+import { usePushPrompt } from '@/features/settings/hooks/use-push-prompt';
 import { RealtimeProvider } from '@/realtime/realtime-provider';
 import { useSettingsStore } from '@/stores/use-settings-store';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
@@ -43,6 +45,8 @@ export default function TabsLayout() {
   // Settings-owned control (see settings/index.tsx's ToggleRow + its own register/unregister
   // mutations for the user-initiated on/off path).
   usePushTokenRotation(currentWorkspaceId ?? '', pushEnabled);
+  // In-app soft ask shown before the one-shot OS permission dialog; see use-push-prompt.ts.
+  const pushPrompt = usePushPrompt(currentWorkspaceId ?? '');
 
   if (!currentWorkspaceId) {
     return <Redirect href="/(app)/workspace-picker" />;
@@ -78,6 +82,11 @@ export default function TabsLayout() {
           options={{ title: t('settings.title'), tabBarIcon: tabIcon('settings') }}
         />
       </Tabs>
+      <PushPermissionSheet
+        sheetRef={pushPrompt.sheetRef}
+        onEnable={pushPrompt.handleEnable}
+        onLater={pushPrompt.handleLater}
+      />
     </RealtimeProvider>
   );
 }

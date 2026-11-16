@@ -6,7 +6,13 @@ jest.mock('expo-localization', () => ({
 }));
 
 beforeEach(() => {
-  useSettingsStore.setState({ themePreference: 'system', language: 'en', pushEnabled: false });
+  useSettingsStore.setState({
+    themePreference: 'system',
+    language: 'en',
+    pushEnabled: false,
+    pushPromptDismissCount: 0,
+    pushPromptLastDismissedAt: null,
+  });
 });
 
 describe('useSettingsStore', () => {
@@ -28,5 +34,12 @@ describe('useSettingsStore', () => {
   it('setPushEnabled updates the flag', () => {
     useSettingsStore.getState().setPushEnabled(true);
     expect(useSettingsStore.getState().pushEnabled).toBe(true);
+  });
+
+  it('recordPushPromptDismissed increments the count and stamps the time', () => {
+    useSettingsStore.getState().recordPushPromptDismissed(1000);
+    useSettingsStore.getState().recordPushPromptDismissed(2000);
+    expect(useSettingsStore.getState().pushPromptDismissCount).toBe(2);
+    expect(useSettingsStore.getState().pushPromptLastDismissedAt).toBe(2000);
   });
 });

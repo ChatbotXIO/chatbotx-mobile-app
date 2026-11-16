@@ -317,7 +317,11 @@
     "plan": "Plan"
   },
   "notifications": {
-    "androidChannelName": "Implicit"
+    "androidChannelName": "Implicit",
+    "promptTitle": "Nu pierde niciun mesaj de la clienți",
+    "promptBody": "Activează notificările ca să fii alertat la mesaje noi, chiar și când aplicația este închisă.",
+    "promptEnable": "Activează notificările",
+    "promptLater": "Nu acum"
   },
   "errors": {
     "unauthorized": "Sesiunea ta a expirat. Te rugăm să te conectezi din nou.",

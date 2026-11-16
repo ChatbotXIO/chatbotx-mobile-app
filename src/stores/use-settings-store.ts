@@ -15,9 +15,14 @@ interface SettingsStoreState {
    * can be revoked in OS Settings independently of this flag. See settings screen for how the two
    * combine. */
   pushEnabled: boolean;
+  /** How many times the user dismissed the in-app push soft-ask, and when last — drives the
+   * re-ask cadence in `shouldShowPushPrompt`. */
+  pushPromptDismissCount: number;
+  pushPromptLastDismissedAt: number | null;
   setThemePreference: (preference: ThemePreference) => void;
   setLanguage: (language: SupportedLanguage) => void;
   setPushEnabled: (enabled: boolean) => void;
+  recordPushPromptDismissed: (now?: number) => void;
 }
 
 export const useSettingsStore = create<SettingsStoreState>()(
@@ -26,11 +31,18 @@ export const useSettingsStore = create<SettingsStoreState>()(
       themePreference: 'system',
       language: resolveLocale(Localization.getLocales()[0]?.languageTag),
       pushEnabled: false,
+      pushPromptDismissCount: 0,
+      pushPromptLastDismissedAt: null,
       setThemePreference: (themePreference) => set({ themePreference }),
       // Pure setter — i18next/dayjs/RTL side effects live in `changeAppLanguage`
       // (src/i18n/apply-language.ts), which calls this and then applies them.
       setLanguage: (language) => set({ language }),
       setPushEnabled: (pushEnabled) => set({ pushEnabled }),
+      recordPushPromptDismissed: (now = Date.now()) =>
+        set((state) => ({
+          pushPromptDismissCount: state.pushPromptDismissCount + 1,
+          pushPromptLastDismissedAt: now,
+        })),
     }),
     {
       name: 'settings-store',

@@ -314,7 +314,11 @@
     "plan": "Plan"
   },
   "notifications": {
-    "androidChannelName": "Varsayılan"
+    "androidChannelName": "Varsayılan",
+    "promptTitle": "Hiçbir müşteri mesajını kaçırmayın",
+    "promptBody": "Uygulama kapalıyken bile yeni mesajlardan haberdar olmak için bildirimleri açın.",
+    "promptEnable": "Bildirimleri aç",
+    "promptLater": "Şimdi değil"
   },
   "errors": {
     "unauthorized": "Oturumunuzun süresi doldu. Lütfen tekrar giriş yapın.",

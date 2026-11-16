@@ -340,6 +340,10 @@
     "retry": "Reintentar"
   },
   "notifications": {
-    "androidChannelName": "Predeterminado"
+    "androidChannelName": "Predeterminado",
+    "promptTitle": "No te pierdas ningún mensaje de tus clientes",
+    "promptBody": "Activa las notificaciones para recibir avisos de nuevos mensajes, incluso con la app cerrada.",
+    "promptEnable": "Activar notificaciones",
+    "promptLater": "Ahora no"
   }
 }

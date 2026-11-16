@@ -340,6 +340,10 @@
     "retry": "Erneut versuchen"
   },
   "notifications": {
-    "androidChannelName": "Standard"
+    "androidChannelName": "Standard",
+    "promptTitle": "Keine Kundennachricht verpassen",
+    "promptBody": "Aktiviere Benachrichtigungen, um bei neuen Nachrichten informiert zu werden, auch wenn die App geschlossen ist.",
+    "promptEnable": "Benachrichtigungen aktivieren",
+    "promptLater": "Nicht jetzt"
   }
 }

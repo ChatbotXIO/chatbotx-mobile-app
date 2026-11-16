@@ -345,6 +345,10 @@
     "retry": "إعادة المحاولة"
   },
   "notifications": {
-    "androidChannelName": "الافتراضي"
+    "androidChannelName": "الافتراضي",
+    "promptTitle": "لا تفوّت أي رسالة من عملائك",
+    "promptBody": "فعّل الإشعارات لتصلك تنبيهات الرسائل الجديدة حتى عندما يكون التطبيق مغلقًا.",
+    "promptEnable": "تفعيل الإشعارات",
+    "promptLater": "ليس الآن"
   }
 }

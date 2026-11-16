@@ -314,7 +314,11 @@
     "plan": "方案"
   },
   "notifications": {
-    "androidChannelName": "預設"
+    "androidChannelName": "預設",
+    "promptTitle": "不錯過任何客戶訊息",
+    "promptBody": "開啟通知，即使 App 已關閉，也能及時收到新訊息提醒。",
+    "promptEnable": "開啟通知",
+    "promptLater": "暫時不要"
   },
   "errors": {
     "unauthorized": "您的工作階段已過期，請重新登入。",

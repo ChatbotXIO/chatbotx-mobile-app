@@ -314,7 +314,11 @@
     "plan": "套餐"
   },
   "notifications": {
-    "androidChannelName": "默认"
+    "androidChannelName": "默认",
+    "promptTitle": "不错过任何客户消息",
+    "promptBody": "开启通知，即使应用已关闭，也能及时收到新消息提醒。",
+    "promptEnable": "开启通知",
+    "promptLater": "暂不"
   },
   "errors": {
     "unauthorized": "您的会话已过期，请重新登录。",
