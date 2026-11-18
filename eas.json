@@ -64,6 +64,9 @@
     },
     "production": {
       "extends": "base",
+      "ios": {
+        "ascAppId": "6835288472"
+      },
       "android": {
         "track": "internal"
       }
