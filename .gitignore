@@ -48,3 +48,4 @@ brands/*
 # generated native folders
 /ios
 /android
+*-firebase-adminsdk-*.json
