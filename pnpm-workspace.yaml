@@ -9,7 +9,7 @@ peerDependencyRules:
   allowedVersions:
     'openapi-typescript@7.13.0>typescript': '6'
 minimumReleaseAgeExclude:
-  - '@expo/cli@58.1.19'
+  - '@expo/cli@58.1.19 || 58.1.21'
   - '@expo/config-plugins@58.0.12'
   - '@expo/config@58.0.11'
   - '@expo/env@2.5.4'
@@ -17,11 +17,11 @@ minimumReleaseAgeExclude:
   - '@expo/inline-modules@0.2.9'
   - '@expo/local-build-cache-provider@58.0.11'
   - '@expo/log-box@58.0.15'
-  - '@expo/metro-config@58.0.21'
+  - '@expo/metro-config@58.0.21 || 58.0.23'
   - '@expo/metro-runtime@58.0.17'
   - '@expo/prebuild-config@58.0.19'
-  - '@expo/router-server@58.0.21'
-  - babel-preset-expo@58.0.24
+  - '@expo/router-server@58.0.21 || 58.0.23'
+  - babel-preset-expo@58.0.24 || 58.0.26
   - expo-asset@58.0.20
   - expo-constants@58.0.15
   - expo-linking@58.0.16
@@ -29,12 +29,14 @@ minimumReleaseAgeExclude:
   - expo-modules-core@58.0.30
   - expo-modules-jsi@58.0.22
   - expo-notifications@58.1.8
-  - expo-router@58.0.30
+  - expo-router@58.0.30 || 58.0.32
   - expo-splash-screen@58.0.13
-  - expo@58.0.23 || 58.0.25
-  - jest-expo@58.0.14
+  - expo@58.0.23 || 58.0.25 || 58.0.26
+  - jest-expo@58.0.14 || 58.0.15
   - expo-updates@58.0.21
-  - expo-dev-client@58.0.20
-  - expo-dev-launcher@58.0.20
+  - expo-dev-client@58.0.20 || 58.0.21
+  - expo-dev-launcher@58.0.20 || 58.0.21
+  - expo-file-system@58.0.14
+  - expo-web-browser@58.1.0
 patchedDependencies:
   '@gorhom/bottom-sheet@5.2.14': patches/@gorhom__bottom-sheet@5.2.14.patch

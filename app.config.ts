@@ -237,6 +237,9 @@ const config: ExpoConfig = {
         // Photo capture only (src/app/camera.tsx) — skip the unused microphone permission prompt.
         recordAudioAndroid: false,
         microphonePermission: false,
+        // No barcode scanning anywhere — drops ML Kit's libbarhopper (~5 MB per ABI) on Android
+        // and ZXingObjC on iOS from the binary.
+        barcodeScannerEnabled: false,
       },
     ],
     [
