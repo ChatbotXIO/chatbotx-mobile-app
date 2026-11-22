@@ -26,7 +26,7 @@ const flush = async () => {
 function setup(getUrl?: (lastSeq: string | null) => Promise<string>) {
   const handlers = {
     getUrl: jest.fn(getUrl ?? (async (seq: string | null) => `ws://x?lastSeq=${seq ?? ''}`)),
-    onEvent: jest.fn(),
+    onEvents: jest.fn(),
     onStatus: jest.fn(),
     onOpen: jest.fn(),
     onResync: jest.fn(),
@@ -68,9 +68,30 @@ describe('createRealtimeConnection', () => {
         ],
       }),
     });
-    expect(handlers.onEvent).toHaveBeenCalledTimes(1);
+    expect(handlers.onEvents).toHaveBeenCalledTimes(1);
+    expect(handlers.onEvents).toHaveBeenCalledWith([
+      expect.objectContaining({ eventType: 'messageDeleted' }),
+    ]);
     expect(handlers.onResync).not.toHaveBeenCalled();
     expect(handlers.onOpen).toHaveBeenCalledWith({ hasCursor: false });
+  });
+
+  it('delivers every valid event of one frame in a single onEvents call', async () => {
+    const { connection, handlers } = setup();
+    connection.start();
+    await flush();
+    FakeSocket.instances[0]!.onmessage?.({
+      data: JSON.stringify({
+        seq: '1-0',
+        batch: [
+          { eventType: 'messageDeleted', data: { messageIds: ['m1'] } },
+          { eventType: 'messageDeleted', data: { messageIds: ['m2'] } },
+          { eventType: 'messageDeleted', data: { messageIds: ['m3'] } },
+        ],
+      }),
+    });
+    expect(handlers.onEvents).toHaveBeenCalledTimes(1);
+    expect(handlers.onEvents.mock.calls[0]![0]).toHaveLength(3);
   });
 
   it('requests a resync when a handled event fails validation', async () => {

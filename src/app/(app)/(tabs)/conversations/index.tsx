@@ -88,6 +88,10 @@ function activeFilterCount(filters: ReturnType<typeof conversationFiltersSnapsho
   return count;
 }
 
+function openConversation(conversationId: string) {
+  router.push(`/(app)/conversations/${conversationId}`);
+}
+
 export default function ConversationsScreen() {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
@@ -120,7 +124,7 @@ export default function ConversationsScreen() {
   }, [searchText, setKeyword]);
 
   const query = useConversationsInfinite(workspaceId);
-  const conversations = flattenPages(query.data?.pages);
+  const conversations = useMemo(() => flattenPages(query.data?.pages), [query.data?.pages]);
   const assignMutation = useAssignConversations(workspaceId ?? '');
   const markRead = useMarkConversationRead(workspaceId ?? '');
   const markUnread = useMarkConversationUnread(workspaceId ?? '');
@@ -161,6 +165,13 @@ export default function ConversationsScreen() {
     setActionsConversation(conversation);
     actionsSheetRef.current?.present();
   }, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: ConversationListItem }) => (
+      <ConversationRow conversation={item} onPress={openConversation} onOpenActions={openActions} />
+    ),
+    [openActions],
+  );
 
   // Same dismiss-then-present chaining as the composer's actions sheet → flow picker.
   const closeActions = useCallback(() => actionsSheetRef.current?.dismiss(), []);
@@ -294,13 +305,7 @@ export default function ConversationsScreen() {
           getItemType={conversationRowItemType}
           onScroll={handleScroll}
           scrollEventThrottle={16}
-          renderItem={({ item }) => (
-            <ConversationRow
-              conversation={item}
-              onPress={() => router.push(`/(app)/conversations/${item.id}`)}
-              onOpenActions={() => openActions(item)}
-            />
-          )}
+          renderItem={renderItem}
           onEndReachedThreshold={0.4}
           onEndReached={() => {
             if (query.hasNextPage && !query.isFetchingNextPage) {

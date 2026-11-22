@@ -16,7 +16,8 @@ export interface RealtimeConnectionOptions {
   /** Mints a fresh connect URL (token included). Receives the replay cursor to resume from, or
    * `null` for a fresh stream. Throw `RealtimeFatalError` when the failure is permanent. */
   getUrl: (lastSeq: string | null) => Promise<string>;
-  onEvent: (event: RealtimeEventData) => void;
+  /** Receives every valid event of one frame together, so consumers can apply them in one pass. */
+  onEvents: (events: RealtimeEventData[]) => void;
   onStatus: (status: RealtimeConnectionStatus) => void;
   /** Fires on every successful open. `hasCursor` is false when no frame was ever accepted, so
    * events missed while disconnected can't be replayed and caches need a refetch. */
@@ -66,14 +67,16 @@ export function createRealtimeConnection(options: RealtimeConnectionOptions): Re
   function handleMessage(data: string): void {
     const batch = reader.readFrame(data);
     if (!batch) return;
+    const events: RealtimeEventData[] = [];
     for (const envelope of batch) {
       const result = parseRealtimeEnvelope(envelope);
       if (result.status === 'ok') {
-        options.onEvent(result.event);
+        events.push(result.event);
       } else if (result.status === 'invalid') {
         reader.reportInvalidEvent();
       }
     }
+    if (events.length > 0) options.onEvents(events);
   }
 
   function create(): void {
