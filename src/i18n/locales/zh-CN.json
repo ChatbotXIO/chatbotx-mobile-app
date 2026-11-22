@@ -286,6 +286,7 @@
     "switchWorkspace": "切换工作区",
     "pushNotifications": "推送通知",
     "pushNotificationsDescription": "在此设备上接收新消息通知。",
+    "pushRegisterFailed": "无法开启推送通知，请重试。",
     "teams": "团队",
     "noMembers": "暂无成员",
     "noTeams": "暂无团队",

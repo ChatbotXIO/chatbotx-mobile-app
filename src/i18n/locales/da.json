@@ -276,6 +276,7 @@
     "switchWorkspace": "Skift workspace",
     "pushNotifications": "Push-notifikationer",
     "pushNotificationsDescription": "Få besked om nye beskeder på denne enhed.",
+    "pushRegisterFailed": "Kunne ikke aktivere push-notifikationer. Prøv igen.",
     "teams": "Teams",
     "noMembers": "Ingen medlemmer",
     "noTeams": "Ingen teams",

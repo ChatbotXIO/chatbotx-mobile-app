@@ -8,6 +8,7 @@ import { usePushPrompt } from './use-push-prompt';
 
 const mockMutate = jest.fn();
 
+jest.mock('@/components/ui/toast', () => ({ useToast: () => jest.fn() }));
 jest.mock('expo-localization', () => ({ getLocales: () => [{ languageTag: 'en-US' }] }));
 jest.mock('expo-device', () => ({ isDevice: true }));
 jest.mock('expo-notifications', () => ({ getPermissionsAsync: jest.fn() }));

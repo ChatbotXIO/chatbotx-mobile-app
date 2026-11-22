@@ -5,6 +5,8 @@ import * as Notifications from 'expo-notifications';
 import * as WebBrowser from 'expo-web-browser';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import { useToast } from '@/components/ui/toast';
 import { Linking, ScrollView, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
@@ -39,6 +41,7 @@ const appVersion = Constants.expoConfig?.version ?? null;
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
+  const toast = useToast();
   const { spacing } = useTheme();
   const scheme = useResolvedScheme();
   const reducedMotion = useReducedMotion();
@@ -82,7 +85,10 @@ export default function SettingsScreen() {
 
     registerDeviceToken.mutate(undefined, {
       onSuccess: () => setPushEnabled(true),
-      onError: () => setPushEnabled(false),
+      onError: () => {
+        setPushEnabled(false);
+        toast({ message: t('settings.pushRegisterFailed'), tone: 'danger' });
+      },
     });
   }
 

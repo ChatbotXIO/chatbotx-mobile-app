@@ -286,6 +286,7 @@
     "switchWorkspace": "Byt arbetsyta",
     "pushNotifications": "Push-notiser",
     "pushNotificationsDescription": "Få aviseringar om nya meddelanden på den här enheten.",
+    "pushRegisterFailed": "Det gick inte att aktivera pushnotiser. Försök igen.",
     "teams": "Team",
     "noMembers": "Inga medlemmar",
     "noTeams": "Inga team",

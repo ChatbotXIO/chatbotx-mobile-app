@@ -276,6 +276,7 @@
     "switchWorkspace": "Vaihda työtilaa",
     "pushNotifications": "Push-ilmoitukset",
     "pushNotificationsDescription": "Saat ilmoituksia uusista viesteistä tällä laitteella.",
+    "pushRegisterFailed": "Push-ilmoitusten käyttöönotto epäonnistui. Yritä uudelleen.",
     "teams": "Tiimit",
     "noMembers": "Ei jäseniä",
     "noTeams": "Ei tiimejä",

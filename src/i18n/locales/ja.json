@@ -286,6 +286,7 @@
     "switchWorkspace": "ワークスペースを切り替え",
     "pushNotifications": "プッシュ通知",
     "pushNotificationsDescription": "このデバイスで新しいメッセージの通知を受け取ります。",
+    "pushRegisterFailed": "プッシュ通知を有効にできませんでした。もう一度お試しください。",
     "teams": "チーム",
     "noMembers": "メンバーがいません",
     "noTeams": "チームがありません",

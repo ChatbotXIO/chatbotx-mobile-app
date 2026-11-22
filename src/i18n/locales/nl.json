@@ -286,6 +286,7 @@
     "switchWorkspace": "Workspace wisselen",
     "pushNotifications": "Pushmeldingen",
     "pushNotificationsDescription": "Ontvang meldingen voor nieuwe berichten op dit apparaat.",
+    "pushRegisterFailed": "Pushmeldingen inschakelen is mislukt. Probeer het opnieuw.",
     "teams": "Teams",
     "noMembers": "Geen leden",
     "noTeams": "Geen teams",

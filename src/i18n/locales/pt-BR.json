@@ -286,6 +286,7 @@
     "switchWorkspace": "Trocar workspace",
     "pushNotifications": "Notificações push",
     "pushNotificationsDescription": "Receba notificações de novas mensagens neste dispositivo.",
+    "pushRegisterFailed": "Não foi possível ativar as notificações push. Tente novamente.",
     "teams": "Times",
     "noMembers": "Nenhum membro",
     "noTeams": "Nenhum time",
