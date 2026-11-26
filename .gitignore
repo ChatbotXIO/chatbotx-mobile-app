@@ -17,6 +17,7 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+*.ipa
 google-services.json
 GoogleService-Info.plist
 
@@ -48,3 +49,4 @@ brands/*
 # generated native folders
 /ios
 /android
+*-firebase-adminsdk-*.json

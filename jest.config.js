@@ -9,6 +9,9 @@ module.exports = {
     // throws. Its CJS build is real CommonJS and needs no transform, so map straight to it.
     '^lucide-react-native$':
       '<rootDir>/node_modules/lucide-react-native/dist/cjs/lucide-react-native.js',
+    // Same for the per-icon deep imports used by src/components/ui/icon.tsx.
+    '^lucide-react-native/icons/(.*)$':
+      '<rootDir>/node_modules/lucide-react-native/dist/cjs/icons/$1.js',
     // Reanimated 4 and Worklets 0.13 initialize native/browser runtimes that do not exist in
     // Jest's React Native environment. Component tests use deterministic substitutes.
     '^react-native-reanimated$': '<rootDir>/test-mocks/react-native-reanimated.js',

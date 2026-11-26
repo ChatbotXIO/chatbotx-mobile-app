@@ -2,11 +2,11 @@ import '@/lib/install-crypto-polyfill';
 
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { QueryClientProvider } from '@tanstack/react-query';
-import {
-  PlusJakartaSans_600SemiBold,
-  PlusJakartaSans_700Bold,
-  useFonts,
-} from '@expo-google-fonts/plus-jakarta-sans';
+// Per-weight subpath imports: the package root re-exports all 16 weights, which would bundle every
+// .ttf (~1.5 MB) even though only these two are used.
+import { PlusJakartaSans_600SemiBold } from '@expo-google-fonts/plus-jakarta-sans/600SemiBold';
+import { PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans/700Bold';
+import { useFonts } from 'expo-font';
 import type { ErrorBoundaryProps } from 'expo-router';
 import { Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';

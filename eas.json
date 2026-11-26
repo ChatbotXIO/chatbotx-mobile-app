@@ -53,9 +53,6 @@
   "submit": {
     "base": {
       "ios": {
-        "ascApiKeyPath": "./AuthKey_238L44SV57.p8",
-        "ascApiKeyId": "238L44SV57",
-        "ascApiKeyIssuerId": "a888294a-adc3-4201-a022-67fbbc4a597d",
         "appleTeamId": "5H3UF98Q3H"
       }
     },
@@ -67,6 +64,9 @@
     },
     "production": {
       "extends": "base",
+      "ios": {
+        "ascAppId": "6835288472"
+      },
       "android": {
         "track": "internal"
       }
