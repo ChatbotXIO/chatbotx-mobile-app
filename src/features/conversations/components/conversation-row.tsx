@@ -24,10 +24,11 @@ const ROW_INSET = 16;
 
 interface ConversationRowProps {
   conversation: ConversationListItem;
-  onPress: () => void;
-  onLongPress?: () => void;
+  /** Receives the conversation id so the parent can pass one stable callback to every row. */
+  onPress: (conversationId: string) => void;
+  onLongPress?: (conversation: ConversationListItem) => void;
   /** Opens the conversation actions sheet (⋯ button, long-press fallback, accessibility action). */
-  onOpenActions?: () => void;
+  onOpenActions?: (conversation: ConversationListItem) => void;
 }
 
 /**
@@ -68,7 +69,7 @@ export const ConversationRow = memo(function ConversationRow({
 
   function handleAccessibilityAction(event: { nativeEvent: { actionName: string } }) {
     if (event.nativeEvent.actionName === 'openActions') {
-      onOpenActions?.();
+      onOpenActions?.(conversation);
     }
   }
 
@@ -76,7 +77,7 @@ export const ConversationRow = memo(function ConversationRow({
   const handleLongPress = longPressAction
     ? () => {
         triggerHaptic('medium');
-        longPressAction();
+        longPressAction(conversation);
       }
     : undefined;
 
@@ -86,7 +87,7 @@ export const ConversationRow = memo(function ConversationRow({
       accessibilityLabel={accessibilityLabel}
       accessibilityActions={accessibilityActions}
       onAccessibilityAction={handleAccessibilityAction}
-      onPress={onPress}
+      onPress={() => onPress(conversation.id)}
       onLongPress={handleLongPress}
       haptic={false}
       style={[
@@ -149,7 +150,7 @@ export const ConversationRow = memo(function ConversationRow({
           icon="ellipsis-vertical"
           size="sm"
           variant="ghost"
-          onPress={onOpenActions}
+          onPress={() => onOpenActions(conversation)}
         />
       ) : null}
       {/* Inset hairline: starts at the text column (iOS/WhatsApp style), not the screen edge. */}

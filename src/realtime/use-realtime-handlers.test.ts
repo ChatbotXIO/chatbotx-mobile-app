@@ -1,4 +1,4 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react-native';
 
 import { queryKeys } from '@/api/query-keys';
@@ -53,6 +53,24 @@ function conversationsCache(conversations: ConversationListItem[]) {
   };
 }
 
+/** Mounts an observer so the cache counts as "watched" (unwatched list caches are only marked
+ * stale, never patched). Returns the unsubscribe function. */
+function watch(queryClient: QueryClient, queryKey: readonly unknown[]): () => void {
+  const observer = new QueryObserver(queryClient, {
+    queryKey,
+    queryFn: () => Promise.resolve(undefined),
+    enabled: false,
+  });
+  return observer.subscribe(() => {});
+}
+
+function createdEvent(id: string, conversationId: string, createdAt: string) {
+  return {
+    eventType: RealtimeEventType.messageCreated,
+    data: { id, conversationId, createdAt, attachments: [] },
+  } as const;
+}
+
 describe('useRealtimeHandlers', () => {
   beforeEach(() => {
     jest.useFakeTimers();
@@ -72,10 +90,12 @@ describe('useRealtimeHandlers', () => {
 
     const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
 
-    result.current({
-      eventType: RealtimeEventType.messageCreated,
-      data: { id: 'new-msg', conversationId: 'conv-a', attachments: [] },
-    });
+    result.current([
+      {
+        eventType: RealtimeEventType.messageCreated,
+        data: { id: 'new-msg', conversationId: 'conv-a', attachments: [] },
+      },
+    ]);
 
     const dataA = queryClient.getQueryData<ReturnType<typeof messagesCache>>(keyA);
     const dataB = queryClient.getQueryData<ReturnType<typeof messagesCache>>(keyB);
@@ -91,18 +111,21 @@ describe('useRealtimeHandlers', () => {
       listKey,
       conversationsCache([fakeConversation({ id: 'conv-a', messages: [] })]),
     );
+    watch(queryClient, listKey);
 
     const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
 
-    result.current({
-      eventType: RealtimeEventType.messageCreated,
-      data: {
-        id: 'new-msg',
-        conversationId: 'conv-a',
-        createdAt: '2026-01-05T00:00:00.000Z',
-        attachments: [],
+    result.current([
+      {
+        eventType: RealtimeEventType.messageCreated,
+        data: {
+          id: 'new-msg',
+          conversationId: 'conv-a',
+          createdAt: '2026-01-05T00:00:00.000Z',
+          attachments: [],
+        },
       },
-    });
+    ]);
 
     const data = queryClient.getQueryData<ReturnType<typeof conversationsCache>>(listKey);
     const row = data!.pages[0]!.data[0]!;
@@ -118,13 +141,16 @@ describe('useRealtimeHandlers', () => {
       listKey,
       conversationsCache([fakeConversation({ id: 'some-other-conv' })]),
     );
+    watch(queryClient, listKey);
 
     const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
 
-    result.current({
-      eventType: RealtimeEventType.messageCreated,
-      data: { id: 'new-msg', conversationId: 'not-cached', attachments: [] },
-    });
+    result.current([
+      {
+        eventType: RealtimeEventType.messageCreated,
+        data: { id: 'new-msg', conversationId: 'not-cached', attachments: [] },
+      },
+    ]);
 
     expect(invalidateSpy).not.toHaveBeenCalled();
     jest.advanceTimersByTime(500);
@@ -137,10 +163,12 @@ describe('useRealtimeHandlers', () => {
     const queryClient = new QueryClient();
     const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
 
-    result.current({
-      eventType: RealtimeEventType.typing,
-      data: { conversationId: 'conv-a', typing: true, seconds: 1 },
-    });
+    result.current([
+      {
+        eventType: RealtimeEventType.typing,
+        data: { conversationId: 'conv-a', typing: true, seconds: 1 },
+      },
+    ]);
 
     expect(useChatStore.getState().typingByConversation['conv-a']).toBe(true);
 
@@ -153,10 +181,12 @@ describe('useRealtimeHandlers', () => {
     const queryClient = new QueryClient();
     const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
 
-    result.current({
-      eventType: RealtimeEventType.typing,
-      data: { conversationId: 'conv-a', typing: true, seconds: 5 },
-    });
+    result.current([
+      {
+        eventType: RealtimeEventType.typing,
+        data: { conversationId: 'conv-a', typing: true, seconds: 5 },
+      },
+    ]);
 
     jest.advanceTimersByTime(4000);
     expect(useChatStore.getState().typingByConversation['conv-a']).toBe(true);
@@ -166,14 +196,18 @@ describe('useRealtimeHandlers', () => {
     const queryClient = new QueryClient();
     const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
 
-    result.current({
-      eventType: RealtimeEventType.typing,
-      data: { conversationId: 'conv-a', typing: true, seconds: 5 },
-    });
-    result.current({
-      eventType: RealtimeEventType.typing,
-      data: { conversationId: 'conv-a', typing: false, seconds: 0 },
-    });
+    result.current([
+      {
+        eventType: RealtimeEventType.typing,
+        data: { conversationId: 'conv-a', typing: true, seconds: 5 },
+      },
+    ]);
+    result.current([
+      {
+        eventType: RealtimeEventType.typing,
+        data: { conversationId: 'conv-a', typing: false, seconds: 0 },
+      },
+    ]);
 
     expect(useChatStore.getState().typingByConversation['conv-a']).toBe(false);
 
@@ -187,10 +221,12 @@ describe('useRealtimeHandlers', () => {
     const queryClient = new QueryClient();
     const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
 
-    result.current({
-      eventType: RealtimeEventType.typing,
-      data: { conversationId: 'conv-a', typing: true, seconds: 0 },
-    });
+    result.current([
+      {
+        eventType: RealtimeEventType.typing,
+        data: { conversationId: 'conv-a', typing: true, seconds: 0 },
+      },
+    ]);
 
     jest.advanceTimersByTime(4999);
     expect(useChatStore.getState().typingByConversation['conv-a']).toBe(true);
@@ -208,17 +244,111 @@ describe('useRealtimeHandlers', () => {
         fakeConversation({ id: 'conv-b', botEnabled: true }),
       ]),
     );
+    watch(queryClient, listKey);
 
     const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
 
-    result.current({
-      eventType: RealtimeEventType.conversationUpdated,
-      data: { conversationIds: ['conv-a'], changes: { botEnabled: false } },
-    });
+    result.current([
+      {
+        eventType: RealtimeEventType.conversationUpdated,
+        data: { conversationIds: ['conv-a'], changes: { botEnabled: false } },
+      },
+    ]);
 
     const data = queryClient.getQueryData<ReturnType<typeof conversationsCache>>(listKey);
     const rows = data!.pages[0]!.data;
     expect(rows.find((r) => r.id === 'conv-a')?.botEnabled).toBe(false);
     expect(rows.find((r) => r.id === 'conv-b')?.botEnabled).toBe(true);
+  });
+
+  it('applies a 100-event frame with one write per cache instead of one per event', async () => {
+    const queryClient = new QueryClient();
+    const rows = Array.from({ length: 20 }, (_, i) => fakeConversation({ id: `conv-${i}` }));
+    const listKeys = Array.from({ length: 5 }, (_, i) =>
+      queryKeys.ws.conversations.list(WORKSPACE_ID, { keyword: `k${i}` }),
+    );
+    for (const key of listKeys) {
+      queryClient.setQueryData(key, conversationsCache(rows));
+      watch(queryClient, key);
+    }
+    const setSpy = jest.spyOn(queryClient, 'setQueryData');
+    const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
+
+    const events = Array.from({ length: 100 }, (_, i) =>
+      createdEvent(
+        `m${i}`,
+        `conv-${i % 20}`,
+        `2026-02-01T00:00:${String(i % 60).padStart(2, '0')}.000Z`,
+      ),
+    );
+    result.current(events);
+
+    // 20 conversations' messages caches + 5 list caches — not 100 × 6.
+    expect(setSpy).toHaveBeenCalledTimes(20 + 5);
+  });
+
+  it('refetches instead of patching when a frame exceeds the burst threshold', async () => {
+    const queryClient = new QueryClient();
+    const listKey = queryKeys.ws.conversations.list(WORKSPACE_ID, {});
+    queryClient.setQueryData(listKey, conversationsCache([fakeConversation({ id: 'conv-a' })]));
+    watch(queryClient, listKey);
+    const setSpy = jest.spyOn(queryClient, 'setQueryData');
+    const resetSpy = jest.spyOn(queryClient, 'resetQueries');
+    const invalidateSpy = jest.spyOn(queryClient, 'invalidateQueries');
+    const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
+
+    result.current(
+      Array.from({ length: 101 }, (_, i) =>
+        createdEvent(`m${i}`, 'conv-a', '2026-02-01T00:00:00.000Z'),
+      ),
+    );
+
+    expect(setSpy).not.toHaveBeenCalled();
+    expect(resetSpy).toHaveBeenCalledWith({
+      queryKey: ['ws', WORKSPACE_ID, 'conversations', 'list'],
+    });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['ws', WORKSPACE_ID, 'messages'] });
+  });
+
+  it('keeps event order when messageCreated is interleaved with other events', async () => {
+    const queryClient = new QueryClient();
+    const listKey = queryKeys.ws.conversations.list(WORKSPACE_ID, {});
+    queryClient.setQueryData(
+      listKey,
+      conversationsCache([fakeConversation({ id: 'conv-a' }), fakeConversation({ id: 'conv-b' })]),
+    );
+    watch(queryClient, listKey);
+    const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
+
+    result.current([
+      createdEvent('m1', 'conv-b', '2026-02-01T00:00:00.000Z'),
+      {
+        eventType: RealtimeEventType.conversationUpdated,
+        data: { conversationIds: ['conv-b'], changes: { botEnabled: false } },
+      },
+      createdEvent('m2', 'conv-a', '2026-02-01T00:00:01.000Z'),
+    ]);
+
+    const rows =
+      queryClient.getQueryData<ReturnType<typeof conversationsCache>>(listKey)!.pages[0]!.data;
+    expect(rows.map((r) => r.id)).toEqual(['conv-a', 'conv-b']);
+    // The update landed on conv-b after its message was applied (not lost to the batching).
+    expect(rows[1]!.botEnabled).toBe(false);
+    expect(rows[1]!.messages.map((m) => m.id)).toEqual(['m1']);
+  });
+
+  it('only marks an unwatched conversations-list cache stale instead of patching it', async () => {
+    const queryClient = new QueryClient();
+    const listKey = queryKeys.ws.conversations.list(WORKSPACE_ID, {});
+    queryClient.setQueryData(listKey, conversationsCache([fakeConversation({ id: 'conv-a' })]));
+    const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
+
+    result.current([createdEvent('m1', 'conv-a', '2026-02-01T00:00:00.000Z')]);
+
+    const state = queryClient.getQueryState(listKey)!;
+    expect(state.isInvalidated).toBe(true);
+    const rows =
+      queryClient.getQueryData<ReturnType<typeof conversationsCache>>(listKey)!.pages[0]!.data;
+    expect(rows[0]!.messages).toEqual([]);
   });
 });

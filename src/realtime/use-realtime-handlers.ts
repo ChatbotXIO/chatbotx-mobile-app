@@ -1,9 +1,10 @@
-import type { QueryClient } from '@tanstack/react-query';
+import { notifyManager, type QueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
 import { queryKeys } from '@/api/query-keys';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
 import { narrowIncomingMessage, type InfiniteMessagesData } from './apply-message-events';
+import type { Message } from '@/features/chat/api/use-messages-infinite';
 import {
   applyMessageCreated,
   applyMessageDeleted,
@@ -13,14 +14,18 @@ import {
 } from './apply-message-events';
 import type { InfiniteConversationsData } from './apply-conversation-events';
 import {
-  applyConversationMessageCreated,
+  applyConversationMessagesCreated,
   applyContactBlockState,
   applyContactDetailBlockState,
   applyConversationAssigned,
   applyConversationUpdated,
 } from './apply-conversation-events';
 import { scheduleTypingExpiry, clearTypingTimer } from './typing-timers';
-import { RealtimeEventType, type RealtimeEventData } from './events';
+import {
+  RealtimeEventType,
+  type RealtimeEventCreateMessage,
+  type RealtimeEventData,
+} from './events';
 
 /** Default typing-indicator TTL (seconds) when the event's own `seconds` field is 0/undefined —
  * per the plan, a payload that doesn't specify a TTL still shouldn't stick forever. */
@@ -54,171 +59,216 @@ export function clearPendingConversationInvalidates(): void {
   pendingConversationInvalidate.clear();
 }
 
+/** A single frame holding more events than this (e.g. a 500-event reconnect replay) is cheaper to
+ * recover by refetching than by patching every cache event by event. */
+const BURST_REFETCH_THRESHOLD = 100;
+
+function conversationsListKey(workspaceId: string) {
+  return ['ws', workspaceId, 'conversations', 'list'] as const;
+}
+
+/** Patches every cached conversations-list query that someone is watching. A cache with no
+ * observer is only marked stale (no refetch): it refetches when next mounted, so patching it
+ * would be wasted work. Returns how many caches were patched. */
+function patchObservedConversationLists(
+  queryClient: QueryClient,
+  workspaceId: string,
+  patch: (old: InfiniteConversationsData) => InfiniteConversationsData,
+): number {
+  let patched = 0;
+  for (const query of queryClient
+    .getQueryCache()
+    .findAll({ queryKey: conversationsListKey(workspaceId) })) {
+    if (query.getObserversCount() === 0) {
+      void queryClient.invalidateQueries({ queryKey: query.queryKey, refetchType: 'none' });
+      continue;
+    }
+    patched += 1;
+    queryClient.setQueryData<InfiniteConversationsData>(query.queryKey, patch);
+  }
+  return patched;
+}
+
+/** Applies a run of consecutive `messageCreated` events with one cache write per messages cache
+ * and one per conversations-list cache, rather than one per event. */
+function applyMessagesCreatedBatch(
+  queryClient: QueryClient,
+  workspaceId: string,
+  events: RealtimeEventCreateMessage[],
+): void {
+  const byConversation = new Map<string, RealtimeEventCreateMessage[]>();
+  const incomingList: Message[] = [];
+  for (const event of events) {
+    const incoming = narrowIncomingMessage(event.data);
+    if (!incoming) continue;
+    incomingList.push(incoming);
+    const group = byConversation.get(incoming.conversationId);
+    if (group) group.push(event);
+    else byConversation.set(incoming.conversationId, [event]);
+  }
+  if (incomingList.length === 0) return;
+
+  byConversation.forEach((group, conversationId) => {
+    queryClient.setQueryData<InfiniteMessagesData>(
+      queryKeys.ws.messages.list(workspaceId, conversationId),
+      (old) => group.reduce((acc, event) => applyMessageCreated(acc, event, conversationId), old),
+    );
+  });
+
+  const activeConversationId = useChatStore.getState().activeConversationId;
+  const foundIds = new Set<string>();
+  const patchedCaches = patchObservedConversationLists(queryClient, workspaceId, (old) => {
+    const result = applyConversationMessagesCreated(old, incomingList, activeConversationId);
+    result.foundIds.forEach((id) => foundIds.add(id));
+    return result.data;
+  });
+
+  if (patchedCaches > 0 && incomingList.some((m) => !foundIds.has(m.conversationId))) {
+    debounceInvalidateConversationsList(queryClient, workspaceId);
+  }
+}
+
+function applyOtherEvent(
+  queryClient: QueryClient,
+  workspaceId: string,
+  event: Exclude<RealtimeEventData, RealtimeEventCreateMessage>,
+): void {
+  switch (event.eventType) {
+    case RealtimeEventType.messageDeleted:
+    case RealtimeEventType.messageUpdated:
+    case RealtimeEventType.messageFailed:
+    case RealtimeEventType.messageIdAssigned: {
+      queryClient
+        .getQueryCache()
+        .findAll({ queryKey: ['ws', workspaceId, 'messages'] })
+        .forEach((query) => {
+          queryClient.setQueryData<InfiniteMessagesData>(query.queryKey, (old) => {
+            switch (event.eventType) {
+              case RealtimeEventType.messageDeleted:
+                return applyMessageDeleted(old, event);
+              case RealtimeEventType.messageUpdated:
+                return applyMessageUpdated(old, event);
+              case RealtimeEventType.messageFailed:
+                return applyMessageFailed(old, event);
+              case RealtimeEventType.messageIdAssigned:
+                return applyMessageIdAssigned(old, event);
+              default:
+                return old;
+            }
+          });
+        });
+      break;
+    }
+
+    case RealtimeEventType.typing: {
+      const { conversationId, typing, seconds } = event.data;
+      // `getState()` always returns the live store (and zustand actions are stable), which this
+      // needs since it also runs from the typing-timer's own expiry closure.
+      useChatStore.getState().setTyping(conversationId, typing, seconds);
+
+      if (typing) {
+        scheduleTypingExpiry(conversationId, seconds || DEFAULT_TYPING_TTL_SECONDS, () =>
+          useChatStore.getState().setTyping(conversationId, false),
+        );
+      } else {
+        clearTypingTimer(conversationId);
+      }
+      break;
+    }
+
+    case RealtimeEventType.conversationAssigned:
+    case RealtimeEventType.conversationUpdated:
+    case RealtimeEventType.contactBlocked:
+    case RealtimeEventType.contactUnblocked: {
+      patchObservedConversationLists(queryClient, workspaceId, (old) => {
+        switch (event.eventType) {
+          case RealtimeEventType.conversationAssigned:
+            return applyConversationAssigned(old, event);
+          case RealtimeEventType.conversationUpdated:
+            return applyConversationUpdated(old, event);
+          case RealtimeEventType.contactBlocked:
+            return applyContactBlockState(old, event, true);
+          case RealtimeEventType.contactUnblocked:
+            return applyContactBlockState(old, event, false);
+          default:
+            return old;
+        }
+      });
+
+      if (
+        event.eventType === RealtimeEventType.contactBlocked ||
+        event.eventType === RealtimeEventType.contactUnblocked
+      ) {
+        const blocked = event.eventType === RealtimeEventType.contactBlocked;
+        queryClient
+          .getQueryCache()
+          .findAll({
+            predicate: (query) =>
+              query.queryKey[0] === 'ws' &&
+              query.queryKey[1] === workspaceId &&
+              query.queryKey[2] === 'contacts' &&
+              query.queryKey[3] === 'detail' &&
+              query.queryKey[4] === event.data.contactId,
+          })
+          .forEach((query) => {
+            queryClient.setQueryData(
+              query.queryKey,
+              (old: { blockedAt: string | null } | undefined) =>
+                applyContactDetailBlockState(old, blocked),
+            );
+          });
+      }
+      break;
+    }
+
+    default:
+      break;
+  }
+}
+
 /**
- * Dispatches a parsed realtime event to the right cache applier.
+ * Dispatches one realtime frame's events to the cache appliers, returning `handleEvents`.
  *
- * `messageCreated` is special-cased: it's routed ONLY to the one messages-list query key matching
- * its own `conversationId` (rather than fanning out to every cached messages query like the other
- * message events below) — this is the actual fix for the cross-conversation leak where a message
- * from conversation A could get prepended into conversation B's cache if both happened to be
- * cached simultaneously. `applyMessageCreated`'s own `targetConversationId` guard is
- * defense-in-depth on top of this. It also patches the conversations-list ROW for the same
- * conversation via `applyConversationMessageCreated` so the inbox preview updates live.
+ * A frame larger than `BURST_REFETCH_THRESHOLD` skips per-event patching: the conversations lists
+ * are reset (an infinite query refetches just its first page) and the messages caches invalidated.
+ * Otherwise the frame runs inside `notifyManager.batch` so observers re-render once, and
+ * consecutive `messageCreated` events are applied together (see `applyMessagesCreatedBatch`);
+ * any other event type flushes the pending run first so ordering is preserved.
  *
- * The other message events (`messageDeleted`/`messageUpdated`/`messageFailed`/
- * `messageIdAssigned`) match by message id already, so fanning out to every cached messages query
- * and letting each applier no-op on a non-matching cache is safe and is left unchanged.
- *
- * Conversation events patch every cached conversations-list query (any filter combination) for
- * this workspace, same as the conversation-action mutations' cache patches.
+ * `messageCreated` is routed ONLY to the messages-list query matching its own `conversationId`
+ * (no cross-conversation leak; `applyMessageCreated`'s guard is defense-in-depth) and also patches
+ * the matching conversations-list row so the inbox preview updates live. The other message events
+ * match by message id, so they fan out to every cached messages query and no-op where unmatched.
  */
 export function useRealtimeHandlers(queryClient: QueryClient, workspaceId: string) {
   return useCallback(
-    (event: RealtimeEventData) => {
-      switch (event.eventType) {
-        case RealtimeEventType.messageCreated: {
-          const incoming = narrowIncomingMessage(event.data);
-          if (!incoming) break;
+    (events: RealtimeEventData[]) => {
+      if (events.length === 0) return;
 
-          queryClient.setQueryData<InfiniteMessagesData>(
-            queryKeys.ws.messages.list(workspaceId, incoming.conversationId),
-            (old) => applyMessageCreated(old, event, incoming.conversationId),
-          );
-
-          let foundInAnyPage = false;
-          const activeConversationId = useChatStore.getState().activeConversationId;
-          queryClient
-            .getQueryCache()
-            .findAll({
-              predicate: (query) =>
-                query.queryKey[0] === 'ws' &&
-                query.queryKey[1] === workspaceId &&
-                query.queryKey[2] === 'conversations' &&
-                query.queryKey[3] === 'list',
-            })
-            .forEach((query) => {
-              queryClient.setQueryData<InfiniteConversationsData>(query.queryKey, (old) => {
-                const result = applyConversationMessageCreated(old, event, activeConversationId);
-                if (result.found) foundInAnyPage = true;
-                return result.data;
-              });
-            });
-
-          if (!foundInAnyPage) {
-            debounceInvalidateConversationsList(queryClient, workspaceId);
-          }
-          break;
-        }
-
-        case RealtimeEventType.messageDeleted:
-        case RealtimeEventType.messageUpdated:
-        case RealtimeEventType.messageFailed:
-        case RealtimeEventType.messageIdAssigned: {
-          queryClient
-            .getQueryCache()
-            .findAll({
-              predicate: (query) =>
-                query.queryKey[0] === 'ws' &&
-                query.queryKey[1] === workspaceId &&
-                query.queryKey[2] === 'messages',
-            })
-            .forEach((query) => {
-              queryClient.setQueryData<InfiniteMessagesData>(query.queryKey, (old) => {
-                switch (event.eventType) {
-                  case RealtimeEventType.messageDeleted:
-                    return applyMessageDeleted(old, event);
-                  case RealtimeEventType.messageUpdated:
-                    return applyMessageUpdated(old, event);
-                  case RealtimeEventType.messageFailed:
-                    return applyMessageFailed(old, event);
-                  case RealtimeEventType.messageIdAssigned:
-                    return applyMessageIdAssigned(old, event);
-                  default:
-                    return old;
-                }
-              });
-            });
-          break;
-        }
-
-        case RealtimeEventType.typing: {
-          const { conversationId, typing, seconds } = event.data;
-          // Read via `getState()` rather than a hook-selected value: this callback is memoized by
-          // `useCallback` below (deps: queryClient/workspaceId only) and also invoked from the
-          // typing-timer's own expiry closure, so it needs the CURRENT store action each time it
-          // runs rather than one captured at a particular render — `getState()` always returns the
-          // live store, zustand action references are stable, so this is safe outside React.
-          useChatStore.getState().setTyping(conversationId, typing, seconds);
-
-          if (typing) {
-            scheduleTypingExpiry(conversationId, seconds || DEFAULT_TYPING_TTL_SECONDS, () =>
-              useChatStore.getState().setTyping(conversationId, false),
-            );
-          } else {
-            clearTypingTimer(conversationId);
-          }
-          break;
-        }
-
-        case RealtimeEventType.conversationAssigned:
-        case RealtimeEventType.conversationUpdated:
-        case RealtimeEventType.contactBlocked:
-        case RealtimeEventType.contactUnblocked: {
-          queryClient
-            .getQueryCache()
-            .findAll({
-              predicate: (query) =>
-                query.queryKey[0] === 'ws' &&
-                query.queryKey[1] === workspaceId &&
-                query.queryKey[2] === 'conversations' &&
-                query.queryKey[3] === 'list',
-            })
-            .forEach((query) => {
-              queryClient.setQueryData<InfiniteConversationsData>(query.queryKey, (old) => {
-                switch (event.eventType) {
-                  case RealtimeEventType.conversationAssigned:
-                    return applyConversationAssigned(old, event);
-                  case RealtimeEventType.conversationUpdated:
-                    return applyConversationUpdated(old, event);
-                  case RealtimeEventType.contactBlocked:
-                    return applyContactBlockState(old, event, true);
-                  case RealtimeEventType.contactUnblocked:
-                    return applyContactBlockState(old, event, false);
-                  default:
-                    return old;
-                }
-              });
-            });
-
-          if (
-            event.eventType === RealtimeEventType.contactBlocked ||
-            event.eventType === RealtimeEventType.contactUnblocked
-          ) {
-            const blocked = event.eventType === RealtimeEventType.contactBlocked;
-            queryClient
-              .getQueryCache()
-              .findAll({
-                predicate: (query) =>
-                  query.queryKey[0] === 'ws' &&
-                  query.queryKey[1] === workspaceId &&
-                  query.queryKey[2] === 'contacts' &&
-                  query.queryKey[3] === 'detail' &&
-                  query.queryKey[4] === event.data.contactId,
-              })
-              .forEach((query) => {
-                queryClient.setQueryData(
-                  query.queryKey,
-                  (old: { blockedAt: string | null } | undefined) =>
-                    applyContactDetailBlockState(old, blocked),
-                );
-              });
-          }
-          break;
-        }
-
-        default:
-          break;
+      if (events.length > BURST_REFETCH_THRESHOLD) {
+        void queryClient.resetQueries({ queryKey: conversationsListKey(workspaceId) });
+        void queryClient.invalidateQueries({ queryKey: ['ws', workspaceId, 'messages'] });
+        return;
       }
+
+      notifyManager.batch(() => {
+        let pending: RealtimeEventCreateMessage[] = [];
+        const flush = () => {
+          if (pending.length === 0) return;
+          applyMessagesCreatedBatch(queryClient, workspaceId, pending);
+          pending = [];
+        };
+
+        for (const event of events) {
+          if (event.eventType === RealtimeEventType.messageCreated) {
+            pending.push(event);
+          } else {
+            flush();
+            applyOtherEvent(queryClient, workspaceId, event);
+          }
+        }
+        flush();
+      });
     },
     [queryClient, workspaceId],
   );

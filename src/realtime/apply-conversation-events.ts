@@ -5,6 +5,7 @@ import type {
   RealtimeEventCreateMessage,
 } from '@/realtime/events';
 import { narrowIncomingMessage } from '@/realtime/apply-message-events';
+import type { Message } from '@/features/chat/api/use-messages-infinite';
 import type {
   ConversationListItem,
   ListConversationsResponse,
@@ -99,71 +100,102 @@ export interface ApplyConversationMessageCreatedResult {
   found: boolean;
 }
 
-/**
- * Companion to `applyMessageCreated` in apply-message-events.ts: when a `messageCreated` event
- * arrives, the messages-list cache for the open conversation gets the new message (that applier),
- * and this one ALSO patches the matching conversation-list ROW so the inbox preview stays live
- * without a refetch — updates `lastActivityAt`, splices the message onto the row's `messages[]`
- * preview array (capped to the last few entries, matching `conversation-row.tsx`'s
- * `lastMessagePreview` which only ever reads the LAST entry). When the matched row is on the
- * FIRST page, it's also moved to the front of that page (conventional "most recent conversation
- * first" ordering) — a row found on a later page is patched in place instead, since the list is
- * cursor-paginated and splicing a row from page N to the front of page 0 would duplicate it
- * across pages and desync every subsequent page's cursor.
- *
- * `activeConversationId` — when it matches the incoming message's conversation — also bumps
- * `agentLastReadAt` on the patched row, so the inbox unread badge doesn't drift stale while the
- * user is actively looking at that conversation's chat screen (the realtime event is the only
- * signal here; the user isn't calling the read-receipt mutation just by having the screen open).
- *
- * Deliberately does NOT attempt to fabricate a brand-new row when the conversation isn't cached
- * anywhere — the event payload is a single message, not a full conversation row, so there's no
- * contact/channel/assignee data to build one from. Callers should invalidate instead (see `found`
- * on the return value).
- */
-const MAX_PREVIEW_MESSAGES = 20;
+export interface ApplyConversationMessagesCreatedResult {
+  data: InfiniteConversationsData;
+  /** Ids of the conversations that had a row in this cache (patched, or already newer). */
+  foundIds: Set<string>;
+}
 
+/** The inbox row preview only ever reads the LAST message (see `conversation-preview.ts`), so a
+ * single entry is enough — keeping more only made every patch and structural-sharing pass heavier. */
+const MAX_PREVIEW_MESSAGES = 1;
+
+function activityTime(value: string | null | undefined): number {
+  if (!value) return Number.NEGATIVE_INFINITY;
+  const time = Date.parse(value);
+  return Number.isNaN(time) ? Number.NEGATIVE_INFINITY : time;
+}
+
+/**
+ * Batched companion to `applyMessageCreated`: patches the conversation-list ROWS for a whole burst
+ * of `messageCreated` messages in ONE pass over the pages (instead of one pass per message).
+ *
+ * Per conversation only the newest message (last in `incomingList`) becomes the preview, and
+ * `lastActivityAt` only ever moves forward — an older (replayed) message never overwrites it.
+ * Matched rows on the FIRST page are hoisted to the front, ordered by `lastActivityAt` descending;
+ * a row on a later page is patched in place, since the list is cursor-paginated and moving a row
+ * across a page boundary would duplicate it and desync every subsequent page's cursor.
+ *
+ * `activeConversationId` — when it matches a patched row — also bumps `agentLastReadAt`, so the
+ * unread badge doesn't drift while the user is looking at that chat.
+ *
+ * Never fabricates a row for a conversation that isn't cached; callers invalidate for the ids
+ * missing from `foundIds`.
+ */
+export function applyConversationMessagesCreated(
+  current: InfiniteConversationsData,
+  incomingList: Message[],
+  activeConversationId: string | null = null,
+): ApplyConversationMessagesCreatedResult {
+  const foundIds = new Set<string>();
+  if (!current || incomingList.length === 0) return { data: current, foundIds };
+
+  const latestByConversation = new Map<string, Message>();
+  for (const message of incomingList) {
+    const existing = latestByConversation.get(message.conversationId);
+    if (!existing || activityTime(message.createdAt) >= activityTime(existing.createdAt)) {
+      latestByConversation.set(message.conversationId, message);
+    }
+  }
+
+  const pages = current.pages.map((page, pageIndex) => {
+    const patchedIndexes = new Set<number>();
+    const data = page.data.map((item, index) => {
+      const incoming = latestByConversation.get(item.id);
+      if (!incoming) return item;
+      foundIds.add(item.id);
+
+      // Stale/replayed message: keep the row (and its preview) untouched.
+      if (activityTime(incoming.createdAt) < activityTime(item.lastActivityAt)) return item;
+
+      patchedIndexes.add(index);
+      return {
+        ...item,
+        lastActivityAt: incoming.createdAt ?? item.lastActivityAt,
+        messages: [incoming].slice(-MAX_PREVIEW_MESSAGES),
+        ...(item.id === activeConversationId && incoming.createdAt
+          ? { agentLastReadAt: incoming.createdAt }
+          : {}),
+      } as ConversationListItem;
+    });
+
+    if (patchedIndexes.size === 0) return page;
+    if (pageIndex !== 0) return { ...page, data };
+
+    const patched = data
+      .filter((_, index) => patchedIndexes.has(index))
+      .sort((a, b) => activityTime(b.lastActivityAt) - activityTime(a.lastActivityAt));
+    const rest = data.filter((_, index) => !patchedIndexes.has(index));
+    return { ...page, data: [...patched, ...rest] };
+  });
+
+  if (foundIds.size === 0) return { data: current, foundIds };
+  return { data: { ...current, pages }, foundIds };
+}
+
+/** Single-event form of `applyConversationMessagesCreated`. */
 export function applyConversationMessageCreated(
   current: InfiniteConversationsData,
   event: RealtimeEventCreateMessage,
   activeConversationId: string | null = null,
 ): ApplyConversationMessageCreatedResult {
-  if (!current) return { data: current, found: false };
-
   const incoming = narrowIncomingMessage(event.data);
-  if (!incoming) return { data: current, found: false };
+  if (!current || !incoming) return { data: current, found: false };
 
-  let found = false;
-
-  const pages = current.pages.map((page, pageIndex) => {
-    const matchIndex = page.data.findIndex((item) => item.id === incoming.conversationId);
-    if (matchIndex < 0) return page;
-
-    found = true;
-    const matched = page.data[matchIndex]!;
-    const patchedRow: ConversationListItem = {
-      ...matched,
-      lastActivityAt: incoming.createdAt,
-      messages: [...matched.messages, incoming].slice(-MAX_PREVIEW_MESSAGES),
-      ...(incoming.conversationId === activeConversationId
-        ? { agentLastReadAt: incoming.createdAt }
-        : {}),
-    };
-
-    if (pageIndex !== 0) {
-      // Not the first page — patch in place. Hoisting here would move the row across a page
-      // boundary, duplicating it in the client's merged view and corrupting cursor pagination.
-      return {
-        ...page,
-        data: page.data.map((item, index) => (index === matchIndex ? patchedRow : item)),
-      };
-    }
-
-    // First page only: move the patched row to the front — mirrors "most recently active
-    // conversation first" ordering without waiting on a refetch.
-    const rest = page.data.filter((_, index) => index !== matchIndex);
-    return { ...page, data: [patchedRow, ...rest] };
-  });
-
-  return { data: { ...current, pages }, found };
+  const { data, foundIds } = applyConversationMessagesCreated(
+    current,
+    [incoming],
+    activeConversationId,
+  );
+  return { data, found: foundIds.has(incoming.conversationId) };
 }

@@ -24,7 +24,7 @@ function ConnectedRealtimeProvider({
   workspaceId,
 }: PropsWithChildren<{ workspaceId: string }>) {
   const queryClient = useQueryClient();
-  const handleEvent = useRealtimeHandlers(queryClient, workspaceId);
+  const handleEvents = useRealtimeHandlers(queryClient, workspaceId);
   const setStatus = useConnectionStore((state) => state.setStatus);
   const markOpened = useConnectionStore((state) => state.markOpened);
   const markFailed = useConnectionStore((state) => state.markFailed);
@@ -51,7 +51,7 @@ function ConnectedRealtimeProvider({
         if (lastSeq) url.searchParams.set('lastSeq', lastSeq);
         return url.toString();
       },
-      onEvent: handleEvent,
+      onEvents: handleEvents,
       onStatus: setStatus,
       onOpen: ({ hasCursor }) => {
         // With a cursor the server replays missed frames (and closes with `resync`, which

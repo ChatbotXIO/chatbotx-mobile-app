@@ -1,6 +1,7 @@
 import {
   applyConversationAssigned,
   applyConversationMessageCreated,
+  applyConversationMessagesCreated,
   applyConversationUpdated,
   applyContactBlockState,
   applyContactDetailBlockState,
@@ -153,7 +154,7 @@ describe('applyConversationMessageCreated', () => {
     expect(result.found).toBe(true);
     const row = firstPage(result.data)[0]!;
     expect(row.lastActivityAt).toBe('2026-01-02T00:00:00.000Z');
-    expect(row.messages.map((m) => m.id)).toEqual(['old-msg', 'new-msg']);
+    expect(row.messages.map((m) => m.id)).toEqual(['new-msg']);
   });
 
   it('moves the patched row to the top of its page', () => {
@@ -206,8 +207,8 @@ describe('applyConversationMessageCreated', () => {
     expect(result.data).toBe(cache);
   });
 
-  it('caps the preview messages array at the max length', () => {
-    const existing = Array.from({ length: 20 }, (_, i) => ({ id: `msg-${i}` }) as Message);
+  it('keeps only the newest message as the preview', () => {
+    const existing = Array.from({ length: 5 }, (_, i) => ({ id: `msg-${i}` }) as Message);
     const cache = cacheWith([fakeConversation({ id: 'conv-1', messages: existing })]);
 
     const result = applyConversationMessageCreated(
@@ -220,10 +221,7 @@ describe('applyConversationMessageCreated', () => {
       }),
     );
 
-    const row = firstPage(result.data)[0]!;
-    expect(row.messages).toHaveLength(20);
-    expect(row.messages[row.messages.length - 1]!.id).toBe('new-msg');
-    expect(row.messages[0]!.id).toBe('msg-1');
+    expect(firstPage(result.data)[0]!.messages.map((m) => m.id)).toEqual(['new-msg']);
   });
 
   it('patches a matching row on a LATER page in place instead of hoisting it to page 0', () => {
@@ -289,5 +287,73 @@ describe('applyConversationMessageCreated', () => {
     );
 
     expect(firstPage(result.data)[0]!.agentLastReadAt).toBe('2025-01-01T00:00:00.000Z');
+  });
+});
+
+describe('applyConversationMessagesCreated', () => {
+  const msg = (id: string, conversationId: string, createdAt: string) =>
+    ({ id, conversationId, createdAt, attachments: [] }) as unknown as Message;
+
+  it('uses only the newest message per conversation as the preview', () => {
+    const cache = cacheWith([fakeConversation({ id: 'conv-1' })]);
+    const result = applyConversationMessagesCreated(cache, [
+      msg('m1', 'conv-1', '2026-01-02T00:00:00.000Z'),
+      msg('m2', 'conv-1', '2026-01-03T00:00:00.000Z'),
+    ]);
+    const row = firstPage(result.data)[0]!;
+    expect(row.messages.map((m) => m.id)).toEqual(['m2']);
+    expect(row.lastActivityAt).toBe('2026-01-03T00:00:00.000Z');
+  });
+
+  it('orders hoisted first-page rows by lastActivityAt descending', () => {
+    const cache = cacheWith([
+      fakeConversation({ id: 'conv-1' }),
+      fakeConversation({ id: 'conv-2' }),
+      fakeConversation({ id: 'conv-3' }),
+    ]);
+    const result = applyConversationMessagesCreated(cache, [
+      msg('m1', 'conv-2', '2026-01-02T00:00:00.000Z'),
+      msg('m2', 'conv-3', '2026-01-03T00:00:00.000Z'),
+    ]);
+    expect(firstPage(result.data).map((c) => c.id)).toEqual(['conv-3', 'conv-2', 'conv-1']);
+  });
+
+  it('patches later-page rows in place', () => {
+    const cache = cacheWithPages([
+      [fakeConversation({ id: 'conv-1' })],
+      [fakeConversation({ id: 'conv-2' }), fakeConversation({ id: 'conv-3' })],
+    ]);
+    const result = applyConversationMessagesCreated(cache, [
+      msg('m1', 'conv-3', '2026-01-02T00:00:00.000Z'),
+    ]);
+    expect(pageAt(result.data, 0).map((c) => c.id)).toEqual(['conv-1']);
+    expect(pageAt(result.data, 1).map((c) => c.id)).toEqual(['conv-2', 'conv-3']);
+    expect(pageAt(result.data, 1)[1]!.messages.map((m) => m.id)).toEqual(['m1']);
+  });
+
+  it('never moves lastActivityAt backwards', () => {
+    const cache = cacheWith([
+      fakeConversation({
+        id: 'conv-1',
+        lastActivityAt: '2026-03-01T00:00:00.000Z',
+        messages: [{ id: 'current' } as Message],
+      }),
+    ]);
+    const result = applyConversationMessagesCreated(cache, [
+      msg('old', 'conv-1', '2026-01-02T00:00:00.000Z'),
+    ]);
+    const row = firstPage(result.data)[0]!;
+    expect(row.lastActivityAt).toBe('2026-03-01T00:00:00.000Z');
+    expect(row.messages.map((m) => m.id)).toEqual(['current']);
+    expect(result.foundIds.has('conv-1')).toBe(true);
+  });
+
+  it('returns exactly the conversation ids that exist in the cache', () => {
+    const cache = cacheWith([fakeConversation({ id: 'conv-1' })]);
+    const result = applyConversationMessagesCreated(cache, [
+      msg('m1', 'conv-1', '2026-01-02T00:00:00.000Z'),
+      msg('m2', 'missing', '2026-01-02T00:00:00.000Z'),
+    ]);
+    expect([...result.foundIds]).toEqual(['conv-1']);
   });
 });
