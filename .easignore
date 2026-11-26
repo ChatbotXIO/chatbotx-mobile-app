@@ -12,6 +12,9 @@ web-build/
 /ios
 /android
 
+# local build artifacts (eas build --local output)
+*.ipa
+
 # secrets & credentials (provided through EAS environment variables / credentials instead)
 .env
 .env.*
