@@ -276,6 +276,8 @@
     "switchWorkspace": "Workspace wechseln",
     "pushNotifications": "Push-Benachrichtigungen",
     "pushNotificationsDescription": "Erhalten Sie Benachrichtigungen über neue Nachrichten auf diesem Gerät.",
+    "pushRegisterFailed": "Push-Benachrichtigungen konnten nicht aktiviert werden. Bitte versuche es erneut.",
+    "pushUnregisterFailed": "Push-Benachrichtigungen konnten nicht deaktiviert werden. Bitte versuche es erneut.",
     "teams": "Teams",
     "noMembers": "Keine Mitglieder",
     "noTeams": "Keine Teams",

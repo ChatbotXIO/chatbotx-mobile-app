@@ -3,7 +3,7 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useRef, type RefObject } from 'react';
 
-import { useRegisterDeviceToken } from '@/features/settings/api/use-device-token';
+import { usePushToggle } from '@/features/settings/hooks/use-push-toggle';
 import { shouldShowPushPrompt } from '@/features/settings/lib/push-prompt-policy';
 import { useSettingsStore, waitForSettingsHydration } from '@/stores/use-settings-store';
 
@@ -22,8 +22,7 @@ interface PushPrompt {
 export function usePushPrompt(workspaceId: string): PushPrompt {
   const sheetRef = useRef<BottomSheetModal>(null);
   const hasCheckedRef = useRef(false);
-  const registerDeviceToken = useRegisterDeviceToken();
-  const setPushEnabled = useSettingsStore((state) => state.setPushEnabled);
+  const { enable: handleEnable } = usePushToggle();
   const recordPushPromptDismissed = useSettingsStore((state) => state.recordPushPromptDismissed);
 
   useEffect(() => {
@@ -52,13 +51,6 @@ export function usePushPrompt(workspaceId: string): PushPrompt {
       }
     })();
   }, [workspaceId]);
-
-  const handleEnable = useCallback(() => {
-    registerDeviceToken.mutate(undefined, {
-      onSuccess: () => setPushEnabled(true),
-      onError: () => setPushEnabled(false),
-    });
-  }, [registerDeviceToken, setPushEnabled]);
 
   const handleLater = useCallback(() => {
     recordPushPromptDismissed();

@@ -286,6 +286,8 @@
     "switchWorkspace": "Çalışma alanını değiştir",
     "pushNotifications": "Push bildirimleri",
     "pushNotificationsDescription": "Bu cihazda yeni mesajlar hakkında bildirim alın.",
+    "pushRegisterFailed": "Anlık bildirimler etkinleştirilemedi. Lütfen tekrar deneyin.",
+    "pushUnregisterFailed": "Anlık bildirimler kapatılamadı. Lütfen tekrar deneyin.",
     "teams": "Ekipler",
     "noMembers": "Üye yok",
     "noTeams": "Ekip yok",

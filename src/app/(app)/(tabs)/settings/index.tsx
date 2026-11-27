@@ -5,6 +5,7 @@ import * as Notifications from 'expo-notifications';
 import * as WebBrowser from 'expo-web-browser';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import { Linking, ScrollView, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
@@ -19,12 +20,9 @@ import { Text } from '@/components/ui/text';
 import { LEGAL_URLS } from '@/config/legal-urls';
 import { ToggleRow } from '@/components/ui/toggle-row';
 import { useSignOut } from '@/features/auth/use-sign-out';
-import {
-  useRegisterDeviceToken,
-  useUnregisterDeviceToken,
-} from '@/features/settings/api/use-device-token';
 import { DeleteAccountCard } from '@/features/settings/components/delete-account-card';
 import { LanguageSheet } from '@/features/settings/components/language-sheet';
+import { usePushToggle } from '@/features/settings/hooks/use-push-toggle';
 import { WorkspaceSwitcherSheet } from '@/features/workspaces/components/workspace-switcher-sheet';
 import { useWorkspaces } from '@/features/workspaces/api/use-workspaces';
 import { localeMeta } from '@/i18n/locales';
@@ -62,28 +60,26 @@ export default function SettingsScreen() {
   // Token rotation itself (re-registering on a new Expo push token) is handled once, workspace-
   // aware, in the tabs layout — this screen only owns the on/off toggle and its mutations.
   const pushEnabled = useSettingsStore((state) => state.pushEnabled);
-  const setPushEnabled = useSettingsStore((state) => state.setPushEnabled);
-  const registerDeviceToken = useRegisterDeviceToken();
-  const unregisterDeviceToken = useUnregisterDeviceToken();
+  const pushToggle = usePushToggle();
 
   async function handleTogglePush(value: boolean) {
     if (!value) {
-      setPushEnabled(false);
-      unregisterDeviceToken.mutate();
+      pushToggle.disable();
       return;
     }
 
-    const permission = await Notifications.getPermissionsAsync();
-    if (permission.status === 'denied' && !permission.canAskAgain) {
-      // Denied-forever: the OS won't show the prompt again — only Settings can flip it.
-      Linking.openSettings();
-      return;
+    try {
+      const permission = await Notifications.getPermissionsAsync();
+      if (permission.status === 'denied' && !permission.canAskAgain) {
+        // Denied-forever: the OS won't show the prompt again — only Settings can flip it.
+        await Linking.openSettings();
+        return;
+      }
+    } catch {
+      // Permission lookup failed; fall through and let the register mutation surface any error.
     }
 
-    registerDeviceToken.mutate(undefined, {
-      onSuccess: () => setPushEnabled(true),
-      onError: () => setPushEnabled(false),
-    });
+    pushToggle.enable();
   }
 
   return (
@@ -164,7 +160,7 @@ export default function SettingsScreen() {
                 description={t('settings.pushNotificationsDescription')}
                 value={pushEnabled}
                 onValueChange={(value) => void handleTogglePush(value)}
-                disabled={registerDeviceToken.isPending || unregisterDeviceToken.isPending}
+                disabled={pushToggle.isPending}
               />
             </Card>
           </View>

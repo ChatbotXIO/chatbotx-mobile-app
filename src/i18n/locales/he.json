@@ -278,6 +278,8 @@
     "switchWorkspace": "החלפת סביבת עבודה",
     "pushNotifications": "התראות דחיפה",
     "pushNotificationsDescription": "קבל התראות על הודעות חדשות במכשיר זה.",
+    "pushRegisterFailed": "לא ניתן היה להפעיל התראות Push. נסו שוב.",
+    "pushUnregisterFailed": "לא ניתן היה לכבות את ההתראות. נסה שוב.",
     "teams": "צוותים",
     "noMembers": "אין חברים",
     "noTeams": "אין צוותים",
