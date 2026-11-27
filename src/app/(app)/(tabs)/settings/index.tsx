@@ -63,7 +63,7 @@ export default function SettingsScreen() {
   // aware, in the tabs layout — this screen only owns the on/off toggle and its mutations.
   const pushEnabled = useSettingsStore((state) => state.pushEnabled);
   const setPushEnabled = useSettingsStore((state) => state.setPushEnabled);
-  const registerDeviceToken = useRegisterDeviceToken(currentWorkspaceId ?? '');
+  const registerDeviceToken = useRegisterDeviceToken();
   const unregisterDeviceToken = useUnregisterDeviceToken();
 
   async function handleTogglePush(value: boolean) {

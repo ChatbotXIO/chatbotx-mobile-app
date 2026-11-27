@@ -22,7 +22,7 @@ interface PushPrompt {
 export function usePushPrompt(workspaceId: string): PushPrompt {
   const sheetRef = useRef<BottomSheetModal>(null);
   const hasCheckedRef = useRef(false);
-  const registerDeviceToken = useRegisterDeviceToken(workspaceId);
+  const registerDeviceToken = useRegisterDeviceToken();
   const setPushEnabled = useSettingsStore((state) => state.setPushEnabled);
   const recordPushPromptDismissed = useSettingsStore((state) => state.recordPushPromptDismissed);
 
