@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { revokeMobileToken } from '@/api/auth-endpoints';
 import { clearAuthToken } from '@/api/auth-token';
+import { unregisterStoredDeviceToken } from '@/features/settings/api/use-device-token';
 import { queryClient } from '@/lib/query-client';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
@@ -23,6 +24,8 @@ export function useSignOutLocally() {
   return async function signOutLocally({ revokeToken = true }: SignOutLocallyOptions = {}) {
     try {
       if (revokeToken) {
+        // Needs a still-valid session and the current workspace header, so it goes first.
+        await unregisterStoredDeviceToken();
         await revokeMobileToken().catch(() => {});
       }
       await clearAuthToken();

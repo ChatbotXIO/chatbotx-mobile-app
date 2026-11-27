@@ -42,6 +42,21 @@ async function unregisterToken(token: string): Promise<void> {
   if (error) throw new ApiError(error);
 }
 
+/**
+ * Best-effort: removes this install's token from the signed-in account on the backend and clears the
+ * local cache. Call it while the session is still valid (before sign-out) so a different account
+ * signing in on this device doesn't inherit the previous account's pushes.
+ */
+export async function unregisterStoredDeviceToken(): Promise<void> {
+  try {
+    const token = await SecureStore.getItemAsync(LAST_REGISTERED_TOKEN_KEY);
+    if (!token) return;
+    await unregisterToken(token).catch(() => {});
+  } finally {
+    await SecureStore.deleteItemAsync(LAST_REGISTERED_TOKEN_KEY).catch(() => {});
+  }
+}
+
 export function useRegisterDeviceToken(workspaceId: string) {
   return useMutation({
     mutationFn: async () => {
@@ -77,6 +92,18 @@ export function usePushTokenRotation(workspaceId: string, enabled: boolean): voi
     if (!enabled) return undefined;
 
     let cancelled = false;
+
+    // Push intent is per-device, but the backend row is per-account: after signing in as someone
+    // else (or switching workspace) nothing else registers this install, so sync it on entry.
+    void (async () => {
+      try {
+        const result = await getPushTokenAsync();
+        if (cancelled || result.status !== 'granted') return;
+        await registerToken(result.token);
+      } catch {
+        // Best-effort; the Settings toggle remains the manual path.
+      }
+    })();
 
     const subscription = Notifications.addPushTokenListener(async ({ data: newToken }) => {
       const previousToken = await SecureStore.getItemAsync(LAST_REGISTERED_TOKEN_KEY);
