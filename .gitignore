@@ -50,3 +50,4 @@ brands/*
 /ios
 /android
 *-firebase-adminsdk-*.json
+*.apk
