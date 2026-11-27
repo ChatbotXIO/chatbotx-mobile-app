@@ -3,12 +3,10 @@ import type { PropsWithChildren } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
 
-import { apiClient } from '@/api/client';
-import { ApiError } from '@/api/errors';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
 
 import { invalidateWorkspaceQueries, useRealtimeAppState } from './app-state';
-import { RealtimeFatalError } from './protocol/realtime-socket';
+import { mintRealtimeUrl } from './mint-realtime-url';
 import { RealtimeControlsContext } from './realtime-context';
 import { createRealtimeConnection } from './realtime-connection';
 import { clearAllTypingTimers } from './typing-timers';
@@ -30,27 +28,11 @@ function ConnectedRealtimeProvider({
   const markFailed = useConnectionStore((state) => state.markFailed);
 
   // This component is keyed by workspaceId, so this initializer creates exactly one connection
-  // per selected workspace. It also resets synchronously before the connection starts in the
-  // mount effect, avoiding a stale "open" banner from the previous workspace.
+  // per selected workspace. It must stay free of store writes: updating the zustand store during
+  // render would notify other mounted components (e.g. the connection title) mid-render.
   const [connection] = useState(() => {
-    resetConnectionStore();
     return createRealtimeConnection({
-      getUrl: async (lastSeq) => {
-        const { data, error } = await apiClient.GET('/v1/realtime/connect-token');
-        if (error) {
-          const apiError = new ApiError(error);
-          const status = apiError.body.status;
-          if (status && status >= 400 && status < 500 && status !== 429) {
-            throw new RealtimeFatalError(apiError.message);
-          }
-          throw apiError;
-        }
-
-        const url = new URL(data.socketUrl);
-        url.searchParams.set('token', data.token);
-        if (lastSeq) url.searchParams.set('lastSeq', lastSeq);
-        return url.toString();
-      },
+      getUrl: mintRealtimeUrl,
       onEvents: handleEvents,
       onStatus: setStatus,
       onOpen: ({ hasCursor }) => {
@@ -70,6 +52,9 @@ function ConnectedRealtimeProvider({
   });
 
   useEffect(() => {
+    // Reset right before connecting so a stale "open" state from the previous workspace is
+    // cleared; done in the effect (not render) to avoid setState-in-render warnings.
+    resetConnectionStore();
     connection.start();
     return () => {
       connection.stop();

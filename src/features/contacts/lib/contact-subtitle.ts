@@ -1,4 +1,5 @@
 import type { ContactListItem } from '@/features/contacts/api/use-contacts-infinite';
+import { inboxNameOf } from '@/features/contacts/lib/inbox-name';
 import { maskEmail, maskPhone } from '@/features/contacts/pii-mask';
 
 // Lightweight shape checks, not full validation: guest contacts often carry a technical
@@ -16,7 +17,7 @@ export function contactSubtitle(contact: ContactListItem, canSeePii: boolean): s
   if (contact.phoneNumber && PHONE_PATTERN.test(contact.phoneNumber)) {
     return canSeePii ? contact.phoneNumber : maskPhone(contact.phoneNumber);
   }
-  return contact.contactInboxes?.[0]?.inbox?.name || undefined;
+  return inboxNameOf(contact.contactInboxes?.[0]) ?? undefined;
 }
 
 /** Most meaningful "last seen" timestamp available on a list row. */

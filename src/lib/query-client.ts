@@ -8,8 +8,9 @@ import {
 import { addNetworkStateListener } from 'expo-network';
 import { AppState } from 'react-native';
 
-import { ApiError, normalizeApiError } from '@/api/errors';
+import { normalizeApiError } from '@/api/errors';
 import { clearAuthToken, getAuthToken } from '@/api/auth-token';
+import { retryDelay, shouldRetry } from '@/lib/query-retry';
 import { isNetworkStateReachable } from '@/realtime/use-network-reachability';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
@@ -41,19 +42,6 @@ async function handleGlobalError(error: unknown): Promise<void> {
   }
 }
 
-/** Skip retrying 4xx responses — they're the server telling us the request itself is wrong
- * (bad input, unauthorized, not found, blocked), and retrying identically can't change that
- * outcome. Only retry once for everything else (network blips, 5xx). */
-function shouldRetry(failureCount: number, error: unknown): boolean {
-  if (error instanceof ApiError) {
-    const status = error.body.status;
-    if (status !== undefined && status >= 400 && status < 500) {
-      return false;
-    }
-  }
-  return failureCount < 1;
-}
-
 // React Query has no native notion of app focus or connectivity in React Native; wire both so
 // paused queries resume when the network returns and stale data refetches on foreground.
 onlineManager.setEventListener((setOnline) => {
@@ -73,6 +61,7 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: shouldRetry,
+      retryDelay,
       staleTime: 30_000,
     },
   },

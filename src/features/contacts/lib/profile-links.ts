@@ -2,6 +2,8 @@ interface ContactInboxIdentity {
   channel: string;
   sourceId: string;
   sourceUsername?: string | null;
+  /** The connected page/account the contact reached us on. */
+  inbox?: { name?: string | null } | null;
 }
 
 interface ContactIdentity {

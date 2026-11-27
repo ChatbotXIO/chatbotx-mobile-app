@@ -10,6 +10,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { Text } from '@/components/ui/text';
 import { useToast } from '@/components/ui/toast';
 import { normalizeApiError } from '@/api/errors';
+import { inboxNameOf } from '@/features/contacts/lib/inbox-name';
 import { ChannelBadge } from '@/features/conversations/components/channel-badge';
 import { useConversationDetail } from '@/features/conversations/api/use-conversation-detail';
 import { useDisableBot, useEnableBot } from '@/features/conversations/api/use-conversation-actions';
@@ -61,7 +62,11 @@ export function ChatHeader({ workspaceId, conversationId, onBack }: ChatHeaderPr
 
   const connectionStatusLabel = useConnectionStatusLabel();
   const contactName = conversation?.contact?.fullName ?? t('conversations.unknownContact');
-  const channel = conversation?.contactInboxes?.[0]?.channel;
+  const primaryInbox = conversation?.contactInboxes?.[0];
+  const channel = primaryInbox?.channel;
+  // The connected page/account name (e.g. "AhaChat"), so an agent with several pages on the same
+  // channel can tell which one this conversation came in on.
+  const inboxName = inboxNameOf(primaryInbox);
   const assigneeName = conversation?.assignedUser?.name;
   const botActive = conversation
     ? isBotActive(conversation.botEnabled, conversation.botResumeAt)
@@ -91,6 +96,7 @@ export function ChatHeader({ workspaceId, conversationId, onBack }: ChatHeaderPr
 
   const subtitleParts = [
     channel ? t(`conversations.channel${capitalize(channel)}`, { defaultValue: channel }) : null,
+    inboxName,
     assigneeName ? t('conversations.assignedTo', { name: assigneeName }) : null,
   ].filter(Boolean);
 

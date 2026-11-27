@@ -25,6 +25,21 @@ export const REALTIME_CLOSE_CODE = {
  */
 export class RealtimeFatalError extends Error {}
 
+/**
+ * `getUrl` throws this when the token endpoint rate-limited the client and told it how long to
+ * wait. The socket honors the delay instead of its own jittered backoff, which can retry sooner
+ * than the server allows and keep the limiter tripped.
+ */
+export class RealtimeRetryAfterError extends Error {
+  readonly retryAfterMs: number;
+
+  constructor(message: string, retryAfterMs: number) {
+    super(message);
+    this.name = 'RealtimeRetryAfterError';
+    this.retryAfterMs = retryAfterMs;
+  }
+}
+
 type RealtimeWebSocket = {
   close: (code?: number, reason?: string) => void;
   onclose: ((event: { code: number; reason: string }) => void) | null;
@@ -55,7 +70,7 @@ type TimerHandle = ReturnType<typeof setTimeout>;
 const DEFAULT_HEARTBEAT_TIMEOUT_MS = 60_000;
 const DEFAULT_MAX_RECONNECT_DELAY_MS = 30_000;
 const DEFAULT_MIN_UPTIME_BEFORE_RESET_MS = 10_000;
-const DEFAULT_RECONNECT_BASE_DELAY_MS = 500;
+const DEFAULT_RECONNECT_BASE_DELAY_MS = 3_000;
 
 const getRetryAfterMs = (reason: string): number | null => {
   try {
@@ -151,7 +166,10 @@ export class RealtimeSocket {
           this.close();
           return;
         }
-        this.#scheduleReconnect({ code: 0, reason: '' });
+        this.#scheduleReconnect(
+          { code: 0, reason: '' },
+          error instanceof RealtimeRetryAfterError ? error.retryAfterMs : null,
+        );
       });
   };
 
@@ -219,7 +237,10 @@ export class RealtimeSocket {
     }
   }
 
-  #scheduleReconnect(event: { code: number; reason: string }): void {
+  #scheduleReconnect(
+    event: { code: number; reason: string },
+    serverRetryAfterMs: number | null = null,
+  ): void {
     if (this.#closed || event.code === REALTIME_CLOSE_CODE.revoked) {
       return;
     }
@@ -227,13 +248,16 @@ export class RealtimeSocket {
       this.options.onResync?.();
     }
     const retryAfterMs =
-      event.code === REALTIME_CLOSE_CODE.overloaded ? getRetryAfterMs(event.reason) : null;
+      serverRetryAfterMs ??
+      (event.code === REALTIME_CLOSE_CODE.overloaded ? getRetryAfterMs(event.reason) : null);
     const ceiling = Math.min(
       this.#maxReconnectDelayMs,
       this.#reconnectBaseDelayMs * 2 ** this.#attempt,
     );
     this.#attempt += 1;
-    const delay = retryAfterMs ?? Math.floor(this.#random() * ceiling);
+    // "Equal jitter": half the ceiling is guaranteed, the other half random. Full jitter can pick
+    // ~0ms, which burns the per-user rate-limit budget on an immediate retry.
+    const delay = retryAfterMs ?? Math.floor(ceiling / 2 + (this.#random() * ceiling) / 2);
     this.#retryNotBeforeMs = retryAfterMs === null ? null : Date.now() + delay;
     this.#reconnectTimer = setTimeout(() => {
       this.#reconnectTimer = null;

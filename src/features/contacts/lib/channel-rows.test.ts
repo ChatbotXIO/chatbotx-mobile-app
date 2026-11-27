@@ -18,9 +18,10 @@ describe('getChannelRows', () => {
         channel: 'instagram',
         name: 'Instagram',
         detail: '@sanu',
+        inboxName: null,
         url: 'https://www.instagram.com/sanu',
       },
-      { channel: 'messenger', name: 'Messenger', detail: null, url: null },
+      { channel: 'messenger', name: 'Messenger', detail: null, inboxName: null, url: null },
     ]);
   });
 
@@ -41,5 +42,16 @@ describe('getChannelRows', () => {
 
   it('returns no rows when the contact has no channels', () => {
     expect(getChannelRows({}, [])).toEqual([]);
+  });
+});
+
+describe('getChannelRows inbox name', () => {
+  it('carries the connected page name for the channel', () => {
+    const rows = getChannelRows(
+      { contactInboxes: [{ channel: 'zalo', sourceId: '1', inbox: { name: 'AhaChat' } }] },
+      ['zalo'],
+    );
+
+    expect(rows[0]).toMatchObject({ channel: 'zalo', inboxName: 'AhaChat' });
   });
 });

@@ -32,11 +32,12 @@ export function ContactChannels({ rows }: ContactChannelsProps) {
       <SectionHeader title={t('contacts.channels')} />
       {rows.map((row) => {
         const { url } = row;
+        const subtitle = [row.inboxName, row.detail].filter(Boolean).join(' · ');
         return (
           <ListItem
             key={row.channel}
             title={row.name}
-            subtitle={row.detail ?? undefined}
+            subtitle={subtitle || undefined}
             leading={<ChannelBadge channel={row.channel} size={BADGE_SIZE} />}
             showChevron={url !== null}
             onPress={url ? () => openProfile(url) : undefined}

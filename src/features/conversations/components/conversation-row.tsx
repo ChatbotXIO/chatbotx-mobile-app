@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { IconButton } from '@/components/ui/icon-button';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
+import { inboxNameOf } from '@/features/contacts/lib/inbox-name';
 import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
 import { describeConversationPreview } from '@/features/conversations/lib/conversation-preview';
 import { botState, isUnread } from '@/features/conversations/lib/conversation-status';
@@ -56,6 +57,7 @@ export const ConversationRow = memo(function ConversationRow({
   const accessibilityLabel = [
     contactName,
     channel,
+    inboxNameOf(conversation.contactInboxes[0]),
     unread ? t('conversations.a11yUnread') : null,
     previewA11y || null,
     timeLabel || null,

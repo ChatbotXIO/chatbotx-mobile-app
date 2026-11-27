@@ -25,9 +25,9 @@ interface ContactHeaderProps {
    * which case "Message" pushes to the contact's conversation). */
   origin: ContactPanelOrigin;
   /** The contact's channel identifiers (e.g. `['whatsapp', 'email']`), for the channel chip row.
-   * `useContactDetail`'s response doesn't embed `contactInboxes` (only the contacts-LIST
-   * endpoints do — see find-contact-in-cache.ts) so the caller sources this from whichever list
-   * cache is available; omitted/empty renders no chips. */
+   * `useContactDetail`'s response embeds `contactInboxes` (used for inbox names and handles), so
+   * this is only an order and fallback hint, sourced by the caller from whichever list or
+   * conversation cache is available; channels found only in `contactInboxes` are appended. */
   channels?: string[];
   /** The contact's active conversation id, if any — sourced the same way as `channels` (not
    * present on the contact-detail response). Drives the "Message" CTA; the button is disabled
@@ -137,8 +137,6 @@ export function ContactHeader({
       </View>
 
       <ContactChannels rows={channelRows} />
-
-      <View style={[styles.divider, { backgroundColor: colors.borderSubtle }]} />
     </View>
   );
 }
@@ -166,10 +164,5 @@ const styles = StyleSheet.create({
   ctaRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    width: '100%',
-    marginTop: 8,
   },
 });
