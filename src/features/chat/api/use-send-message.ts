@@ -37,13 +37,6 @@ export const MAX_FILE_SIZE_BYTES = 5 * 1000 * 1000;
 /** Longest message text the public API accepts. */
 export const MAX_MESSAGE_TEXT_LENGTH = 1000;
 
-class AttachmentTooLargeError extends Error {
-  constructor(fileName: string) {
-    super(`"${fileName}" is larger than 5MB.`);
-    this.name = 'AttachmentTooLargeError';
-  }
-}
-
 /** Maps a locally-picked file into the SERVER attachment shape so the optimistic bubble can render
  * a preview through the normal `AttachmentView` path. `url` points at the local `file://` URI —
  * expo-image renders that identically to a remote URL, so no preview-specific rendering code is
