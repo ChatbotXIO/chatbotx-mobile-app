@@ -190,6 +190,8 @@
     "empty": "لا توجد جهات اتصال",
     "unknown": "غير معروف",
     "blocked": "محظور",
+    "openProfileOn": "فتح {{handle}} على {{channel}}",
+    "channels": "القنوات",
     "email": "البريد الإلكتروني",
     "phone": "الهاتف",
     "locale": "اللغة",

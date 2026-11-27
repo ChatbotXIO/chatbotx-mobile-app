@@ -190,6 +190,8 @@
     "empty": "Ei yhteystietoja",
     "unknown": "Tuntematon",
     "blocked": "Estetty",
+    "openProfileOn": "Avaa {{handle}} palvelussa {{channel}}",
+    "channels": "Kanavat",
     "email": "Sähköposti",
     "phone": "Puhelin",
     "locale": "Kieli",

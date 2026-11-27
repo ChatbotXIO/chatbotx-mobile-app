@@ -200,6 +200,8 @@
     "empty": "Không có liên hệ",
     "unknown": "Không xác định",
     "blocked": "Đã chặn",
+    "openProfileOn": "Mở {{handle}} trên {{channel}}",
+    "channels": "Kênh",
     "email": "Email",
     "phone": "Số điện thoại",
     "locale": "Ngôn ngữ",

@@ -200,6 +200,8 @@
     "empty": "Geen contacten",
     "unknown": "Onbekend",
     "blocked": "Geblokkeerd",
+    "openProfileOn": "{{handle}} openen op {{channel}}",
+    "channels": "Kanalen",
     "email": "E-mail",
     "phone": "Telefoon",
     "locale": "Taal",

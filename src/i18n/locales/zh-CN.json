@@ -200,6 +200,8 @@
     "empty": "暂无联系人",
     "unknown": "未知",
     "blocked": "已屏蔽",
+    "openProfileOn": "在 {{channel}} 上打开 {{handle}}",
+    "channels": "渠道",
     "email": "邮箱",
     "phone": "电话",
     "locale": "语言",

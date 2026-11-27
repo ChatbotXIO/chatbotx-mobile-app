@@ -200,6 +200,8 @@
     "empty": "Inga kontakter",
     "unknown": "Okänd",
     "blocked": "Blockerad",
+    "openProfileOn": "Öppna {{handle}} på {{channel}}",
+    "channels": "Kanaler",
     "email": "E-post",
     "phone": "Telefon",
     "locale": "Språk",

@@ -9,6 +9,8 @@ import { IconButton } from '@/components/ui/icon-button';
 import { Text } from '@/components/ui/text';
 import { ChannelBadge } from '@/features/conversations/components/channel-badge';
 import type { ContactDetail } from '@/features/contacts/api/use-contact-detail';
+import { ContactChannels } from '@/features/contacts/components/contact-channels';
+import { getChannelRows } from '@/features/contacts/lib/channel-rows';
 import { useTheme } from '@/theme/use-theme';
 
 const AVATAR_SIZE = 88;
@@ -53,9 +55,11 @@ export function ContactHeader({
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
   const name = contact.fullName ?? contact.email ?? contact.phoneNumber ?? t('contacts.unknown');
-  const uniqueChannels = Array.from(new Set(channels));
-
   const hasConversation = Boolean(conversationId);
+  const channelRows = getChannelRows(contact, channels);
+  // The avatar's corner badge only identifies the primary channel; the channel rows below carry
+  // the handles and the press-to-open links.
+  const primaryChannel = channelRows[0]?.channel;
 
   function handleMessage() {
     if (!conversationId) return;
@@ -80,25 +84,26 @@ export function ContactHeader({
       ) : null}
 
       <View style={styles.avatarWrap}>
-        <Avatar uri={contact.avatar} name={name} size={AVATAR_SIZE} />
+        <Avatar
+          uri={contact.avatar}
+          name={name}
+          size={AVATAR_SIZE}
+          badge={
+            primaryChannel ? (
+              <ChannelBadge channel={primaryChannel} size={22} ringColor={colors.bg} />
+            ) : undefined
+          }
+        />
       </View>
       <Text variant="heading" style={styles.name} numberOfLines={2} ellipsizeMode="tail">
         {name}
       </Text>
-
-      {uniqueChannels.length > 0 || contact.blockedAt ? (
-        <View style={[styles.chipRow, { gap: spacing.xs }]}>
-          {uniqueChannels.map((channel) => (
-            <ChannelBadge key={channel} channel={channel} size={16} />
-          ))}
-          {contact.blockedAt ? (
-            <View style={[styles.blockedRow, { gap: spacing.xxs }]}>
-              <Icon name="user-lock" size={14} color={colors.danger} />
-              <Text variant="caption" style={{ color: colors.danger, fontWeight: '600' }}>
-                {t('contacts.blocked')}
-              </Text>
-            </View>
-          ) : null}
+      {contact.blockedAt ? (
+        <View style={[styles.blockedRow, { gap: spacing.xxs }]}>
+          <Icon name="user-lock" size={14} color={colors.danger} />
+          <Text variant="caption" style={{ color: colors.danger, fontWeight: '600' }}>
+            {t('contacts.blocked')}
+          </Text>
         </View>
       ) : null}
 
@@ -131,6 +136,8 @@ export function ContactHeader({
         ) : null}
       </View>
 
+      <ContactChannels rows={channelRows} />
+
       <View style={[styles.divider, { backgroundColor: colors.borderSubtle }]} />
     </View>
   );
@@ -151,12 +158,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     alignSelf: 'stretch',
     flexShrink: 1,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
   },
   blockedRow: {
     flexDirection: 'row',

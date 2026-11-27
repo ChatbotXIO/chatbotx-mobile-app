@@ -200,6 +200,8 @@
     "empty": "Niciun contact",
     "unknown": "Necunoscut",
     "blocked": "Blocat",
+    "openProfileOn": "Deschide {{handle}} pe {{channel}}",
+    "channels": "Canale",
     "email": "E-mail",
     "phone": "Telefon",
     "locale": "Limbă",
