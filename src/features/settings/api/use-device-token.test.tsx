@@ -7,6 +7,7 @@ import { apiClient } from '@/api/client';
 import { getPushTokenAsync } from '@/lib/notifications';
 import * as Notifications from 'expo-notifications';
 import {
+  PushPermissionError,
   usePushTokenRotation,
   useRegisterDeviceToken,
   useUnregisterDeviceToken,
@@ -66,6 +67,26 @@ describe('device-token mutations', () => {
     expect(apiClient.PUT).toHaveBeenCalledWith('/v1/me/device-tokens', {
       body: { platform: 'ios', token: 'ExponentPushToken[1]' },
     });
+    await unmount();
+    queryClient.clear();
+    queryClient.unmount();
+  });
+
+  it('rejects with PushPermissionError when the OS permission is denied', async () => {
+    jest.mocked(getPushTokenAsync).mockResolvedValue({ status: 'denied' } as never);
+    const queryClient = createTestQueryClient();
+
+    const { result, unmount } = await renderHook(() => useRegisterDeviceToken(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    let caught: unknown;
+    await act(async () => {
+      caught = await result.current.mutateAsync().catch((error: unknown) => error);
+    });
+
+    expect(caught).toBeInstanceOf(PushPermissionError);
+    expect(apiClient.PUT).not.toHaveBeenCalled();
     await unmount();
     queryClient.clear();
     queryClient.unmount();

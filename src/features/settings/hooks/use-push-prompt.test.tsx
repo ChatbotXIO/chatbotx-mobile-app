@@ -6,14 +6,13 @@ import { useSettingsStore } from '@/stores/use-settings-store';
 
 import { usePushPrompt } from './use-push-prompt';
 
-const mockMutate = jest.fn();
+const mockEnable = jest.fn();
 
-jest.mock('@/components/ui/toast', () => ({ useToast: () => jest.fn() }));
 jest.mock('expo-localization', () => ({ getLocales: () => [{ languageTag: 'en-US' }] }));
 jest.mock('expo-device', () => ({ isDevice: true }));
 jest.mock('expo-notifications', () => ({ getPermissionsAsync: jest.fn() }));
-jest.mock('@/features/settings/api/use-device-token', () => ({
-  useRegisterDeviceToken: () => ({ mutate: mockMutate }),
+jest.mock('@/features/settings/hooks/use-push-toggle', () => ({
+  usePushToggle: () => ({ enable: mockEnable, disable: jest.fn(), isPending: false }),
 }));
 
 function mockPermission(status: 'granted' | 'denied' | 'undetermined') {
@@ -75,20 +74,12 @@ describe('usePushPrompt', () => {
     expect(useSettingsStore.getState().pushPromptDismissCount).toBe(1);
   });
 
-  it('enables push intent only after the token registers, and clears it on failure', async () => {
+  it('delegates "enable" to the shared push toggle', async () => {
     mockPermission('granted');
     const { result } = await renderWithSheet();
 
     await act(async () => result.current.handleEnable());
-    const [, callbacks] = mockMutate.mock.calls[0] as [
-      undefined,
-      { onSuccess: () => void; onError: () => void },
-    ];
 
-    expect(useSettingsStore.getState().pushEnabled).toBe(false);
-    await act(async () => callbacks.onSuccess());
-    expect(useSettingsStore.getState().pushEnabled).toBe(true);
-    await act(async () => callbacks.onError());
-    expect(useSettingsStore.getState().pushEnabled).toBe(false);
+    expect(mockEnable).toHaveBeenCalledTimes(1);
   });
 });

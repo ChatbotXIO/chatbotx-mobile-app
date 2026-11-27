@@ -277,6 +277,7 @@
     "pushNotifications": "Push-ilmoitukset",
     "pushNotificationsDescription": "Saat ilmoituksia uusista viesteistä tällä laitteella.",
     "pushRegisterFailed": "Push-ilmoitusten käyttöönotto epäonnistui. Yritä uudelleen.",
+    "pushUnregisterFailed": "Push-ilmoituksia ei voitu poistaa käytöstä. Yritä uudelleen.",
     "teams": "Tiimit",
     "noMembers": "Ei jäseniä",
     "noTeams": "Ei tiimejä",

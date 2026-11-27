@@ -277,6 +277,7 @@
     "pushNotifications": "Notifications push",
     "pushNotificationsDescription": "Recevez des notifications pour les nouveaux messages sur cet appareil.",
     "pushRegisterFailed": "Impossible d'activer les notifications push. Veuillez réessayer.",
+    "pushUnregisterFailed": "Impossible de désactiver les notifications push. Veuillez réessayer.",
     "teams": "Équipes",
     "noMembers": "Aucun membre",
     "noTeams": "Aucune équipe",

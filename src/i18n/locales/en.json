@@ -287,6 +287,7 @@
     "pushNotifications": "Push notifications",
     "pushNotificationsDescription": "Get notified about new messages on this device.",
     "pushRegisterFailed": "Couldn't enable push notifications. Please try again.",
+    "pushUnregisterFailed": "Couldn't turn off push notifications. Please try again.",
     "teams": "Teams",
     "noMembers": "No members",
     "noTeams": "No teams",

@@ -10,12 +10,23 @@ import {
 } from '@/api/device-tokens';
 import { getPushTokenAsync } from '@/lib/notifications';
 
+/** The OS withheld push permission (user choice or unsupported device) — not a retryable failure. */
+export class PushPermissionError extends Error {
+  readonly status: 'denied' | 'unsupported';
+
+  constructor(status: 'denied' | 'unsupported') {
+    super(`Push permission ${status}`);
+    this.name = 'PushPermissionError';
+    this.status = status;
+  }
+}
+
 export function useRegisterDeviceToken() {
   return useMutation({
     mutationFn: async () => {
       const result = await getPushTokenAsync();
       if (result.status !== 'granted') {
-        throw new Error(`Push permission ${result.status}`);
+        throw new PushPermissionError(result.status);
       }
       await registerDeviceToken(result.token);
       return result.token;

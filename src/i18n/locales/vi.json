@@ -287,6 +287,7 @@
     "pushNotifications": "Thông báo đẩy",
     "pushNotificationsDescription": "Nhận thông báo về tin nhắn mới trên thiết bị này.",
     "pushRegisterFailed": "Không thể bật thông báo đẩy. Vui lòng thử lại.",
+    "pushUnregisterFailed": "Không thể tắt thông báo đẩy. Vui lòng thử lại.",
     "teams": "Nhóm",
     "noMembers": "Không có thành viên",
     "noTeams": "Không có nhóm",

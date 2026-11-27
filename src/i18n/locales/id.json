@@ -277,6 +277,7 @@
     "pushNotifications": "Notifikasi push",
     "pushNotificationsDescription": "Dapatkan notifikasi tentang pesan baru di perangkat ini.",
     "pushRegisterFailed": "Gagal mengaktifkan notifikasi push. Silakan coba lagi.",
+    "pushUnregisterFailed": "Tidak dapat menonaktifkan notifikasi push. Silakan coba lagi.",
     "teams": "Tim",
     "noMembers": "Tidak ada anggota",
     "noTeams": "Tidak ada tim",

@@ -287,6 +287,7 @@
     "pushNotifications": "Pushmeldingen",
     "pushNotificationsDescription": "Ontvang meldingen voor nieuwe berichten op dit apparaat.",
     "pushRegisterFailed": "Pushmeldingen inschakelen is mislukt. Probeer het opnieuw.",
+    "pushUnregisterFailed": "Pushmeldingen konden niet worden uitgezet. Probeer het opnieuw.",
     "teams": "Teams",
     "noMembers": "Geen leden",
     "noTeams": "Geen teams",

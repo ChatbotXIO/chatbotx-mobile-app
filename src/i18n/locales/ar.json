@@ -282,6 +282,7 @@
     "pushNotifications": "الإشعارات الفورية",
     "pushNotificationsDescription": "احصل على إشعارات بالرسائل الجديدة على هذا الجهاز.",
     "pushRegisterFailed": "تعذّر تفعيل الإشعارات. يُرجى المحاولة مرة أخرى.",
+    "pushUnregisterFailed": "تعذر إيقاف الإشعارات الفورية. يرجى المحاولة مرة أخرى.",
     "teams": "الفرق",
     "noMembers": "لا يوجد أعضاء",
     "noTeams": "لا توجد فرق",

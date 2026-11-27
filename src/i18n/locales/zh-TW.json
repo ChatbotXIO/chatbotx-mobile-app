@@ -287,6 +287,7 @@
     "pushNotifications": "推播通知",
     "pushNotificationsDescription": "在此裝置上接收新訊息通知。",
     "pushRegisterFailed": "無法開啟推播通知，請重試。",
+    "pushUnregisterFailed": "無法關閉推播通知，請再試一次。",
     "teams": "團隊",
     "noMembers": "沒有成員",
     "noTeams": "沒有團隊",

@@ -3,10 +3,7 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useRef, type RefObject } from 'react';
 
-import { useTranslation } from 'react-i18next';
-
-import { useToast } from '@/components/ui/toast';
-import { useRegisterDeviceToken } from '@/features/settings/api/use-device-token';
+import { usePushToggle } from '@/features/settings/hooks/use-push-toggle';
 import { shouldShowPushPrompt } from '@/features/settings/lib/push-prompt-policy';
 import { useSettingsStore, waitForSettingsHydration } from '@/stores/use-settings-store';
 
@@ -23,12 +20,9 @@ interface PushPrompt {
  * same register mutation the Settings toggle uses.
  */
 export function usePushPrompt(workspaceId: string): PushPrompt {
-  const { t } = useTranslation();
-  const toast = useToast();
   const sheetRef = useRef<BottomSheetModal>(null);
   const hasCheckedRef = useRef(false);
-  const registerDeviceToken = useRegisterDeviceToken();
-  const setPushEnabled = useSettingsStore((state) => state.setPushEnabled);
+  const { enable: handleEnable } = usePushToggle();
   const recordPushPromptDismissed = useSettingsStore((state) => state.recordPushPromptDismissed);
 
   useEffect(() => {
@@ -57,16 +51,6 @@ export function usePushPrompt(workspaceId: string): PushPrompt {
       }
     })();
   }, [workspaceId]);
-
-  const handleEnable = useCallback(() => {
-    registerDeviceToken.mutate(undefined, {
-      onSuccess: () => setPushEnabled(true),
-      onError: () => {
-        setPushEnabled(false);
-        toast({ message: t('settings.pushRegisterFailed'), tone: 'danger' });
-      },
-    });
-  }, [registerDeviceToken, setPushEnabled, t, toast]);
 
   const handleLater = useCallback(() => {
     recordPushPromptDismissed();

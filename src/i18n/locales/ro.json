@@ -290,6 +290,7 @@
     "pushNotifications": "Notificări push",
     "pushNotificationsDescription": "Primești notificări despre mesajele noi pe acest dispozitiv.",
     "pushRegisterFailed": "Nu s-au putut activa notificările push. Încearcă din nou.",
+    "pushUnregisterFailed": "Nu s-au putut dezactiva notificările push. Încearcă din nou.",
     "teams": "Echipe",
     "noMembers": "Niciun membru",
     "noTeams": "Nicio echipă",
