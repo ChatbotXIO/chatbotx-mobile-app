@@ -56,6 +56,7 @@ export const ConversationRow = memo(function ConversationRow({
   const accessibilityLabel = [
     contactName,
     channel,
+    conversation.contactInboxes[0]?.inbox?.name || null,
     unread ? t('conversations.a11yUnread') : null,
     previewA11y || null,
     timeLabel || null,

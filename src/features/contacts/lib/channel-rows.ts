@@ -8,6 +8,8 @@ export interface ChannelRow {
   name: string;
   /** `@handle` or phone number when the channel has a public profile, else null. */
   detail: string | null;
+  /** Name of the connected page/account (e.g. "AhaChat"), or null when unknown. */
+  inboxName: string | null;
   /** Profile URL to open, or null when the channel has no public profile. */
   url: string | null;
 }
@@ -34,6 +36,11 @@ const CHANNEL_NAMES: Record<string, string> = {
  * linked channel the list omitted appended. Channels with a public profile carry a handle + url. */
 export function getChannelRows(contact: ProfileLinksInput, channels: string[]): ChannelRow[] {
   const links = new Map(getProfileLinks(contact).map((link) => [link.channel, link]));
+  const inboxNames = new Map<string, string>();
+  for (const inbox of contact.contactInboxes ?? []) {
+    const inboxName = inbox.inbox?.name?.trim();
+    if (inboxName && !inboxNames.has(inbox.channel)) inboxNames.set(inbox.channel, inboxName);
+  }
   const keys = Array.from(new Set([...channels, ...links.keys()]));
 
   return keys.map((channel) => {
@@ -42,6 +49,7 @@ export function getChannelRows(contact: ProfileLinksInput, channels: string[]): 
       channel,
       name: link?.channelName ?? CHANNEL_NAMES[channel] ?? channel,
       detail: link?.label ?? null,
+      inboxName: inboxNames.get(channel) ?? null,
       url: link?.url ?? null,
     };
   });

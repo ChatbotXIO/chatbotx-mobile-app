@@ -61,7 +61,11 @@ export function ChatHeader({ workspaceId, conversationId, onBack }: ChatHeaderPr
 
   const connectionStatusLabel = useConnectionStatusLabel();
   const contactName = conversation?.contact?.fullName ?? t('conversations.unknownContact');
-  const channel = conversation?.contactInboxes?.[0]?.channel;
+  const primaryInbox = conversation?.contactInboxes?.[0];
+  const channel = primaryInbox?.channel;
+  // The connected page/account name (e.g. "AhaChat"), so an agent with several pages on the same
+  // channel can tell which one this conversation came in on.
+  const inboxName = primaryInbox?.inbox?.name?.trim() || null;
   const assigneeName = conversation?.assignedUser?.name;
   const botActive = conversation
     ? isBotActive(conversation.botEnabled, conversation.botResumeAt)
@@ -91,6 +95,7 @@ export function ChatHeader({ workspaceId, conversationId, onBack }: ChatHeaderPr
 
   const subtitleParts = [
     channel ? t(`conversations.channel${capitalize(channel)}`, { defaultValue: channel }) : null,
+    inboxName,
     assigneeName ? t('conversations.assignedTo', { name: assigneeName }) : null,
   ].filter(Boolean);
 

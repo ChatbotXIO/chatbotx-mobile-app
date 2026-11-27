@@ -137,8 +137,6 @@ export function ContactHeader({
       </View>
 
       <ContactChannels rows={channelRows} />
-
-      <View style={[styles.divider, { backgroundColor: colors.borderSubtle }]} />
     </View>
   );
 }
@@ -166,10 +164,5 @@ const styles = StyleSheet.create({
   ctaRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    width: '100%',
-    marginTop: 8,
   },
 });
