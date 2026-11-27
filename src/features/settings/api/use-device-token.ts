@@ -1,70 +1,23 @@
 import { useMutation } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
-import * as SecureStore from 'expo-secure-store';
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
 
-import { apiClient } from '@/api/client';
-import { ApiError } from '@/api/errors';
-import { brand } from '@/config/brand';
+import {
+  getCachedDeviceToken,
+  registerDeviceToken,
+  unregisterCachedDeviceToken,
+  unregisterDeviceToken,
+} from '@/api/device-tokens';
 import { getPushTokenAsync } from '@/lib/notifications';
 
-/**
- * Registers Expo push tokens through the member-scoped `/v1/me/device-tokens` endpoint. The
- * selected workspace is an `x-workspace-id` header, never a request-body field. The
- * last-registered token is cached in SecureStore so unregister (and re-registration after a token
- * rotation) always targets the token the backend actually has on file, not whatever
- * `getExpoPushTokenAsync` returns now if it has since changed.
- */
-const LAST_REGISTERED_TOKEN_KEY = `${brand.brandId}.lastRegisteredPushToken`;
-
-function resolvePlatform(): 'ios' | 'android' | null {
-  if (Platform.OS === 'ios') return 'ios';
-  if (Platform.OS === 'android') return 'android';
-  return null; // web / other — the backend enum has no matching value, don't attempt registration.
-}
-
-async function registerToken(token: string): Promise<void> {
-  const platform = resolvePlatform();
-  if (!platform) throw new Error('Push registration is only supported on iOS and Android.');
-
-  // The generated member route does not declare an explicit header parameter. apiClient's
-  // middleware attaches the current workspace id, including immediately after a workspace switch.
-  const { error } = await apiClient.PUT('/v1/me/device-tokens', {
-    body: { platform, token },
-  });
-  if (error) throw new ApiError(error);
-  await SecureStore.setItemAsync(LAST_REGISTERED_TOKEN_KEY, token);
-}
-
-async function unregisterToken(token: string): Promise<void> {
-  const { error } = await apiClient.DELETE('/v1/me/device-tokens', { body: { token } });
-  if (error) throw new ApiError(error);
-}
-
-/**
- * Best-effort: removes this install's token from the signed-in account on the backend and clears the
- * local cache. Call it while the session is still valid (before sign-out) so a different account
- * signing in on this device doesn't inherit the previous account's pushes.
- */
-export async function unregisterStoredDeviceToken(): Promise<void> {
-  try {
-    const token = await SecureStore.getItemAsync(LAST_REGISTERED_TOKEN_KEY);
-    if (!token) return;
-    await unregisterToken(token).catch(() => {});
-  } finally {
-    await SecureStore.deleteItemAsync(LAST_REGISTERED_TOKEN_KEY).catch(() => {});
-  }
-}
-
-export function useRegisterDeviceToken(workspaceId: string) {
+export function useRegisterDeviceToken() {
   return useMutation({
     mutationFn: async () => {
       const result = await getPushTokenAsync();
       if (result.status !== 'granted') {
         throw new Error(`Push permission ${result.status}`);
       }
-      await registerToken(result.token);
+      await registerDeviceToken(result.token);
       return result.token;
     },
   });
@@ -72,20 +25,17 @@ export function useRegisterDeviceToken(workspaceId: string) {
 
 export function useUnregisterDeviceToken() {
   return useMutation({
-    mutationFn: async () => {
-      const token = await SecureStore.getItemAsync(LAST_REGISTERED_TOKEN_KEY);
-      if (!token) return;
-      await unregisterToken(token);
-      await SecureStore.deleteItemAsync(LAST_REGISTERED_TOKEN_KEY);
-    },
+    mutationFn: () => unregisterCachedDeviceToken({ bestEffort: false }),
   });
 }
 
 /**
- * Expo can issue a new push token at any time (token rotation) — this re-registers automatically
- * whenever that happens, but only while the user has push enabled (tracked by the caller via
- * `enabled`), and unregisters the stale token first so the backend never holds two tokens for one
- * install.
+ * Keeps the backend row in sync with this install's Expo push token while push is enabled:
+ * on entry (the backend row is per-account, so after signing in as someone else nothing else
+ * registers this install) and whenever the OS rotates the token. The stale token is unregistered
+ * first so the backend never holds two tokens for one install.
+ *
+ * `workspaceId` stays in the effect dependencies on purpose so a workspace switch re-syncs.
  */
 export function usePushTokenRotation(workspaceId: string, enabled: boolean): void {
   useEffect(() => {
@@ -93,27 +43,29 @@ export function usePushTokenRotation(workspaceId: string, enabled: boolean): voi
 
     let cancelled = false;
 
-    // Push intent is per-device, but the backend row is per-account: after signing in as someone
-    // else (or switching workspace) nothing else registers this install, so sync it on entry.
-    void (async () => {
+    async function sync() {
       try {
-        const result = await getPushTokenAsync();
+        // Never prompt from a background sync.
+        const result = await getPushTokenAsync({ requestPermission: false });
         if (cancelled || result.status !== 'granted') return;
-        await registerToken(result.token);
+
+        const cached = await getCachedDeviceToken();
+        if (cancelled) return;
+        if (cached && cached !== result.token) {
+          await unregisterDeviceToken(cached).catch(() => {});
+          if (cancelled) return;
+        }
+        await registerDeviceToken(result.token);
       } catch {
         // Best-effort; the Settings toggle remains the manual path.
       }
-    })();
+    }
 
-    const subscription = Notifications.addPushTokenListener(async ({ data: newToken }) => {
-      const previousToken = await SecureStore.getItemAsync(LAST_REGISTERED_TOKEN_KEY);
-      if (cancelled) return;
+    void sync();
 
-      if (previousToken && previousToken !== newToken) {
-        await unregisterToken(previousToken).catch(() => {});
-        if (cancelled) return;
-      }
-      await registerToken(newToken);
+    // The listener payload is the native APNs/FCM token, not the Expo token, so re-fetch instead.
+    const subscription = Notifications.addPushTokenListener(() => {
+      void sync();
     });
 
     return () => {

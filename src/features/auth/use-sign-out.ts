@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { revokeMobileToken } from '@/api/auth-endpoints';
 import { clearAuthToken } from '@/api/auth-token';
-import { unregisterStoredDeviceToken } from '@/features/settings/api/use-device-token';
+import { clearCachedDeviceToken, unregisterCachedDeviceToken } from '@/api/device-tokens';
 import { queryClient } from '@/lib/query-client';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
@@ -25,8 +25,11 @@ export function useSignOutLocally() {
     try {
       if (revokeToken) {
         // Needs a still-valid session and the current workspace header, so it goes first.
-        await unregisterStoredDeviceToken();
+        await unregisterCachedDeviceToken({ bestEffort: true });
         await revokeMobileToken().catch(() => {});
+      } else {
+        // Account deletion: the server dropped everything, but the local cache must not leak.
+        await clearCachedDeviceToken();
       }
       await clearAuthToken();
     } finally {

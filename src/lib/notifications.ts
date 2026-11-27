@@ -62,12 +62,14 @@ export type PushTokenResult =
   { status: 'granted'; token: string } | { status: 'denied' | 'unsupported' };
 
 /**
- * Requests notification permission (if not already granted) and returns an Expo push token.
+ * Requests notification permission (if not already granted and `requestPermission` is true) and returns an Expo push token.
  * `unsupported` covers both simulators/emulators (`Device.isDevice` is false — remote push
  * doesn't work there) and web. Requires `Constants.expoConfig.extra.eas.projectId`, which only
  * exists after `eas init` has run.
  */
-export async function getPushTokenAsync(): Promise<PushTokenResult> {
+export async function getPushTokenAsync({
+  requestPermission = true,
+}: { requestPermission?: boolean } = {}): Promise<PushTokenResult> {
   if (!Device.isDevice) {
     return { status: 'unsupported' };
   }
@@ -75,7 +77,7 @@ export async function getPushTokenAsync(): Promise<PushTokenResult> {
   const existing = await Notifications.getPermissionsAsync();
   let finalStatus = existing.status;
 
-  if (finalStatus !== 'granted') {
+  if (finalStatus !== 'granted' && requestPermission) {
     const requested = await Notifications.requestPermissionsAsync();
     finalStatus = requested.status;
   }

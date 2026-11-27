@@ -5,7 +5,12 @@ import type { PropsWithChildren } from 'react';
 
 import { apiClient } from '@/api/client';
 import { getPushTokenAsync } from '@/lib/notifications';
-import { useRegisterDeviceToken, useUnregisterDeviceToken } from './use-device-token';
+import * as Notifications from 'expo-notifications';
+import {
+  usePushTokenRotation,
+  useRegisterDeviceToken,
+  useUnregisterDeviceToken,
+} from './use-device-token';
 
 jest.mock('expo-notifications', () => ({
   addPushTokenListener: jest.fn(),
@@ -50,7 +55,7 @@ describe('device-token mutations', () => {
     jest.mocked(apiClient.PUT).mockResolvedValue({ data: undefined, error: undefined } as never);
     const queryClient = createTestQueryClient();
 
-    const { result, unmount } = await renderHook(() => useRegisterDeviceToken('workspace-1'), {
+    const { result, unmount } = await renderHook(() => useRegisterDeviceToken(), {
       wrapper: createWrapper(queryClient),
     });
 
@@ -85,5 +90,77 @@ describe('device-token mutations', () => {
     await unmount();
     queryClient.clear();
     queryClient.unmount();
+  });
+});
+
+describe('usePushTokenRotation', () => {
+  const remove = jest.fn();
+  let rotationListener: () => void;
+
+  beforeEach(() => {
+    jest.mocked(Notifications.addPushTokenListener).mockImplementation(((cb: () => void) => {
+      rotationListener = cb;
+      return { remove };
+    }) as never);
+    jest.mocked(apiClient.PUT).mockResolvedValue({ data: undefined, error: undefined } as never);
+    jest.mocked(apiClient.DELETE).mockResolvedValue({ data: undefined, error: undefined } as never);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('syncs the Expo token on entry without requesting permission', async () => {
+    jest
+      .mocked(getPushTokenAsync)
+      .mockResolvedValue({ status: 'granted', token: 'ExponentPushToken[1]' });
+    jest.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
+
+    await renderHook(() => usePushTokenRotation('workspace-1', true));
+    await act(async () => {});
+
+    expect(getPushTokenAsync).toHaveBeenCalledWith({ requestPermission: false });
+    expect(apiClient.PUT).toHaveBeenCalledWith('/v1/me/device-tokens', {
+      body: { platform: 'ios', token: 'ExponentPushToken[1]' },
+    });
+  });
+
+  it('re-fetches the Expo token on rotation and unregisters the stale one', async () => {
+    jest
+      .mocked(getPushTokenAsync)
+      .mockResolvedValue({ status: 'granted', token: 'ExponentPushToken[2]' });
+    jest.mocked(SecureStore.getItemAsync).mockResolvedValue('ExponentPushToken[1]');
+
+    await renderHook(() => usePushTokenRotation('workspace-1', true));
+    await act(async () => {});
+    jest.mocked(apiClient.PUT).mockClear();
+    jest.mocked(apiClient.DELETE).mockClear();
+
+    await act(async () => {
+      rotationListener();
+    });
+
+    expect(apiClient.DELETE).toHaveBeenCalledWith('/v1/me/device-tokens', {
+      body: { token: 'ExponentPushToken[1]' },
+    });
+    expect(apiClient.PUT).toHaveBeenCalledWith('/v1/me/device-tokens', {
+      body: { platform: 'ios', token: 'ExponentPushToken[2]' },
+    });
+  });
+
+  it('does nothing when disabled', async () => {
+    await renderHook(() => usePushTokenRotation('workspace-1', false));
+    await act(async () => {});
+
+    expect(Notifications.addPushTokenListener).not.toHaveBeenCalled();
+    expect(apiClient.PUT).not.toHaveBeenCalled();
+  });
+
+  it('removes the listener on unmount', async () => {
+    jest.mocked(getPushTokenAsync).mockResolvedValue({ status: 'denied' });
+    const { unmount } = await renderHook(() => usePushTokenRotation('workspace-1', true));
+    await unmount();
+
+    expect(remove).toHaveBeenCalled();
   });
 });
