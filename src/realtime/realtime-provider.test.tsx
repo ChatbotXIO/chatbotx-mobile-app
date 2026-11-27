@@ -6,7 +6,7 @@ import { Text } from 'react-native';
 import { apiClient } from '@/api/client';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
 import { RealtimeProvider } from './realtime-provider';
-import { RealtimeFatalError } from './protocol/realtime-socket';
+import { RealtimeFatalError, RealtimeRetryAfterError } from './protocol/realtime-socket';
 
 const mockStart = jest.fn();
 const mockStop = jest.fn();
@@ -107,6 +107,36 @@ describe('RealtimeProvider', () => {
     await waitFor(() => expect(getUrl).toBeDefined());
 
     await expect(getUrl!(null)).rejects.toBeInstanceOf(RealtimeFatalError);
+    await unmount();
+    queryClient.clear();
+    queryClient.unmount();
+  });
+
+  it('turns a rate-limited connect-token into a retry-after error that honors the header', async () => {
+    jest.mocked(apiClient.GET).mockResolvedValue({
+      data: undefined,
+      error: { message: 'Too many requests', status: 429 },
+      response: new Response(null, { status: 429, headers: { 'retry-after': '5' } }),
+    } as never);
+    const queryClient = new QueryClient();
+    let getUrl: ((lastSeq: string | null) => Promise<string>) | undefined;
+    mockCreateRealtimeConnection.mockImplementation((options: { getUrl: typeof getUrl }) => {
+      getUrl = options.getUrl;
+      return { start: mockStart, stop: mockStop, resume: mockResume, retry: jest.fn() };
+    });
+
+    const { unmount } = await render(
+      <RealtimeProvider>
+        <Text>Inbox</Text>
+      </RealtimeProvider>,
+      { wrapper: createWrapper(queryClient) },
+    );
+
+    await waitFor(() => expect(getUrl).toBeDefined());
+
+    const failure = await getUrl!(null).catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(RealtimeRetryAfterError);
+    expect((failure as RealtimeRetryAfterError).retryAfterMs).toBeGreaterThanOrEqual(5000);
     await unmount();
     queryClient.clear();
     queryClient.unmount();

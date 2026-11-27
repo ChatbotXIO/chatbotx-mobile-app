@@ -1,5 +1,9 @@
 import { createRealtimeConnection } from './realtime-connection';
-import { REALTIME_CLOSE_CODE, RealtimeFatalError } from './protocol/realtime-socket';
+import {
+  REALTIME_CLOSE_CODE,
+  RealtimeFatalError,
+  RealtimeRetryAfterError,
+} from './protocol/realtime-socket';
 
 class FakeSocket {
   static instances: FakeSocket[] = [];
@@ -151,6 +155,43 @@ describe('createRealtimeConnection', () => {
       JSON.stringify({ retryAfter: 5000 }),
     );
     jest.advanceTimersByTime(4999);
+    await flush();
+    expect(FakeSocket.instances).toHaveLength(1);
+    jest.advanceTimersByTime(2);
+    await flush();
+    expect(FakeSocket.instances).toHaveLength(2);
+  });
+
+  it('waits the retry-after of a rate-limited token mint and blocks early resume', async () => {
+    let calls = 0;
+    const { connection, handlers } = setup(async (seq) => {
+      calls += 1;
+      if (calls === 1) throw new RealtimeRetryAfterError('slow down', 5000);
+      return `ws://x?lastSeq=${seq ?? ''}`;
+    });
+    connection.start();
+    await flush();
+    expect(FakeSocket.instances).toHaveLength(0);
+
+    jest.advanceTimersByTime(1000);
+    connection.resume();
+    await flush();
+    expect(handlers.getUrl).toHaveBeenCalledTimes(1);
+
+    jest.advanceTimersByTime(3998);
+    await flush();
+    expect(FakeSocket.instances).toHaveLength(0);
+    jest.advanceTimersByTime(2);
+    await flush();
+    expect(FakeSocket.instances).toHaveLength(1);
+  });
+
+  it('guarantees at least half the backoff ceiling before a plain reconnect (equal jitter)', async () => {
+    const { connection } = setup();
+    connection.start();
+    await flush();
+    FakeSocket.instances[0]!.serverClose(1006);
+    jest.advanceTimersByTime(1499);
     await flush();
     expect(FakeSocket.instances).toHaveLength(1);
     jest.advanceTimersByTime(2);

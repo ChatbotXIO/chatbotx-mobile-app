@@ -3,13 +3,10 @@ import type { PropsWithChildren } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
 
-import { apiClient } from '@/api/client';
-import { ApiError } from '@/api/errors';
-import { parseRetryAfterMs } from '@/api/retry-after';
 import { useWorkspaceStore } from '@/stores/use-workspace-store';
 
 import { invalidateWorkspaceQueries, useRealtimeAppState } from './app-state';
-import { RealtimeFatalError, RealtimeRetryAfterError } from './protocol/realtime-socket';
+import { mintRealtimeUrl } from './mint-realtime-url';
 import { RealtimeControlsContext } from './realtime-context';
 import { createRealtimeConnection } from './realtime-connection';
 import { clearAllTypingTimers } from './typing-timers';
@@ -35,31 +32,7 @@ function ConnectedRealtimeProvider({
   // render would notify other mounted components (e.g. the connection title) mid-render.
   const [connection] = useState(() => {
     return createRealtimeConnection({
-      getUrl: async (lastSeq) => {
-        const { data, error, response } = await apiClient.GET('/v1/realtime/connect-token');
-        if (error) {
-          const apiError = new ApiError(error);
-          const status = apiError.body.status;
-          if (status && status >= 400 && status < 500 && status !== 429) {
-            throw new RealtimeFatalError(apiError.message);
-          }
-          if (status === 429) {
-            const retryAfterMs = parseRetryAfterMs(
-              response.headers.get('retry-after'),
-              apiError.message,
-            );
-            if (retryAfterMs !== null) {
-              throw new RealtimeRetryAfterError(apiError.message, retryAfterMs);
-            }
-          }
-          throw apiError;
-        }
-
-        const url = new URL(data.socketUrl);
-        url.searchParams.set('token', data.token);
-        if (lastSeq) url.searchParams.set('lastSeq', lastSeq);
-        return url.toString();
-      },
+      getUrl: mintRealtimeUrl,
       onEvents: handleEvents,
       onStatus: setStatus,
       onOpen: ({ hasCursor }) => {
