@@ -16,7 +16,7 @@ function delay(ms: number): Promise<void> {
 
 /** Resolves once the channel has answered for `clientId` (it left use-send-status-store.ts), or
  * after `timeoutMs`. Resolves at once for a send that isn't tracked (e.g. a flow send). */
-export function waitForDeliveryAnswer(clientId: string, timeoutMs: number): Promise<void> {
+function waitForDeliveryAnswer(clientId: string, timeoutMs: number): Promise<void> {
   if (!(clientId in useSendStatusStore.getState().sends)) return Promise.resolve();
   return new Promise((resolve) => {
     const finish = () => {

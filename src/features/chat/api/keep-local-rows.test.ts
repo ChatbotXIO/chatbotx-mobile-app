@@ -60,4 +60,32 @@ describe('keepLocalRows', () => {
 
     expect(result.data).toEqual([{ id: 'srv-1', clientId: 'c-1' }]);
   });
+
+  it('places a kept failed row by createdAt instead of on top', () => {
+    const previous = {
+      pages: [
+        page([
+          { id: 'new', createdAt: '2026-01-01T12:03:00.000Z' },
+          {
+            id: 'tmp',
+            clientId: 'c-1',
+            createdAt: '2026-01-01T12:01:00.000Z',
+            __optimisticStatus: 'failed',
+          },
+        ]),
+      ],
+      pageParams: [undefined],
+    };
+
+    const result = keepLocalRows(
+      previous,
+      page([
+        { id: 'newer', createdAt: '2026-01-01T12:05:00.000Z' },
+        { id: 'new', createdAt: '2026-01-01T12:03:00.000Z' },
+        { id: 'old', createdAt: '2026-01-01T12:00:00.000Z' },
+      ]),
+    );
+
+    expect(result.data.map((m) => m.id)).toEqual(['newer', 'new', 'tmp', 'old']);
+  });
 });

@@ -7,7 +7,12 @@ import type {
   RealtimeEventMessageRemoved,
   RealtimeEventMessageUpdated,
 } from '@/realtime/events';
-import type { ListMessagesResponse, Message } from '@/features/chat/api/use-messages-infinite';
+import type { Message, MessagesInfiniteData } from '@/features/chat/api/use-messages-infinite';
+import {
+  getMessageClientId,
+  markOptimisticFailed,
+  stripOptimisticFields,
+} from '@/features/chat/components/optimistic-message';
 import { DELIVERY_FAILED_ERROR_KIND } from '@/features/chat/lib/send-status';
 
 /**
@@ -16,8 +21,7 @@ import { DELIVERY_FAILED_ERROR_KIND } from '@/features/chat/lib/send-status';
  * easy to unit test later (the plan notes jest-expo coverage for exactly this kind of pure cache
  * applier, even though no test infra exists yet this phase).
  */
-export type InfiniteMessagesData =
-  { pages: ListMessagesResponse[]; pageParams: unknown[] } | undefined;
+export type InfiniteMessagesData = MessagesInfiniteData | undefined;
 
 /** Normalizes as well as narrows: `attachments` is required by the `Message` type and dereferenced
  * unguarded by message-bubble.tsx, but nothing guarantees a wire payload includes it. Defaulting it
@@ -29,22 +33,6 @@ export function narrowIncomingMessage(data: unknown): Message | null {
   if (!('id' in data) || typeof data.id !== 'string') return null;
   const message = data as Message;
   return Array.isArray(message.attachments) ? message : { ...message, attachments: [] };
-}
-
-type LocalFields = { __optimisticStatus?: string; __optimisticError?: string };
-
-/** Drops the `__optimistic*` keys use-send-message.ts stashes on a local row. */
-export function stripOptimisticFields(message: Message): Message {
-  const {
-    __optimisticStatus: _status,
-    __optimisticError: _error,
-    ...rest
-  } = message as Message & LocalFields;
-  return rest as Message;
-}
-
-function messageClientId(message: Message): string | undefined {
-  return 'clientId' in message && message.clientId ? message.clientId : undefined;
 }
 
 function timeOf(message: Message): number {
@@ -90,8 +78,8 @@ export function applyMessageCreated(
   if (incoming.conversationId !== targetConversationId) return current;
   if (current.pages.length === 0) return current;
 
-  const clientId = messageClientId(incoming);
-  const isOwnRow = (message: Message) => !!clientId && messageClientId(message) === clientId;
+  const clientId = getMessageClientId(incoming);
+  const isOwnRow = (message: Message) => !!clientId && getMessageClientId(message) === clientId;
 
   let replaced = false;
   const pages = current.pages.map((page) => ({
@@ -135,13 +123,15 @@ export function reconcileSentMessage(
   if (!current) return current;
   let local: Message | null = null;
   for (const page of current.pages) {
-    local = page.data.find((message) => messageClientId(message) === clientId) ?? null;
+    local = page.data.find((message) => getMessageClientId(message) === clientId) ?? null;
     if (local) break;
   }
   if (!local) return current;
 
   const hasServerRow = current.pages.some((page) =>
-    page.data.some((message) => message.id === serverId && messageClientId(message) !== clientId),
+    page.data.some(
+      (message) => message.id === serverId && getMessageClientId(message) !== clientId,
+    ),
   );
 
   return {
@@ -149,7 +139,7 @@ export function reconcileSentMessage(
     pages: current.pages.map((page) => ({
       ...page,
       data: page.data.flatMap((message): Message[] => {
-        if (messageClientId(message) === clientId) {
+        if (getMessageClientId(message) === clientId) {
           return hasServerRow ? [] : [{ ...stripOptimisticFields(message), id: serverId }];
         }
         if (message.id === serverId) return [{ ...message, clientId } as Message];
@@ -224,9 +214,8 @@ export function applyMessageFailed(
     pages: current.pages.map((page) => ({
       ...page,
       data: page.data.map((message) => {
-        const matches = clientId
-          ? 'clientId' in message && message.clientId === clientId
-          : message.id === messageId;
+        const matches =
+          message.id === messageId || (!!clientId && getMessageClientId(message) === clientId);
         if (!matches) return message;
         return { ...stripOptimisticFields(message), sendError };
       }),
@@ -252,7 +241,7 @@ export function applyMessageRemoved(
   const removedIds = new Set(event.data.messageIds);
   const ownClientIds = new Set(ownSends.values());
   const ownClientIdOf = (message: Message): string | undefined => {
-    const clientId = messageClientId(message);
+    const clientId = getMessageClientId(message);
     if (clientId && ownClientIds.has(clientId)) return clientId;
     return ownSends.get(message.id);
   };
@@ -265,12 +254,7 @@ export function applyMessageRemoved(
         const clientId = ownClientIdOf(message);
         if (clientId) {
           return [
-            {
-              ...message,
-              clientId,
-              __optimisticStatus: 'failed',
-              __optimisticError: DELIVERY_FAILED_ERROR_KIND,
-            } as unknown as Message,
+            markOptimisticFailed({ ...message, clientId } as Message, DELIVERY_FAILED_ERROR_KIND),
           ];
         }
         return removedIds.has(message.id) ? [] : [message];

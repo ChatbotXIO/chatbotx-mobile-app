@@ -3,13 +3,17 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
 import { ApiError, normalizeApiError } from '@/api/errors';
 import { queryKeys } from '@/api/query-keys';
-import { getOptimisticErrorKind } from '@/features/chat/components/optimistic-message';
+import {
+  getMessageClientId,
+  getOptimisticErrorKind,
+  markOptimisticFailed,
+} from '@/features/chat/components/optimistic-message';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
 import { useSendStatusStore } from '@/features/chat/stores/use-send-status-store';
 import { runInSendQueue } from '@/features/chat/lib/send-queue';
 import { reconcileSentMessage } from '@/realtime/apply-message-events';
 import { generateClientId } from './generate-client-id';
-import type { ListMessagesResponse, Message } from './use-messages-infinite';
+import type { Message, MessagesInfiniteData } from './use-messages-infinite';
 import { type MultipartAttachment, sendMultipartMessage } from './send-message-multipart';
 
 interface SendMessageParams {
@@ -126,8 +130,6 @@ function parseCreatedMessageId(body: unknown): string | null {
   return null;
 }
 
-type MessagesInfiniteData = { pages: ListMessagesResponse[]; pageParams: unknown[] };
-
 /** How long a send may wait for the channel's answer (see use-send-status-store.ts) before the
  * bubble stops trusting realtime and shows whatever the server now holds. Covers a lost event (the
  * socket dropped mid-send, or a reconnect burst that refetched instead of replaying) without
@@ -157,9 +159,7 @@ function removeOptimisticMessageFromData(
     ...old,
     pages: old.pages.map((page) => ({
       ...page,
-      data: page.data.filter(
-        (message) => !('clientId' in message && message.clientId === clientId),
-      ),
+      data: page.data.filter((message) => getMessageClientId(message) !== clientId),
     })),
   };
 }
@@ -246,12 +246,7 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
 
       queryClient.setQueryData<MessagesInfiniteData>(queryKey, (old) => {
         if (!old) return old;
-        const [firstPage, ...restPages] = old.pages;
-        if (!firstPage) return old;
-
-        const existingIndex = firstPage.data.findIndex(
-          (message) => 'clientId' in message && message.clientId === clientId,
-        );
+        if (old.pages.length === 0) return old;
         // `__optimisticStatus` is deliberately off-schema — see optimistic-message.ts for the
         // narrowing contract. The base object itself is fully type-checked by the factory.
         const optimisticEntry = {
@@ -266,14 +261,27 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
           __optimisticStatus: 'pending',
         } as Message;
 
-        const newData =
-          existingIndex >= 0
-            ? firstPage.data.map((message, index) =>
-                index === existingIndex ? optimisticEntry : message,
-              )
-            : [optimisticEntry, ...firstPage.data];
-
-        return { ...old, pages: [{ ...firstPage, data: newData }, ...restPages] };
+        // A retried row may sit on any page (messageRemoved can fail a row anywhere): replace it
+        // in place, otherwise prepend to the first page.
+        const isRetry = old.pages.some((page) =>
+          page.data.some((message) => getMessageClientId(message) === clientId),
+        );
+        if (isRetry) {
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((message) =>
+                getMessageClientId(message) === clientId ? optimisticEntry : message,
+              ),
+            })),
+          };
+        }
+        const [firstPage, ...restPages] = old.pages;
+        return {
+          ...old,
+          pages: [{ ...firstPage!, data: [optimisticEntry, ...firstPage!.data] }, ...restPages],
+        };
       });
 
       return { clientId, skippedOptimistic: false as const };
@@ -309,12 +317,8 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
           pages: old.pages.map((page) => ({
             ...page,
             data: page.data.map((message) =>
-              'clientId' in message && message.clientId === context.clientId
-                ? ({
-                    ...message,
-                    __optimisticStatus: 'failed',
-                    __optimisticError: getOptimisticErrorKind(error),
-                  } as unknown as Message)
+              getMessageClientId(message) === context.clientId
+                ? markOptimisticFailed(message, getOptimisticErrorKind(error))
                 : message,
             ),
           })),

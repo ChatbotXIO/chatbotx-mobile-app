@@ -5,7 +5,11 @@ import { ApiError } from '@/api/errors';
 import { getNextPageParam } from '@/api/pagination';
 import { queryKeys } from '@/api/query-keys';
 import type { operations } from '@/api/generated/schema';
-import { getOptimisticStatus } from '@/features/chat/components/optimistic-message';
+import {
+  getMessageClientId,
+  getOptimisticStatus,
+} from '@/features/chat/components/optimistic-message';
+import { insertByCreatedAt } from '@/realtime/apply-message-events';
 
 /**
  * Types derived directly from the generated schema's `operations` map for
@@ -18,11 +22,7 @@ export type Message = ListMessagesResponse['data'][number];
 
 const PER_PAGE = 30;
 
-type MessagesInfiniteData = { pages: ListMessagesResponse[]; pageParams: unknown[] };
-
-function clientIdOf(message: Message): string | undefined {
-  return 'clientId' in message && message.clientId ? message.clientId : undefined;
-}
+export type MessagesInfiniteData = { pages: ListMessagesResponse[]; pageParams: unknown[] };
 
 /**
  * Merges this device's local state into a freshly fetched first page. A refetch only returns what
@@ -43,28 +43,31 @@ export function keepLocalRows(
 
   const clientIdById = new Map<string, string>();
   for (const message of previousRows) {
-    const clientId = clientIdOf(message);
+    const clientId = getMessageClientId(message);
     if (clientId) clientIdById.set(message.id, clientId);
   }
 
   const freshIds = new Set(fresh.data.map((message) => message.id));
-  const freshClientIds = new Set(fresh.data.flatMap((message) => clientIdOf(message) ?? []));
+  const freshClientIds = new Set(
+    fresh.data.flatMap((message) => getMessageClientId(message) ?? []),
+  );
   const localRows = (previous?.pages[0]?.data ?? []).filter((message) => {
     if (getOptimisticStatus(message) === null) return false;
-    const clientId = clientIdOf(message);
+    const clientId = getMessageClientId(message);
     return !freshIds.has(message.id) && !(clientId && freshClientIds.has(clientId));
   });
 
-  const hasCarriedClientId = fresh.data.some(
-    (message) => !clientIdOf(message) && clientIdById.has(message.id),
-  );
-  if (localRows.length === 0 && !hasCarriedClientId) return fresh;
-
+  let changed = false;
   const data = fresh.data.map((message) => {
-    const clientId = clientIdOf(message) ? undefined : clientIdById.get(message.id);
-    return clientId ? ({ ...message, clientId } as Message) : message;
+    const clientId = getMessageClientId(message) ? undefined : clientIdById.get(message.id);
+    if (!clientId) return message;
+    changed = true;
+    return { ...message, clientId } as Message;
   });
-  return { ...fresh, data: [...localRows, ...data] };
+  if (localRows.length === 0 && !changed) return fresh;
+
+  // Newest-first; a kept local row goes where its createdAt puts it, not on top.
+  return { ...fresh, data: localRows.reduce(insertByCreatedAt, data) };
 }
 
 /** Each page returns newest-first; `nextCursor` walks toward older messages. message-list.tsx

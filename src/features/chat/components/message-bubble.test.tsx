@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react-native';
 import { initI18n } from '@/i18n';
 import type { Message } from '@/features/chat/api/use-messages-infinite';
 
-import { MessageBubble } from './message-bubble';
+import { MessageBubble, messagesEqual } from './message-bubble';
 
 // expo-router's full module (pulled in transitively via attachment-view.tsx's `router.push` for
 // the image viewer) drags in its native-stack navigator, which in turn imports expo-glass-effect's
@@ -147,5 +147,18 @@ describe('MessageBubble', () => {
     );
 
     expect(screen.getByText('Conversation archived')).toBeTruthy();
+  });
+});
+
+describe('messagesEqual', () => {
+  const props = (message: Message) => ({ message, position: 'single', showMeta: true }) as never;
+
+  it('re-renders when text or contentAttributes change without an updatedAt bump', () => {
+    const base = fakeMessage();
+    expect(messagesEqual(props(base), props({ ...base, text: 'edited' }))).toBe(false);
+    expect(messagesEqual(props(base), props({ ...base, contentAttributes: {} as never }))).toBe(
+      false,
+    );
+    expect(messagesEqual(props(base), props({ ...base }))).toBe(true);
   });
 });

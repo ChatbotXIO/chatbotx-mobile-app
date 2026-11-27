@@ -150,6 +150,15 @@ describe('applyMessageFailed', () => {
     expect(firstPage(result)[0]).toEqual({ id: 'tmp', clientId: 'c-1', sendError: null });
   });
 
+  it('matches by messageId when the event carries a clientId the cached row lacks', () => {
+    const result = applyMessageFailed(
+      cacheWith([{ id: 'srv-1' }]),
+      failedEvent({ messageId: 'srv-1', clientId: 'c-other', error: 'rejected' }),
+    );
+
+    expect(firstPage(result)[0]?.sendError).toBe('rejected');
+  });
+
   it('writes the channel error onto the row', () => {
     const result = applyMessageFailed(
       cacheWith([{ id: 'srv-1' }, { id: 'srv-2' }]),

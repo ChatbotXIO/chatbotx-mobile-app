@@ -273,12 +273,14 @@ function MessageBubbleImpl({
   );
 }
 
-function messagesEqual(prev: MessageBubbleProps, next: MessageBubbleProps): boolean {
+export function messagesEqual(prev: MessageBubbleProps, next: MessageBubbleProps): boolean {
   const prevOptimistic = getOptimisticStatus(prev.message);
   const nextOptimistic = getOptimisticStatus(next.message);
   return (
     prev.message.id === next.message.id &&
     prev.message.updatedAt === next.message.updatedAt &&
+    prev.message.text === next.message.text &&
+    prev.message.contentAttributes === next.message.contentAttributes &&
     prev.message.deletedAt === next.message.deletedAt &&
     prev.position === next.position &&
     prev.showMeta === next.showMeta &&
