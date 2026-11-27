@@ -190,6 +190,8 @@
     "empty": "אין אנשי קשר",
     "unknown": "לא ידוע",
     "blocked": "חסום",
+    "openProfileOn": "פתח את {{handle}} ב-{{channel}}",
+    "channels": "ערוצים",
     "email": "אימייל",
     "phone": "טלפון",
     "locale": "שפה",

@@ -200,6 +200,8 @@
     "empty": "Kişi yok",
     "unknown": "Bilinmiyor",
     "blocked": "Engellendi",
+    "openProfileOn": "{{handle}} hesabını {{channel}} üzerinde aç",
+    "channels": "Kanallar",
     "email": "E-posta",
     "phone": "Telefon",
     "locale": "Dil",

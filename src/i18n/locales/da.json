@@ -190,6 +190,8 @@
     "empty": "Ingen kontakter",
     "unknown": "Ukendt",
     "blocked": "Blokeret",
+    "openProfileOn": "Åbn {{handle}} på {{channel}}",
+    "channels": "Kanaler",
     "email": "E-mail",
     "phone": "Telefon",
     "locale": "Sprog",

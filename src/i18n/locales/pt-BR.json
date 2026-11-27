@@ -200,6 +200,8 @@
     "empty": "Nenhum contato",
     "unknown": "Desconhecido",
     "blocked": "Bloqueado",
+    "openProfileOn": "Abrir {{handle}} no {{channel}}",
+    "channels": "Canais",
     "email": "E-mail",
     "phone": "Telefone",
     "locale": "Idioma",

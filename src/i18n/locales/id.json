@@ -190,6 +190,8 @@
     "empty": "Tidak ada kontak",
     "unknown": "Tidak diketahui",
     "blocked": "Diblokir",
+    "openProfileOn": "Buka {{handle}} di {{channel}}",
+    "channels": "Kanal",
     "email": "Email",
     "phone": "Telepon",
     "locale": "Bahasa",

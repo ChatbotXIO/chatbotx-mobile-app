@@ -200,6 +200,8 @@
     "empty": "連絡先がありません",
     "unknown": "不明",
     "blocked": "ブロック済み",
+    "openProfileOn": "{{channel}} で {{handle}} を開く",
+    "channels": "チャネル",
     "email": "メール",
     "phone": "電話番号",
     "locale": "言語",
