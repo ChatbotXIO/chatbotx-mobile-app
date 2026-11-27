@@ -5,6 +5,9 @@ import { ApiError, normalizeApiError } from '@/api/errors';
 import { queryKeys } from '@/api/query-keys';
 import { getOptimisticErrorKind } from '@/features/chat/components/optimistic-message';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
+import { useSendStatusStore } from '@/features/chat/stores/use-send-status-store';
+import { runInSendQueue } from '@/features/chat/lib/send-queue';
+import { reconcileSentMessage } from '@/realtime/apply-message-events';
 import { generateClientId } from './generate-client-id';
 import type { ListMessagesResponse, Message } from './use-messages-infinite';
 import { type MultipartAttachment, sendMultipartMessage } from './send-message-multipart';
@@ -113,9 +116,9 @@ export function createOptimisticMessage(params: {
 }
 
 /** Response body from message-create is typed `unknown` in the generated schema (openapi-typescript
- * couldn't resolve the handler's real return type) — the backend almost certainly echoes the
- * created message (with server `id` and the `clientId` we sent), but this is not contractually
- * guaranteed, so we narrow defensively rather than casting blindly. */
+ * couldn't resolve the handler's real return type). It carries the created message's server `id`
+ * (but not `clientId`, which the server never stores), so we narrow defensively rather than
+ * casting blindly. */
 function parseCreatedMessageId(body: unknown): string | null {
   if (body && typeof body === 'object' && 'id' in body && typeof body.id === 'string') {
     return body.id;
@@ -124,6 +127,26 @@ function parseCreatedMessageId(body: unknown): string | null {
 }
 
 type MessagesInfiniteData = { pages: ListMessagesResponse[]; pageParams: unknown[] };
+
+/** How long a send may wait for the channel's answer (see use-send-status-store.ts) before the
+ * bubble stops trusting realtime and shows whatever the server now holds. Covers a lost event (the
+ * socket dropped mid-send, or a reconnect burst that refetched instead of replaying) without
+ * leaving the bubble "sending" forever. The worker retries a failing send several times before it
+ * answers, so this is deliberately generous. */
+const DELIVERY_CONFIRM_TIMEOUT_MS = 60_000;
+
+function expireDeliveryTracking(
+  queryClient: ReturnType<typeof useQueryClient>,
+  queryKey: readonly unknown[],
+  clientId: string,
+): void {
+  setTimeout(() => {
+    const store = useSendStatusStore.getState();
+    if (!(clientId in store.sends)) return;
+    store.stopTracking(clientId);
+    void queryClient.invalidateQueries({ queryKey });
+  }, DELIVERY_CONFIRM_TIMEOUT_MS);
+}
 
 function removeOptimisticMessageFromData(
   old: MessagesInfiniteData | undefined,
@@ -162,42 +185,48 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
   const clearUploadProgress = useChatStore((state) => state.clearUploadProgress);
   const setDraft = useChatStore((state) => state.setDraft);
   const setJustSentClientId = useChatStore((state) => state.setJustSentClientId);
+  const startTracking = useSendStatusStore((state) => state.startTracking);
+  const attachMessageId = useSendStatusStore((state) => state.attachMessageId);
+  const stopTracking = useSendStatusStore((state) => state.stopTracking);
+
+  const postMessage = async (params: SendMessageParams & { clientId: string }) => {
+    const { clientId } = params;
+    const attachments = params.attachments ?? [];
+
+    if (attachments.length > 0) {
+      const body = await sendMultipartMessage({
+        workspaceId,
+        conversationId,
+        text: params.text,
+        clientId,
+        attachments,
+        replyToMessageId: params.replyTo?.messageId,
+        replyToMessageCreatedAt: params.replyTo?.createdAt,
+        onProgress: (ratio) => setUploadProgress(clientId, ratio),
+      });
+      return { clientId, serverId: parseCreatedMessageId(body) };
+    }
+
+    const { data, error } = await apiClient.POST('/v1/conversations/{conversationId}/messages', {
+      params: { path: { conversationId } },
+      body: {
+        text: params.text,
+        clientId,
+        flowId: params.flowId,
+        nodeId: params.nodeId,
+        replyToMessageId: params.replyTo?.messageId,
+        replyToMessageCreatedAt: params.replyTo?.createdAt,
+      },
+    });
+    if (error) {
+      throw new ApiError(error);
+    }
+    return { clientId, serverId: parseCreatedMessageId(data) };
+  };
 
   const mutation = useMutation({
-    mutationFn: async (params: SendMessageParams & { clientId: string }) => {
-      const { clientId } = params;
-      const attachments = params.attachments ?? [];
-
-      if (attachments.length > 0) {
-        const body = await sendMultipartMessage({
-          workspaceId,
-          conversationId,
-          text: params.text,
-          clientId,
-          attachments,
-          replyToMessageId: params.replyTo?.messageId,
-          replyToMessageCreatedAt: params.replyTo?.createdAt,
-          onProgress: (ratio) => setUploadProgress(clientId, ratio),
-        });
-        return { clientId, serverId: parseCreatedMessageId(body) };
-      }
-
-      const { data, error } = await apiClient.POST('/v1/conversations/{conversationId}/messages', {
-        params: { path: { conversationId } },
-        body: {
-          text: params.text,
-          clientId,
-          flowId: params.flowId,
-          nodeId: params.nodeId,
-          replyToMessageId: params.replyTo?.messageId,
-          replyToMessageCreatedAt: params.replyTo?.createdAt,
-        },
-      });
-      if (error) {
-        throw new ApiError(error);
-      }
-      return { clientId, serverId: parseCreatedMessageId(data) };
-    },
+    mutationFn: (params: SendMessageParams & { clientId: string }) =>
+      runInSendQueue(conversationId, params.clientId, () => postMessage(params)),
 
     onMutate: async (params) => {
       const { clientId } = params;
@@ -210,6 +239,10 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
       if (params.flowId) {
         return { clientId, skippedOptimistic: true as const };
       }
+
+      // Started before the request so a channel answer that beats the create response (the worker
+      // can be that fast) still finds the send. Stays "sending" until that answer arrives.
+      startTracking(clientId, conversationId);
 
       queryClient.setQueryData<MessagesInfiniteData>(queryKey, (old) => {
         if (!old) return old;
@@ -249,6 +282,8 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
     onError: (error, params, context) => {
       if (!context) return;
       clearUploadProgress(context.clientId);
+      // The request never reached the channel; the optimistic row carries the failure from here.
+      stopTracking(context.clientId);
 
       // context.skippedOptimistic (flow sends): nothing was inserted, so there's no cache entry
       // to touch — but a blocked/unauthorized rejection below still restores the draft.
@@ -287,15 +322,23 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
       });
     },
 
-    onSuccess: (_data, _params, context) => {
+    onSuccess: (data, _params, context) => {
       if (context) clearUploadProgress(context.clientId);
-      // The sender's own optimistic bubble is reconciled here by simply refetching — the newly
-      // created message (with its real server id) will replace the optimistic entry once the list
-      // refetches, since clientId is embedded on the real message too and message-bubble.tsx keys
-      // by clientId when present. Realtime handlers handle the same reconciliation for OTHER
-      // clients viewing this conversation; this path only needs to work for the sender themself.
-      // Flow sends (no optimistic entry) rely on this same invalidation/refetch (or realtime) to
-      // surface the flow's resulting messages.
+      if (context && !context.skippedOptimistic) {
+        if (data.serverId) {
+          attachMessageId(context.clientId, data.serverId);
+          // The server never stores clientId, so a refetch can't match its row to the optimistic
+          // one. Give the local row its server id now (merging into the server row if a refetch or
+          // `messageCreated` already landed it); keepLocalRows then matches by id.
+          const serverId = data.serverId;
+          queryClient.setQueryData<MessagesInfiniteData>(queryKey, (old) =>
+            reconcileSentMessage(old, context.clientId, serverId),
+          );
+        }
+        expireDeliveryTracking(queryClient, queryKey, context.clientId);
+      }
+      // Refetch to pick up anything else the send produced. Flow sends (no optimistic entry) rely
+      // on this (or realtime) to surface the flow's resulting messages.
       queryClient.invalidateQueries({ queryKey });
 
       // Recorded in the shared chat store (not local mutation state) so the chat screen's

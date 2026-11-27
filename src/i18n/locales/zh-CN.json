@@ -142,6 +142,8 @@
     "send": "发送",
     "failedToSend": "发送失败",
     "failedToSendTapRetry": "发送失败，点击重试。",
+    "deliveryFailedTapRetry": "消息未能送达，点击重试。",
+    "failedToSendReason": "发送失败：{{reason}}",
     "retrySend": "重试",
     "noMessages": "暂无消息",
     "edit": "编辑",

@@ -132,6 +132,8 @@
     "send": "Lähetä",
     "failedToSend": "Lähetys epäonnistui",
     "failedToSendTapRetry": "Lähetys epäonnistui. Yritä uudelleen napauttamalla.",
+    "deliveryFailedTapRetry": "Viestiä ei voitu toimittaa. Yritä uudelleen napauttamalla.",
+    "failedToSendReason": "Lähetys epäonnistui: {{reason}}",
     "retrySend": "Yritä uudelleen",
     "noMessages": "Ei vielä viestejä",
     "edit": "Muokkaa",

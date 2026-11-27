@@ -142,6 +142,8 @@
     "send": "Gửi",
     "failedToSend": "Gửi thất bại",
     "failedToSendTapRetry": "Gửi thất bại. Nhấn để thử lại.",
+    "deliveryFailedTapRetry": "Không thể gửi tin nhắn tới khách. Nhấn để thử lại.",
+    "failedToSendReason": "Gửi thất bại: {{reason}}",
     "retrySend": "Thử lại",
     "noMessages": "Chưa có tin nhắn",
     "edit": "Sửa",

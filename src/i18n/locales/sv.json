@@ -142,6 +142,8 @@
     "send": "Skicka",
     "failedToSend": "Det gick inte att skicka",
     "failedToSendTapRetry": "Det gick inte att skicka. Tryck för att försöka igen.",
+    "deliveryFailedTapRetry": "Meddelandet kunde inte levereras. Tryck för att försöka igen.",
+    "failedToSendReason": "Det gick inte att skicka: {{reason}}",
     "retrySend": "Försök igen",
     "noMessages": "Inga meddelanden än",
     "edit": "Redigera",

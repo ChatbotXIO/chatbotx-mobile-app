@@ -142,6 +142,8 @@
     "send": "Trimite",
     "failedToSend": "Trimiterea a eșuat",
     "failedToSendTapRetry": "Trimiterea a eșuat. Atinge pentru a reîncerca.",
+    "deliveryFailedTapRetry": "Mesajul nu a putut fi livrat. Atinge pentru a reîncerca.",
+    "failedToSendReason": "Trimiterea a eșuat: {{reason}}",
     "retrySend": "Reîncearcă",
     "noMessages": "Niciun mesaj încă",
     "edit": "Editează",

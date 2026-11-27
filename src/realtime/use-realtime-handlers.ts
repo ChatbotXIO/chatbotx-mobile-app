@@ -3,13 +3,19 @@ import { useCallback } from 'react';
 
 import { queryKeys } from '@/api/query-keys';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
+import {
+  findTrackedClientId,
+  useSendStatusStore,
+} from '@/features/chat/stores/use-send-status-store';
 import { narrowIncomingMessage, type InfiniteMessagesData } from './apply-message-events';
 import type { Message } from '@/features/chat/api/use-messages-infinite';
 import {
+  applyMessageContentUpdated,
   applyMessageCreated,
   applyMessageDeleted,
   applyMessageFailed,
   applyMessageIdAssigned,
+  applyMessageRemoved,
   applyMessageUpdated,
 } from './apply-message-events';
 import type { InfiniteConversationsData } from './apply-conversation-events';
@@ -128,35 +134,69 @@ function applyMessagesCreatedBatch(
   }
 }
 
+function forEachMessagesCache(
+  queryClient: QueryClient,
+  workspaceId: string,
+  update: (old: InfiniteMessagesData) => InfiniteMessagesData,
+): void {
+  queryClient
+    .getQueryCache()
+    .findAll({ queryKey: ['ws', workspaceId, 'messages'] })
+    .forEach((query) => {
+      queryClient.setQueryData<InfiniteMessagesData>(query.queryKey, update);
+    });
+}
+
+/** The channel answered for a send: it is no longer awaiting delivery, whichever way it went. */
+function settleTrackedSend(ids: { clientId?: string | null; messageId?: string | null }) {
+  const store = useSendStatusStore.getState();
+  const clientId = findTrackedClientId(store.sends, ids);
+  if (clientId) store.stopTracking(clientId);
+  return clientId;
+}
+
 function applyOtherEvent(
   queryClient: QueryClient,
   workspaceId: string,
   event: Exclude<RealtimeEventData, RealtimeEventCreateMessage>,
 ): void {
   switch (event.eventType) {
+    case RealtimeEventType.messageFailed: {
+      settleTrackedSend(event.data);
+      forEachMessagesCache(queryClient, workspaceId, (old) => applyMessageFailed(old, event));
+      break;
+    }
+
+    case RealtimeEventType.messageRemoved: {
+      const ownSends = new Map<string, string>();
+      for (const messageId of event.data.messageIds) {
+        const clientId = settleTrackedSend({ messageId });
+        if (clientId) ownSends.set(messageId, clientId);
+      }
+      forEachMessagesCache(queryClient, workspaceId, (old) =>
+        applyMessageRemoved(old, event, ownSends),
+      );
+      break;
+    }
+
     case RealtimeEventType.messageDeleted:
     case RealtimeEventType.messageUpdated:
-    case RealtimeEventType.messageFailed:
+    case RealtimeEventType.messageContentUpdated:
     case RealtimeEventType.messageIdAssigned: {
-      queryClient
-        .getQueryCache()
-        .findAll({ queryKey: ['ws', workspaceId, 'messages'] })
-        .forEach((query) => {
-          queryClient.setQueryData<InfiniteMessagesData>(query.queryKey, (old) => {
-            switch (event.eventType) {
-              case RealtimeEventType.messageDeleted:
-                return applyMessageDeleted(old, event);
-              case RealtimeEventType.messageUpdated:
-                return applyMessageUpdated(old, event);
-              case RealtimeEventType.messageFailed:
-                return applyMessageFailed(old, event);
-              case RealtimeEventType.messageIdAssigned:
-                return applyMessageIdAssigned(old, event);
-              default:
-                return old;
-            }
-          });
-        });
+      forEachMessagesCache(queryClient, workspaceId, (old) => {
+        switch (event.eventType) {
+          case RealtimeEventType.messageDeleted:
+            return applyMessageDeleted(old, event);
+          case RealtimeEventType.messageUpdated:
+            return applyMessageUpdated(old, event);
+          case RealtimeEventType.messageContentUpdated:
+            return applyMessageContentUpdated(old, event);
+          case RealtimeEventType.messageIdAssigned:
+            return applyMessageIdAssigned(old, event);
+          default:
+            return old;
+        }
+      });
       break;
     }
 

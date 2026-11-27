@@ -132,6 +132,8 @@
     "send": "Envoyer",
     "failedToSend": "Échec de l'envoi",
     "failedToSendTapRetry": "Échec de l'envoi. Appuyez pour réessayer.",
+    "deliveryFailedTapRetry": "Le message n'a pas pu être distribué. Appuyez pour réessayer.",
+    "failedToSendReason": "Échec de l'envoi : {{reason}}",
     "retrySend": "Réessayer",
     "noMessages": "Aucun message pour le moment",
     "edit": "Modifier",

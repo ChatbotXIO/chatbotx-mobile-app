@@ -142,6 +142,8 @@
     "send": "送信",
     "failedToSend": "送信に失敗しました",
     "failedToSendTapRetry": "送信に失敗しました。タップして再試行してください。",
+    "deliveryFailedTapRetry": "メッセージを配信できませんでした。タップして再試行してください。",
+    "failedToSendReason": "送信に失敗しました: {{reason}}",
     "retrySend": "再試行",
     "noMessages": "メッセージはまだありません",
     "edit": "編集",

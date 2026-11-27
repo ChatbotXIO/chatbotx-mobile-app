@@ -3,6 +3,9 @@
  * standalone, so there is no live cross-repo import). Only the event types the app handles are
  * listed; any other event type on the wire is skipped by `parse-event.ts`.
  *
+ * Deliberately not handled: `messageTranslationUpdated` (the app has no translation UI) and
+ * `contactInboxThreadControlUpdated` (no handover / thread-control UI).
+ *
  * When the backend's event schema changes, re-copy the relevant `RealtimeEvent*` types here.
  * Last synced 2026-11-02 against the realtime v2 protocol.
  */
@@ -13,6 +16,8 @@ export const RealtimeEventType = {
   messageUpdated: 'messageUpdated',
   messageIdAssigned: 'messageIdAssigned',
   messageFailed: 'messageFailed',
+  messageRemoved: 'messageRemoved',
+  messageContentUpdated: 'messageContentUpdated',
   typing: 'typing',
   contactBlocked: 'contactBlocked',
   contactUnblocked: 'contactUnblocked',
@@ -37,6 +42,16 @@ export type RealtimeEventMessageDeleted = {
   };
 };
 
+/** Messages removed from the conversation for good — an outgoing message whose send failed and
+ * that was not kept with an error (every public-API send, which is what this app uses). Unlike
+ * `messageDeleted` there is no tombstone: the rows leave the timeline. */
+export type RealtimeEventMessageRemoved = {
+  eventType: typeof RealtimeEventType.messageRemoved;
+  data: {
+    messageIds: string[];
+  };
+};
+
 export type RealtimeEventMessageIdAssigned = {
   eventType: typeof RealtimeEventType.messageIdAssigned;
   data: {
@@ -56,6 +71,16 @@ export type RealtimeEventMessageUpdated = {
     newAttachmentWidth?: number;
     newAttachmentHeight?: number;
     removedAttachment?: boolean;
+  };
+};
+
+/** A message's structured payload was enriched after it was created (e.g. a call transcript).
+ * Carries the complete `contentAttributes`, not a patch. */
+export type RealtimeEventMessageContentUpdated = {
+  eventType: typeof RealtimeEventType.messageContentUpdated;
+  data: {
+    messageId: string;
+    contentAttributes: Record<string, unknown>;
   };
 };
 
@@ -116,6 +141,8 @@ export type RealtimeEventData =
   | RealtimeEventMessageIdAssigned
   | RealtimeEventMessageUpdated
   | RealtimeEventMessageFailed
+  | RealtimeEventMessageRemoved
+  | RealtimeEventMessageContentUpdated
   | RealtimeEventContactCommon
   | RealtimeEventConversationAssigned
   | RealtimeEventTyping

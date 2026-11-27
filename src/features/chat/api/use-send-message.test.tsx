@@ -6,6 +6,8 @@ import type { PropsWithChildren } from 'react';
 import { apiClient } from '@/api/client';
 import { queryKeys } from '@/api/query-keys';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
+import { useSendStatusStore } from '@/features/chat/stores/use-send-status-store';
+import { resetSendQueue } from '@/features/chat/lib/send-queue';
 import { createOptimisticMessage, useSendMessage } from '@/features/chat/api/use-send-message';
 
 jest.mock('@/api/client', () => ({
@@ -127,6 +129,10 @@ function messagesData(): { pages: { data: unknown[]; nextCursor: null }[]; pageP
 describe('useSendMessage', () => {
   afterEach(() => {
     mockedPost.mockReset();
+    // A send settles only on its realtime answer, which these tests never emit; clear it so the
+    // per-conversation send queue doesn't hold the next test's request.
+    useSendStatusStore.setState({ sends: {} });
+    resetSendQueue();
     useChatStore.setState({
       draftsByConversation: {},
       composerModeByConversation: {},

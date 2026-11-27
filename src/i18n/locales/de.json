@@ -132,6 +132,8 @@
     "send": "Senden",
     "failedToSend": "Senden fehlgeschlagen",
     "failedToSendTapRetry": "Senden fehlgeschlagen. Zum Wiederholen tippen.",
+    "deliveryFailedTapRetry": "Nachricht konnte nicht zugestellt werden. Zum Wiederholen tippen.",
+    "failedToSendReason": "Senden fehlgeschlagen: {{reason}}",
     "retrySend": "Erneut versuchen",
     "noMessages": "Noch keine Nachrichten",
     "edit": "Bearbeiten",

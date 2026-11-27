@@ -142,6 +142,8 @@
     "send": "Verstuur",
     "failedToSend": "Verzenden mislukt",
     "failedToSendTapRetry": "Verzenden mislukt. Tik om opnieuw te proberen.",
+    "deliveryFailedTapRetry": "Bericht kon niet worden afgeleverd. Tik om opnieuw te proberen.",
+    "failedToSendReason": "Verzenden mislukt: {{reason}}",
     "retrySend": "Opnieuw proberen",
     "noMessages": "Nog geen berichten",
     "edit": "Bewerken",
