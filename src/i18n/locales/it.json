@@ -142,6 +142,8 @@
     "send": "Invia",
     "failedToSend": "Invio non riuscito",
     "failedToSendTapRetry": "Invio non riuscito. Tocca per riprovare.",
+    "deliveryFailedTapRetry": "Impossibile consegnare il messaggio. Tocca per riprovare.",
+    "failedToSendReason": "Invio non riuscito: {{reason}}",
     "retrySend": "Riprova",
     "noMessages": "Nessun messaggio ancora",
     "edit": "Modifica",

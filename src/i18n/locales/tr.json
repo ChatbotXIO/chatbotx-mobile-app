@@ -142,6 +142,8 @@
     "send": "Gönder",
     "failedToSend": "Gönderilemedi",
     "failedToSendTapRetry": "Gönderilemedi. Yeniden denemek için dokunun.",
+    "deliveryFailedTapRetry": "Mesaj iletilemedi. Yeniden denemek için dokunun.",
+    "failedToSendReason": "Gönderilemedi: {{reason}}",
     "retrySend": "Tekrar dene",
     "noMessages": "Henüz mesaj yok",
     "edit": "Düzenle",

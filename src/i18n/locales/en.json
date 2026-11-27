@@ -142,6 +142,8 @@
     "send": "Send",
     "failedToSend": "Failed to send",
     "failedToSendTapRetry": "Failed to send. Tap to retry.",
+    "deliveryFailedTapRetry": "Couldn't deliver this message. Tap to retry.",
+    "failedToSendReason": "Failed to send: {{reason}}",
     "retrySend": "Retry",
     "noMessages": "No messages yet",
     "edit": "Edit",

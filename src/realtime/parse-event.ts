@@ -65,6 +65,10 @@ function validateMessageFailed(data: unknown): boolean {
   return true;
 }
 
+function validateMessageContentUpdated(data: unknown): boolean {
+  return isObject(data) && isString(data.messageId) && isObject(data.contentAttributes);
+}
+
 function validateTyping(data: unknown): boolean {
   return (
     isObject(data) &&
@@ -112,6 +116,8 @@ const EVENT_VALIDATORS: Record<string, (data: unknown) => boolean> = {
   [RealtimeEventType.messageIdAssigned]: validateMessageIdAssigned,
   [RealtimeEventType.messageUpdated]: validateMessageUpdated,
   [RealtimeEventType.messageFailed]: validateMessageFailed,
+  [RealtimeEventType.messageRemoved]: validateMessageDeleted,
+  [RealtimeEventType.messageContentUpdated]: validateMessageContentUpdated,
   [RealtimeEventType.typing]: validateTyping,
   [RealtimeEventType.contactBlocked]: validateContactCommon,
   [RealtimeEventType.contactUnblocked]: validateContactCommon,

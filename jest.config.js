@@ -1,6 +1,7 @@
 module.exports = {
   preset: 'jest-expo',
   setupFiles: ['./jest.setup.ts'],
+  setupFilesAfterEnv: ['./jest.setup-i18n.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     // Under Jest's RN environment, lucide-react-native's package.json `exports` picks its ESM

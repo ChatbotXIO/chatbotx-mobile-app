@@ -3,6 +3,7 @@ import { renderHook } from '@testing-library/react-native';
 
 import { queryKeys } from '@/api/query-keys';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
+import { useSendStatusStore } from '@/features/chat/stores/use-send-status-store';
 import type { Message } from '@/features/chat/api/use-messages-infinite';
 import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
 import { RealtimeEventType } from './events';
@@ -350,5 +351,53 @@ describe('useRealtimeHandlers', () => {
     const rows =
       queryClient.getQueryData<ReturnType<typeof conversationsCache>>(listKey)!.pages[0]!.data;
     expect(rows[0]!.messages).toEqual([]);
+  });
+
+  describe('send confirmation', () => {
+    const key = queryKeys.ws.messages.list(WORKSPACE_ID, 'conv-a');
+
+    beforeEach(() => {
+      useSendStatusStore.setState({
+        sends: { 'c-1': { conversationId: 'conv-a', messageId: 'srv-1' } },
+      });
+    });
+
+    it('marks an accepted send as delivered instead of failed (messageFailed with error: null)', async () => {
+      const queryClient = new QueryClient();
+      queryClient.setQueryData(
+        key,
+        messagesCache([{ id: 'srv-1', clientId: 'c-1', sendError: null }]),
+      );
+      const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
+
+      result.current([
+        {
+          eventType: RealtimeEventType.messageFailed,
+          data: { messageId: 'srv-1', clientId: 'c-1', error: null },
+        },
+      ]);
+
+      const data = queryClient.getQueryData<ReturnType<typeof messagesCache>>(key);
+      expect(useSendStatusStore.getState().sends).toEqual({});
+      expect(data!.pages[0]!.data[0]).toEqual({ id: 'srv-1', clientId: 'c-1', sendError: null });
+    });
+
+    it('keeps an own send the server removed as a failed row', async () => {
+      const queryClient = new QueryClient();
+      queryClient.setQueryData(
+        key,
+        messagesCache([{ id: 'srv-1', clientId: 'c-1' }, { id: 'srv-2' }]),
+      );
+      const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
+
+      result.current([
+        { eventType: RealtimeEventType.messageRemoved, data: { messageIds: ['srv-1', 'srv-2'] } },
+      ]);
+
+      const rows = queryClient.getQueryData<ReturnType<typeof messagesCache>>(key)!.pages[0]!.data;
+      expect(useSendStatusStore.getState().sends).toEqual({});
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({ clientId: 'c-1', __optimisticStatus: 'failed' });
+    });
   });
 });

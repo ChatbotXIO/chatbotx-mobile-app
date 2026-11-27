@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import { memo } from 'react';
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -8,6 +9,12 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import type { Message } from '@/features/chat/api/use-messages-infinite';
 import type { GroupPosition } from '@/features/chat/lib/message-groups';
+import {
+  DELIVERY_FAILED_ERROR_KIND,
+  resolveSendStatus,
+  type SendStatus,
+} from '@/features/chat/lib/send-status';
+import { useSendStatusStore } from '@/features/chat/stores/use-send-status-store';
 import { describeApiErrorKind } from '@/lib/describe-api-error';
 import { useTheme } from '@/theme/use-theme';
 
@@ -49,6 +56,12 @@ function formatTime(date: string): string {
   return dayjs(date).format('HH:mm');
 }
 
+function failedLabel(status: Extract<SendStatus, { status: 'failed' }>, t: TFunction): string {
+  if (!status.retryable) return t('chat.failedToSendReason', { reason: status.errorText });
+  if (status.errorKind === DELIVERY_FAILED_ERROR_KIND) return t('chat.deliveryFailedTapRetry');
+  return describeApiErrorKind(status.errorKind, t) ?? t('chat.failedToSendTapRetry');
+}
+
 function MessageBubbleImpl({
   message,
   position,
@@ -60,6 +73,11 @@ function MessageBubbleImpl({
 }: MessageBubbleProps) {
   const { t } = useTranslation();
   const { colors, spacing, radius } = useTheme();
+  // Subscribed here (not passed through props) so the bubble flips from "sending" to "sent" when
+  // the channel answers, even though the memo comparator below never sees the store.
+  const isAwaitingDelivery = useSendStatusStore((state) =>
+    message.clientId ? message.clientId in state.sends : false,
+  );
 
   if (message.messageType === 'activity') {
     return <ActivityMessage message={message} />;
@@ -72,7 +90,14 @@ function MessageBubbleImpl({
   }
 
   const outbound = variant !== 'contact';
-  const optimistic = getOptimisticStatus(message);
+  const sendStatus: SendStatus | null = outbound
+    ? resolveSendStatus(message, isAwaitingDelivery)
+    : null;
+  const isSending = sendStatus?.status === 'sending';
+  const isFailed = sendStatus?.status === 'failed';
+  const canRetry = sendStatus?.status === 'failed' && sendStatus.retryable;
+  // Local rows (in flight / failed) have no server-side actions yet.
+  const isLocalRow = getOptimisticStatus(message) !== null;
   const isDeleted = Boolean(message.deletedAt);
   // Defensive: this component renders whatever is in the query cache, which realtime events also
   // write into. A payload missing `attachments` should degrade, not white-screen the chat.
@@ -98,12 +123,11 @@ function MessageBubbleImpl({
   const hasReply = Boolean(message.parentId);
 
   const timeLabel = formatTime(message.createdAt);
-  const statusLabel =
-    optimistic?.status === 'failed'
-      ? t('chat.status.failed')
-      : optimistic?.status === 'pending'
-        ? t('chat.status.pending')
-        : t('chat.status.sent');
+  const statusLabel = isFailed
+    ? t('chat.status.failed')
+    : isSending
+      ? t('chat.status.pending')
+      : t('chat.status.sent');
   const senderLabel =
     variant === 'bot'
       ? t('chat.senderBot')
@@ -146,8 +170,8 @@ function MessageBubbleImpl({
       <Pressable
         accessible
         accessibilityLabel={accessibilityLabel}
-        onLongPress={optimistic || isDeleted ? undefined : onLongPress}
-        onPress={optimistic?.status === 'failed' ? onRetry : undefined}
+        onLongPress={isLocalRow || isDeleted ? undefined : onLongPress}
+        onPress={canRetry ? onRetry : undefined}
         style={[
           styles.bubble,
           cornerStyle,
@@ -156,7 +180,7 @@ function MessageBubbleImpl({
             borderRadius: radius.bubble,
             paddingVertical: spacing.sm,
             paddingHorizontal: spacing.base,
-            opacity: optimistic?.status === 'pending' ? 0.6 : 1,
+            opacity: isSending ? 0.6 : 1,
           },
         ]}
       >
@@ -216,9 +240,9 @@ function MessageBubbleImpl({
               <Text variant="micro" numeric style={{ color: textColor, opacity: 0.75 }}>
                 {timeLabel}
               </Text>
-              {optimistic?.status === 'failed' ? (
+              {isFailed ? (
                 <Icon name="circle-alert" size={12} color={colors.danger} />
-              ) : optimistic?.status === 'pending' ? (
+              ) : isSending ? (
                 <Icon name="clock" size={12} color={textColor} />
               ) : outbound ? (
                 <Icon name="check" size={12} color={textColor} />
@@ -227,9 +251,9 @@ function MessageBubbleImpl({
           ) : null}
         </View>
       </Pressable>
-      {optimistic?.status === 'failed' ? (
+      {sendStatus?.status === 'failed' ? (
         <Text variant="caption" color="danger" style={styles.failedLabel}>
-          {describeApiErrorKind(optimistic.errorKind, t) ?? t('chat.failedToSendTapRetry')}
+          {failedLabel(sendStatus, t)}
         </Text>
       ) : null}
     </View>
@@ -249,16 +273,20 @@ function MessageBubbleImpl({
   );
 }
 
-function messagesEqual(prev: MessageBubbleProps, next: MessageBubbleProps): boolean {
+export function messagesEqual(prev: MessageBubbleProps, next: MessageBubbleProps): boolean {
   const prevOptimistic = getOptimisticStatus(prev.message);
   const nextOptimistic = getOptimisticStatus(next.message);
   return (
     prev.message.id === next.message.id &&
     prev.message.updatedAt === next.message.updatedAt &&
+    prev.message.text === next.message.text &&
+    prev.message.contentAttributes === next.message.contentAttributes &&
     prev.message.deletedAt === next.message.deletedAt &&
     prev.position === next.position &&
     prev.showMeta === next.showMeta &&
     prevOptimistic?.status === nextOptimistic?.status &&
+    prevOptimistic?.errorKind === nextOptimistic?.errorKind &&
+    prev.message.sendError === next.message.sendError &&
     prev.messagesById === next.messagesById &&
     prev.contact?.name === next.contact?.name &&
     prev.contact?.avatarUri === next.contact?.avatarUri

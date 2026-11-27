@@ -132,6 +132,8 @@
     "send": "Kirim",
     "failedToSend": "Gagal mengirim",
     "failedToSendTapRetry": "Gagal mengirim. Ketuk untuk mencoba lagi.",
+    "deliveryFailedTapRetry": "Pesan tidak dapat terkirim. Ketuk untuk mencoba lagi.",
+    "failedToSendReason": "Gagal mengirim: {{reason}}",
     "retrySend": "Coba lagi",
     "noMessages": "Belum ada pesan",
     "edit": "Edit",

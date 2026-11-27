@@ -26,3 +26,30 @@ export function getOptimisticErrorKind(error: unknown): string {
   if (isNetworkError(error)) return 'network';
   return normalizeApiError(error).kind;
 }
+
+/** The client-side id of a locally sent message. The server never stores it, so it only exists on
+ * rows this device created (or that a realtime echo / create response tagged). */
+export function getMessageClientId(message: Message): string | undefined {
+  return 'clientId' in message && message.clientId ? message.clientId : undefined;
+}
+
+type LocalFields = { __optimisticStatus?: string; __optimisticError?: string };
+
+/** Drops the `__optimistic*` keys off a local row. */
+export function stripOptimisticFields(message: Message): Message {
+  const {
+    __optimisticStatus: _status,
+    __optimisticError: _error,
+    ...rest
+  } = message as Message & LocalFields;
+  return rest as Message;
+}
+
+/** Marks a row as a failed local send (tap to retry), localized later from `errorKind`. */
+export function markOptimisticFailed(message: Message, errorKind: string): Message {
+  return {
+    ...message,
+    __optimisticStatus: 'failed',
+    __optimisticError: errorKind,
+  } as unknown as Message;
+}

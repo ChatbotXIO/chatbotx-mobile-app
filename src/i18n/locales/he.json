@@ -132,6 +132,8 @@
     "send": "שליחה",
     "failedToSend": "השליחה נכשלה",
     "failedToSendTapRetry": "השליחה נכשלה. הקש כדי לנסות שוב.",
+    "deliveryFailedTapRetry": "לא ניתן היה למסור את ההודעה. הקש כדי לנסות שוב.",
+    "failedToSendReason": "השליחה נכשלה: {{reason}}",
     "retrySend": "נסה שוב",
     "noMessages": "אין עדיין הודעות",
     "edit": "עריכה",

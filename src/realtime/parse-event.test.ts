@@ -151,6 +151,39 @@ describe('parseRealtimeEvent', () => {
     });
   });
 
+  describe('messageRemoved', () => {
+    it('accepts a list of message ids', () => {
+      const raw = JSON.stringify({
+        eventType: RealtimeEventType.messageRemoved,
+        data: { messageIds: ['m1'] },
+      });
+      expect(parseRealtimeEvent(raw)).not.toBeNull();
+    });
+
+    it('rejects a payload without messageIds', () => {
+      const raw = JSON.stringify({ eventType: RealtimeEventType.messageRemoved, data: {} });
+      expect(parseRealtimeEvent(raw)).toBeNull();
+    });
+  });
+
+  describe('messageContentUpdated', () => {
+    it('accepts a message id with its complete contentAttributes', () => {
+      const raw = JSON.stringify({
+        eventType: RealtimeEventType.messageContentUpdated,
+        data: { messageId: 'm1', contentAttributes: { transcript: 'hi' } },
+      });
+      expect(parseRealtimeEvent(raw)).not.toBeNull();
+    });
+
+    it('rejects a payload without contentAttributes', () => {
+      const raw = JSON.stringify({
+        eventType: RealtimeEventType.messageContentUpdated,
+        data: { messageId: 'm1' },
+      });
+      expect(parseRealtimeEvent(raw)).toBeNull();
+    });
+  });
+
   describe('typing', () => {
     it('accepts a valid payload', () => {
       const raw = JSON.stringify({

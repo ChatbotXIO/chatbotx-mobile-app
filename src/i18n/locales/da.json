@@ -132,6 +132,8 @@
     "send": "Send",
     "failedToSend": "Afsendelse mislykkedes",
     "failedToSendTapRetry": "Afsendelse mislykkedes. Tryk for at prøve igen.",
+    "deliveryFailedTapRetry": "Beskeden kunne ikke leveres. Tryk for at prøve igen.",
+    "failedToSendReason": "Afsendelse mislykkedes: {{reason}}",
     "retrySend": "Prøv igen",
     "noMessages": "Ingen beskeder endnu",
     "edit": "Rediger",

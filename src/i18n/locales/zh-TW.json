@@ -142,6 +142,8 @@
     "send": "傳送",
     "failedToSend": "傳送失敗",
     "failedToSendTapRetry": "傳送失敗，點一下重試。",
+    "deliveryFailedTapRetry": "訊息未能送達，點一下重試。",
+    "failedToSendReason": "傳送失敗：{{reason}}",
     "retrySend": "重試",
     "noMessages": "尚無訊息",
     "edit": "編輯",

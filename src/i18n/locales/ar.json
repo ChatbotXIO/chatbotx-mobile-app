@@ -132,6 +132,8 @@
     "send": "إرسال",
     "failedToSend": "فشل الإرسال",
     "failedToSendTapRetry": "فشل الإرسال. اضغط لإعادة المحاولة.",
+    "deliveryFailedTapRetry": "تعذّر توصيل الرسالة. اضغط لإعادة المحاولة.",
+    "failedToSendReason": "فشل الإرسال: {{reason}}",
     "retrySend": "إعادة المحاولة",
     "noMessages": "لا توجد رسائل بعد",
     "edit": "تعديل",

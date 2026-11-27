@@ -132,6 +132,8 @@
     "send": "Enviar",
     "failedToSend": "Error al enviar",
     "failedToSendTapRetry": "Error al enviar. Toca para reintentar.",
+    "deliveryFailedTapRetry": "No se pudo entregar el mensaje. Toca para reintentar.",
+    "failedToSendReason": "Error al enviar: {{reason}}",
     "retrySend": "Reintentar",
     "noMessages": "Aún no hay mensajes",
     "edit": "Editar",

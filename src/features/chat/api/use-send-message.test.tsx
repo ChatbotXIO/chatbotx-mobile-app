@@ -6,6 +6,8 @@ import type { PropsWithChildren } from 'react';
 import { apiClient } from '@/api/client';
 import { queryKeys } from '@/api/query-keys';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
+import { useSendStatusStore } from '@/features/chat/stores/use-send-status-store';
+import { resetSendQueue } from '@/features/chat/lib/send-queue';
 import { createOptimisticMessage, useSendMessage } from '@/features/chat/api/use-send-message';
 
 jest.mock('@/api/client', () => ({
@@ -127,6 +129,10 @@ function messagesData(): { pages: { data: unknown[]; nextCursor: null }[]; pageP
 describe('useSendMessage', () => {
   afterEach(() => {
     mockedPost.mockReset();
+    // A send settles only on its realtime answer, which these tests never emit; clear it so the
+    // per-conversation send queue doesn't hold the next test's request.
+    useSendStatusStore.setState({ sends: {} });
+    resetSendQueue();
     useChatStore.setState({
       draftsByConversation: {},
       composerModeByConversation: {},
@@ -260,6 +266,45 @@ describe('useSendMessage', () => {
     expect(data?.pages[0]?.data).toHaveLength(1);
     expect(data?.pages[0]?.data[0]?.__optimisticStatus).toBe('failed');
     expect(useChatStore.getState().draftsByConversation['conv-1']).toBeUndefined();
+  });
+
+  it('replaces a failed row on an older page in place when retrying', async () => {
+    mockedPost.mockReturnValue(new Promise(() => undefined));
+    const queryClient = createTestQueryClient();
+    const queryKey = queryKeys.ws.messages.list('ws-1', 'conv-1');
+    queryClient.setQueryData(queryKey, {
+      pages: [
+        { data: [{ id: 'a' }], nextCursor: 'x' },
+        {
+          data: [{ id: 'old', clientId: 'c-1', __optimisticStatus: 'failed' }],
+          nextCursor: null,
+        },
+      ],
+      pageParams: [undefined, 'x'],
+    });
+
+    const { result } = await renderHook(() => useSendMessage('ws-1', 'conv-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate({
+        workspaceId: 'ws-1',
+        conversationId: 'conv-1',
+        text: 'hello',
+        clientId: 'c-1',
+      });
+    });
+
+    await waitFor(() => {
+      const data = queryClient.getQueryData<{
+        pages: { data: { id: string; __optimisticStatus?: string }[] }[];
+      }>(queryKey);
+      expect(data?.pages[1]?.data[0]?.__optimisticStatus).toBe('pending');
+    });
+    const data = queryClient.getQueryData<{ pages: { data: unknown[] }[] }>(queryKey);
+    expect(data?.pages[0]?.data).toHaveLength(1);
+    expect(data?.pages[1]?.data).toHaveLength(1);
   });
 
   it('sends the same clientId in the request body as the cached optimistic row', async () => {
