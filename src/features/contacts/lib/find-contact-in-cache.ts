@@ -8,14 +8,12 @@ import type {
 /**
  * Scans every cached contacts-list infinite query (any keyword) for a row matching `contactId`.
  *
- * `useContactDetail`'s `getContactAuthenticatedAPI` response does NOT embed `contactInboxes` or
- * `conversation` (verified directly against the generated schema — only the contacts-LIST
- * operations, `listContactsAuthenticatedAPI`/`listContactsByPOSTAuthenticatedAPI`, embed those).
- * So the contact-header's channel chips and "Message" CTA source `contactInboxes`/`conversation`
- * from whichever list page the user navigated from, mirroring
+ * `useContactDetail`'s `getContactAuthenticatedAPI` response embeds `contactInboxes`, but
+ * `conversation` and the channel order are optional there. This scan is a fallback that sources
+ * them from whichever list page the user navigated from, mirroring
  * `find-conversation-in-cache.ts`'s approach on the conversations side. Falls back to `undefined`
  * on a cache miss (e.g. a cold deep link straight to a contact) — the header degrades gracefully
- * in that case (no channel chips, "Message" disabled).
+ * in that case ("Message" disabled).
  */
 export function findContactInListCache(
   queryClient: QueryClient,

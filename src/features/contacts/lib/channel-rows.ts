@@ -1,3 +1,4 @@
+import { inboxNameOf } from '@/features/contacts/lib/inbox-name';
 import { getProfileLinks } from '@/features/contacts/lib/profile-links';
 
 type ProfileLinksInput = Parameters<typeof getProfileLinks>[0];
@@ -38,7 +39,7 @@ export function getChannelRows(contact: ProfileLinksInput, channels: string[]): 
   const links = new Map(getProfileLinks(contact).map((link) => [link.channel, link]));
   const inboxNames = new Map<string, string>();
   for (const inbox of contact.contactInboxes ?? []) {
-    const inboxName = inbox.inbox?.name?.trim();
+    const inboxName = inboxNameOf(inbox);
     if (inboxName && !inboxNames.has(inbox.channel)) inboxNames.set(inbox.channel, inboxName);
   }
   const keys = Array.from(new Set([...channels, ...links.keys()]));
