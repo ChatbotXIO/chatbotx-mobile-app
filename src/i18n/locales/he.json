@@ -188,7 +188,8 @@
     "windowClosedBannerMeta": "עברו יותר מ-7 ימים מההודעה האחרונה של איש הקשר. ניתן לשלוח רק תבנית או זרימה.",
     "windowClosedBannerTiktok": "עברו יותר מ-48 שעות מההודעה האחרונה של איש הקשר. ניתן לשלוח רק זרימה.",
     "windowHumanAgent": "נציג אנושי · נותרו {{time}}",
-    "windowClosedError": "חלון ההודעות סגור. המתן לתגובת איש הקשר."
+    "windowClosedError": "חלון ההודעות סגור. המתן לתגובת איש הקשר.",
+    "templateCarousel": "קרוסלה"
   },
   "contacts": {
     "title": "אנשי קשר",

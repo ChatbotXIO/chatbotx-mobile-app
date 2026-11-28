@@ -188,7 +188,8 @@
     "windowClosedBannerMeta": "مرّ أكثر من 7 أيام على آخر رسالة من جهة الاتصال. يمكنك إرسال قالب أو مسار فقط.",
     "windowClosedBannerTiktok": "مرّ أكثر من 48 ساعة على آخر رسالة من جهة الاتصال. يمكنك إرسال مسار فقط.",
     "windowHumanAgent": "موظف بشري · متبقي {{time}}",
-    "windowClosedError": "نافذة المراسلة مغلقة. انتظر رد جهة الاتصال."
+    "windowClosedError": "نافذة المراسلة مغلقة. انتظر رد جهة الاتصال.",
+    "templateCarousel": "شريط دوّار"
   },
   "contacts": {
     "title": "جهات الاتصال",

@@ -198,7 +198,8 @@
     "windowClosedBannerMeta": "Er zijn meer dan 7 dagen verstreken sinds het laatste bericht van het contact. Je kunt alleen een sjabloon of flow versturen.",
     "windowClosedBannerTiktok": "Er is meer dan 48 uur verstreken sinds het laatste bericht van het contact. Je kunt alleen een flow versturen.",
     "windowHumanAgent": "Menselijke medewerker · nog {{time}}",
-    "windowClosedError": "Het berichtvenster is gesloten. Wacht tot het contact antwoordt."
+    "windowClosedError": "Het berichtvenster is gesloten. Wacht tot het contact antwoordt.",
+    "templateCarousel": "Carrousel"
   },
   "contacts": {
     "title": "Contacten",

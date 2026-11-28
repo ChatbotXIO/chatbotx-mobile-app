@@ -188,7 +188,8 @@
     "windowClosedBannerMeta": "Der er gået mere end 7 dage siden kontaktens sidste besked. Du kan kun sende en skabelon eller et flow.",
     "windowClosedBannerTiktok": "Der er gået mere end 48 timer siden kontaktens sidste besked. Du kan kun sende et flow.",
     "windowHumanAgent": "Menneskelig agent · {{time}} tilbage",
-    "windowClosedError": "Beskedvinduet er lukket. Vent på, at kontakten svarer."
+    "windowClosedError": "Beskedvinduet er lukket. Vent på, at kontakten svarer.",
+    "templateCarousel": "Karrusel"
   },
   "contacts": {
     "title": "Kontakter",

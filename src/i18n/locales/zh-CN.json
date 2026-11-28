@@ -198,7 +198,8 @@
     "windowClosedBannerMeta": "距离联系人最后一条消息已超过 7 天，只能发送模板或流程。",
     "windowClosedBannerTiktok": "距离联系人最后一条消息已超过 48 小时，只能发送流程。",
     "windowHumanAgent": "人工客服 · 剩余 {{time}}",
-    "windowClosedError": "消息窗口已关闭，请等待联系人回复。"
+    "windowClosedError": "消息窗口已关闭，请等待联系人回复。",
+    "templateCarousel": "轮播"
   },
   "contacts": {
     "title": "联系人",

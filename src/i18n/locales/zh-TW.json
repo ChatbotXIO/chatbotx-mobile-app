@@ -198,7 +198,8 @@
     "windowClosedBannerMeta": "距離聯絡人最後一則訊息已超過 7 天，只能傳送範本或流程。",
     "windowClosedBannerTiktok": "距離聯絡人最後一則訊息已超過 48 小時，只能傳送流程。",
     "windowHumanAgent": "真人客服 · 剩餘 {{time}}",
-    "windowClosedError": "訊息視窗已關閉，請等待聯絡人回覆。"
+    "windowClosedError": "訊息視窗已關閉，請等待聯絡人回覆。",
+    "templateCarousel": "輪播"
   },
   "contacts": {
     "title": "聯絡人",

@@ -198,7 +198,8 @@
     "windowClosedBannerMeta": "Mer än 7 dagar har gått sedan kontaktens senaste meddelande. Du kan bara skicka en mall eller ett flöde.",
     "windowClosedBannerTiktok": "Mer än 48 timmar har gått sedan kontaktens senaste meddelande. Du kan bara skicka ett flöde.",
     "windowHumanAgent": "Mänsklig agent · {{time}} kvar",
-    "windowClosedError": "Meddelandefönstret är stängt. Vänta på att kontakten svarar."
+    "windowClosedError": "Meddelandefönstret är stängt. Vänta på att kontakten svarar.",
+    "templateCarousel": "Karusell"
   },
   "contacts": {
     "title": "Kontakter",

@@ -188,7 +188,8 @@
     "windowClosedBannerMeta": "Han pasado más de 7 días desde el último mensaje del contacto. Solo puedes enviar una plantilla o un flujo.",
     "windowClosedBannerTiktok": "Han pasado más de 48 h desde el último mensaje del contacto. Solo puedes enviar un flujo.",
     "windowHumanAgent": "Agente humano · quedan {{time}}",
-    "windowClosedError": "La ventana de mensajería está cerrada. Espera a que el contacto responda."
+    "windowClosedError": "La ventana de mensajería está cerrada. Espera a que el contacto responda.",
+    "templateCarousel": "Carrusel"
   },
   "contacts": {
     "title": "Contactos",

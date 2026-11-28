@@ -198,7 +198,8 @@
     "windowClosedBannerMeta": "Sono passati più di 7 giorni dall'ultimo messaggio del contatto. Puoi inviare solo un modello o un flusso.",
     "windowClosedBannerTiktok": "Sono passate più di 48 ore dall'ultimo messaggio del contatto. Puoi inviare solo un flusso.",
     "windowHumanAgent": "Operatore umano · {{time}} rimasti",
-    "windowClosedError": "La finestra di messaggistica è chiusa. Attendi la risposta del contatto."
+    "windowClosedError": "La finestra di messaggistica è chiusa. Attendi la risposta del contatto.",
+    "templateCarousel": "Carosello"
   },
   "contacts": {
     "title": "Contatti",

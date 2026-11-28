@@ -188,7 +188,8 @@
     "windowClosedBannerMeta": "Yhteyshenkilön viimeisestä viestistä on yli 7 päivää. Voit lähettää vain mallin tai kulun.",
     "windowClosedBannerTiktok": "Yhteyshenkilön viimeisestä viestistä on yli 48 tuntia. Voit lähettää vain kulun.",
     "windowHumanAgent": "Ihmisagentti · {{time}} jäljellä",
-    "windowClosedError": "Viestiikkuna on suljettu. Odota, että yhteyshenkilö vastaa."
+    "windowClosedError": "Viestiikkuna on suljettu. Odota, että yhteyshenkilö vastaa.",
+    "templateCarousel": "Karuselli"
   },
   "contacts": {
     "title": "Yhteystiedot",
