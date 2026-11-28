@@ -186,7 +186,12 @@
     "windowClosedBanner": "Der er gået mere end 24 timer siden kontaktens sidste besked. Du kan kun sende en skabelon eller et flow.",
     "windowRemaining": "{{time}} tilbage",
     "templateCarousel": "Karrusel",
-    "resend": "Send igen"
+    "resend": "Send igen",
+    "templateSent": "Skabelon sendt",
+    "whatsappTemplates": "WhatsApp-skabeloner",
+    "templateUnsupported": "Denne skabelon kræver værdier, som appen endnu ikke kan udfylde.",
+    "noWhatsappTemplates": "Ingen godkendte skabeloner",
+    "sendWhatsappTemplate": "Send WhatsApp-skabelon"
   },
   "contacts": {
     "title": "Kontakter",

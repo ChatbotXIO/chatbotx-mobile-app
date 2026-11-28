@@ -196,7 +196,12 @@
     "windowClosedBanner": "距離聯絡人上一則訊息已超過 24 小時，只能傳送範本或流程。",
     "windowRemaining": "剩餘 {{time}}",
     "templateCarousel": "輪播",
-    "resend": "重新傳送"
+    "resend": "重新傳送",
+    "templateSent": "範本已傳送",
+    "whatsappTemplates": "WhatsApp 範本",
+    "templateUnsupported": "此範本需要應用程式目前無法填寫的值。",
+    "noWhatsappTemplates": "沒有已核准的範本",
+    "sendWhatsappTemplate": "傳送 WhatsApp 範本"
   },
   "contacts": {
     "title": "聯絡人",

@@ -196,7 +196,12 @@
     "windowClosedBanner": "Passaram mais de 24 h desde a última mensagem do contacto. Só pode enviar um modelo ou um fluxo.",
     "windowRemaining": "Faltam {{time}}",
     "templateCarousel": "Carrossel",
-    "resend": "Reenviar"
+    "resend": "Reenviar",
+    "templateSent": "Modelo enviado",
+    "whatsappTemplates": "Modelos do WhatsApp",
+    "templateUnsupported": "Este modelo precisa de valores que a app ainda não consegue preencher.",
+    "noWhatsappTemplates": "Nenhum modelo aprovado",
+    "sendWhatsappTemplate": "Enviar modelo do WhatsApp"
   },
   "contacts": {
     "title": "Contactos",

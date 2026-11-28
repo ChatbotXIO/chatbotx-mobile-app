@@ -196,7 +196,12 @@
     "windowClosedBanner": "距离联系人上一条消息已超过 24 小时，只能发送模板或流程。",
     "windowRemaining": "剩余 {{time}}",
     "templateCarousel": "轮播",
-    "resend": "重新发送"
+    "resend": "重新发送",
+    "templateSent": "模板已发送",
+    "whatsappTemplates": "WhatsApp 模板",
+    "templateUnsupported": "此模板需要应用暂时无法填写的值。",
+    "noWhatsappTemplates": "没有已审核的模板",
+    "sendWhatsappTemplate": "发送 WhatsApp 模板"
   },
   "contacts": {
     "title": "联系人",

@@ -186,7 +186,12 @@
     "windowClosedBanner": "Yhteystiedon viimeisestä viestistä on yli 24 tuntia. Voit lähettää vain mallipohjan tai flow'n.",
     "windowRemaining": "{{time}} jäljellä",
     "templateCarousel": "Karuselli",
-    "resend": "Lähetä uudelleen"
+    "resend": "Lähetä uudelleen",
+    "templateSent": "Pohja lähetetty",
+    "whatsappTemplates": "WhatsApp-pohjat",
+    "templateUnsupported": "Tämä pohja vaatii arvoja, joita sovellus ei vielä osaa täyttää.",
+    "noWhatsappTemplates": "Ei hyväksyttyjä pohjia",
+    "sendWhatsappTemplate": "Lähetä WhatsApp-pohja"
   },
   "contacts": {
     "title": "Yhteystiedot",

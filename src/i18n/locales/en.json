@@ -196,7 +196,12 @@
     "windowClosedBanner": "More than 24h since the contact's last message. You can only send a template or flow.",
     "windowRemaining": "{{time}} left",
     "templateCarousel": "Carousel",
-    "resend": "Resend"
+    "resend": "Resend",
+    "templateSent": "Template sent",
+    "whatsappTemplates": "WhatsApp templates",
+    "templateUnsupported": "This template needs values the app can't fill yet.",
+    "noWhatsappTemplates": "No approved templates",
+    "sendWhatsappTemplate": "Send WhatsApp template"
   },
   "contacts": {
     "title": "Contacts",

@@ -196,7 +196,12 @@
     "windowClosedBanner": "Het laatste bericht van het contact is meer dan 24 uur geleden. Je kunt alleen een sjabloon of flow verzenden.",
     "windowRemaining": "Nog {{time}}",
     "templateCarousel": "Carrousel",
-    "resend": "Opnieuw verzenden"
+    "resend": "Opnieuw verzenden",
+    "templateSent": "Sjabloon verzonden",
+    "whatsappTemplates": "WhatsApp-sjablonen",
+    "templateUnsupported": "Dit sjabloon vraagt waarden die de app nog niet kan invullen.",
+    "noWhatsappTemplates": "Geen goedgekeurde sjablonen",
+    "sendWhatsappTemplate": "WhatsApp-sjabloon verzenden"
   },
   "contacts": {
     "title": "Contacten",

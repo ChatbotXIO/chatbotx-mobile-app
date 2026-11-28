@@ -186,7 +186,12 @@
     "windowClosedBanner": "مرّت أكثر من 24 ساعة على آخر رسالة من جهة الاتصال. يمكنك إرسال قالب أو مسار فقط.",
     "windowRemaining": "متبقي {{time}}",
     "templateCarousel": "شريط دوّار",
-    "resend": "إعادة الإرسال"
+    "resend": "إعادة الإرسال",
+    "templateSent": "تم إرسال القالب",
+    "whatsappTemplates": "قوالب واتساب",
+    "templateUnsupported": "يحتاج هذا القالب إلى قيم لا يستطيع التطبيق ملأها بعد.",
+    "noWhatsappTemplates": "لا توجد قوالب معتمدة",
+    "sendWhatsappTemplate": "إرسال قالب واتساب"
   },
   "contacts": {
     "title": "جهات الاتصال",

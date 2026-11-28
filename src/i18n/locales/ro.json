@@ -196,7 +196,12 @@
     "windowClosedBanner": "Au trecut peste 24 de ore de la ultimul mesaj al contactului. Poți trimite doar un șablon sau un flux.",
     "windowRemaining": "Mai sunt {{time}}",
     "templateCarousel": "Carusel",
-    "resend": "Retrimite"
+    "resend": "Retrimite",
+    "templateSent": "Șablon trimis",
+    "whatsappTemplates": "Șabloane WhatsApp",
+    "templateUnsupported": "Acest șablon cere valori pe care aplicația nu le poate completa încă.",
+    "noWhatsappTemplates": "Niciun șablon aprobat",
+    "sendWhatsappTemplate": "Trimite șablon WhatsApp"
   },
   "contacts": {
     "title": "Contacte",

@@ -186,7 +186,12 @@
     "windowClosedBanner": "עברו יותר מ-24 שעות מההודעה האחרונה של איש הקשר. ניתן לשלוח רק תבנית או תהליך.",
     "windowRemaining": "נותרו {{time}}",
     "templateCarousel": "קרוסלה",
-    "resend": "שלח שוב"
+    "resend": "שלח שוב",
+    "templateSent": "התבנית נשלחה",
+    "whatsappTemplates": "תבניות WhatsApp",
+    "templateUnsupported": "התבנית דורשת ערכים שהאפליקציה עדיין לא יכולה למלא.",
+    "noWhatsappTemplates": "אין תבניות מאושרות",
+    "sendWhatsappTemplate": "שלח תבנית WhatsApp"
   },
   "contacts": {
     "title": "אנשי קשר",

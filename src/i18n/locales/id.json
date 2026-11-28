@@ -186,7 +186,12 @@
     "windowClosedBanner": "Sudah lebih dari 24 jam sejak pesan terakhir kontak. Anda hanya dapat mengirim templat atau alur.",
     "windowRemaining": "Sisa {{time}}",
     "templateCarousel": "Karusel",
-    "resend": "Kirim ulang"
+    "resend": "Kirim ulang",
+    "templateSent": "Templat terkirim",
+    "whatsappTemplates": "Templat WhatsApp",
+    "templateUnsupported": "Templat ini membutuhkan nilai yang belum bisa diisi aplikasi.",
+    "noWhatsappTemplates": "Tidak ada templat yang disetujui",
+    "sendWhatsappTemplate": "Kirim templat WhatsApp"
   },
   "contacts": {
     "title": "Kontak",

@@ -28,6 +28,7 @@ import {
   pickFromLibrary,
 } from '@/features/chat/lib/pick-attachments';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
+import { WhatsappTemplateSheet } from '@/features/whatsapp-templates/components/whatsapp-template-sheet';
 import { SequencePickerSheet } from '@/features/sequences/components/sequence-picker-sheet';
 import { triggerHaptic } from '@/lib/haptics';
 import { useTheme } from '@/theme/use-theme';
@@ -72,6 +73,7 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
   const savedRepliesRef = useRef<BottomSheetModal>(null);
   const flowPickerRef = useRef<BottomSheetModal>(null);
   const sequencePickerRef = useRef<BottomSheetModal>(null);
+  const whatsappTemplateRef = useRef<BottomSheetModal>(null);
 
   // `FEATURES.sendSequence` is off until the backend route ships (see src/config/features.ts) —
   // fetching the conversation detail here just to resolve `contactId` would be wasted work while
@@ -232,6 +234,13 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
     flowPickerRef.current?.present();
   }
 
+  const whatsappInbox = conversation?.contactInboxes?.find((inbox) => inbox.channel === 'whatsapp');
+
+  function handleOpenWhatsappTemplates() {
+    Keyboard.dismiss();
+    whatsappTemplateRef.current?.present();
+  }
+
   function handleOpenSendSequence() {
     Keyboard.dismiss();
     actionsSheetRef.current?.dismiss();
@@ -330,7 +339,10 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
       ) : null}
 
       {messagingWindow.status === 'closed' ? (
-        <WindowClosedBar onSendFlow={handleOpenFlowPicker} />
+        <WindowClosedBar
+          onSendFlow={handleOpenFlowPicker}
+          onSendTemplate={whatsappInbox ? handleOpenWhatsappTemplates : undefined}
+        />
       ) : (
         <View
           style={[
@@ -449,6 +461,15 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
           savedRepliesRef.current?.dismiss();
         }}
       />
+
+      {whatsappInbox ? (
+        <WhatsappTemplateSheet
+          sheetRef={whatsappTemplateRef}
+          workspaceId={workspaceId}
+          conversationId={conversationId}
+          inboxId={whatsappInbox.inboxId}
+        />
+      ) : null}
 
       {conversationForSequence?.contactId ? (
         <SequencePickerSheet
