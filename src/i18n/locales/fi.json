@@ -185,7 +185,8 @@
     "botStatusOff": "Botti pois",
     "windowClosedBanner": "Yhteystiedon viimeisestä viestistä on yli 24 tuntia. Voit lähettää vain mallipohjan tai flow'n.",
     "windowRemaining": "{{time}} jäljellä",
-    "templateCarousel": "Karuselli"
+    "templateCarousel": "Karuselli",
+    "resend": "Lähetä uudelleen"
   },
   "contacts": {
     "title": "Yhteystiedot",

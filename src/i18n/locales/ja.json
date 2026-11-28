@@ -195,7 +195,8 @@
     "botStatusOff": "ボットオフ",
     "windowClosedBanner": "連絡先の最後のメッセージから24時間以上経過しています。テンプレートまたはフローのみ送信できます。",
     "windowRemaining": "残り{{time}}",
-    "templateCarousel": "カルーセル"
+    "templateCarousel": "カルーセル",
+    "resend": "再送信"
   },
   "contacts": {
     "title": "連絡先",

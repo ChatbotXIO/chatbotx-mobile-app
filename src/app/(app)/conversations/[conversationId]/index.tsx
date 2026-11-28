@@ -22,6 +22,7 @@ import { MessageActionsMenu } from '@/features/chat/components/message-actions-m
 import { MessageList, type MessageListHandle } from '@/features/chat/components/message-list';
 import { useMessagesInfinite, type Message } from '@/features/chat/api/use-messages-infinite';
 import { useDeleteMessage, useSetMessageAttributes } from '@/features/chat/api/use-message-actions';
+import { useResendMessage } from '@/features/chat/api/use-resend-message';
 import { removeOptimisticMessage, useSendMessage } from '@/features/chat/api/use-send-message';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
 import { ConnectionErrorCard } from '@/realtime/connection-error-card';
@@ -77,6 +78,7 @@ export default function ChatScreen() {
       conversationId ? state.justSentClientIdByConversation[conversationId] : undefined,
     ) ?? null;
   const deleteMessage = useDeleteMessage(workspaceId ?? '', conversationId ?? '');
+  const resendMessage = useResendMessage(workspaceId ?? '', conversationId ?? '');
   const setAttributes = useSetMessageAttributes(workspaceId ?? '', conversationId ?? '');
   const setComposerMode = useChatStore((state) => state.setComposerMode);
   const setDraft = useChatStore((state) => state.setDraft);
@@ -256,6 +258,10 @@ export default function ChatScreen() {
           actionsMenuRef.current?.close();
         }}
         onEditAndResend={handleEditAndResend}
+        onResend={(message) => {
+          resendMessage.mutate({ messageId: message.id, createdAt: message.createdAt });
+          actionsMenuRef.current?.close();
+        }}
       />
     </Screen>
   );

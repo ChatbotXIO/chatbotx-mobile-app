@@ -185,7 +185,8 @@
     "botStatusOff": "Bot slået fra",
     "windowClosedBanner": "Der er gået mere end 24 timer siden kontaktens sidste besked. Du kan kun sende en skabelon eller et flow.",
     "windowRemaining": "{{time}} tilbage",
-    "templateCarousel": "Karrusel"
+    "templateCarousel": "Karrusel",
+    "resend": "Send igen"
   },
   "contacts": {
     "title": "Kontakter",

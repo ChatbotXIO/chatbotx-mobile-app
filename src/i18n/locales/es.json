@@ -185,7 +185,8 @@
     "botStatusOff": "Bot desactivado",
     "windowClosedBanner": "Han pasado más de 24 h desde el último mensaje del contacto. Solo puedes enviar una plantilla o un flujo.",
     "windowRemaining": "Quedan {{time}}",
-    "templateCarousel": "Carrusel"
+    "templateCarousel": "Carrusel",
+    "resend": "Reenviar"
   },
   "contacts": {
     "title": "Contactos",

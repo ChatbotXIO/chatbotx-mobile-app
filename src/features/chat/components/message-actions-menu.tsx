@@ -20,6 +20,8 @@ interface MessageActionsMenuProps {
    * the user both retries AND resends the restored draft). Only relevant/shown for a failed
    * optimistic bubble. */
   onEditAndResend: (message: Message) => void;
+  /** Re-queues a server row the channel rejected (`sendError`). */
+  onResend: (message: Message) => void;
 }
 
 /** Long-press action sheet for a message: reply, edit (text messages from us only), delete, like,
@@ -29,7 +31,7 @@ interface MessageActionsMenuProps {
  * `attributes` — the mutation itself is idempotent either way. */
 export const MessageActionsMenu = forwardRef<BottomSheet, MessageActionsMenuProps>(
   function MessageActionsMenu(
-    { message, onEdit, onReply, onDelete, onLike, onHide, onEditAndResend },
+    { message, onEdit, onReply, onDelete, onLike, onHide, onEditAndResend, onResend },
     ref,
   ) {
     const { t } = useTranslation();
@@ -45,6 +47,7 @@ export const MessageActionsMenu = forwardRef<BottomSheet, MessageActionsMenuProp
     const optimistic = getOptimisticStatus(message);
     const isFailed = optimistic?.status === 'failed';
     const canEdit = !isFailed && message.senderType !== 'contact' && message.contentType === 'text';
+    const canResend = !optimistic && Boolean(message.sendError) && !message.deletedAt;
     const canReply = !isFailed && !message.deletedAt;
 
     return (
@@ -52,6 +55,7 @@ export const MessageActionsMenu = forwardRef<BottomSheet, MessageActionsMenuProp
         {isFailed ? (
           <ListItem title={t('chat.editAndResend')} onPress={() => onEditAndResend(message)} />
         ) : null}
+        {canResend ? <ListItem title={t('chat.resend')} onPress={() => onResend(message)} /> : null}
         {canReply ? <ListItem title={t('chat.reply')} onPress={() => onReply(message)} /> : null}
         {canEdit ? <ListItem title={t('chat.edit')} onPress={() => onEdit(message)} /> : null}
         {!isFailed ? <ListItem title={t('chat.like')} onPress={() => onLike(message)} /> : null}
