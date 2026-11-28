@@ -266,7 +266,12 @@
       "boolean": "Introdu adevărat sau fals",
       "date": "Introdu o dată în formatul YYYY-MM-DD",
       "datetime": "Introdu data și ora în formatul YYYY-MM-DDTHH:MM"
-    }
+    },
+    "addNote": "Adaugă notă",
+    "editNote": "Editează nota",
+    "deleteNote": "Șterge nota",
+    "deleteNoteConfirm": "Această notă va fi ștearsă definitiv.",
+    "notePlaceholder": "Scrie o notă…"
   },
   "flows": {
     "title": "Fluxuri",

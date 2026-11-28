@@ -254,7 +254,12 @@
       "boolean": "Masukkan true atau false",
       "date": "Masukkan tanggal dalam format YYYY-MM-DD",
       "datetime": "Masukkan tanggal dan waktu dalam format YYYY-MM-DDTHH:MM"
-    }
+    },
+    "addNote": "Tambah catatan",
+    "editNote": "Ubah catatan",
+    "deleteNote": "Hapus catatan",
+    "deleteNoteConfirm": "Catatan ini akan dihapus permanen.",
+    "notePlaceholder": "Tulis catatan…"
   },
   "flows": {
     "title": "Alur",

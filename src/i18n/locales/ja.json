@@ -264,7 +264,12 @@
       "boolean": "trueまたはfalseを入力してください",
       "date": "日付をYYYY-MM-DD形式で入力してください",
       "datetime": "日時をYYYY-MM-DDTHH:MM形式で入力してください"
-    }
+    },
+    "addNote": "メモを追加",
+    "editNote": "メモを編集",
+    "deleteNote": "メモを削除",
+    "deleteNoteConfirm": "このメモは完全に削除されます。",
+    "notePlaceholder": "メモを入力…"
   },
   "flows": {
     "title": "フロー",

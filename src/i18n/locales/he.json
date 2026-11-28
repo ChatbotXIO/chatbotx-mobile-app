@@ -254,7 +254,12 @@
       "boolean": "הזן true או false",
       "date": "הזן תאריך בפורמט YYYY-MM-DD",
       "datetime": "הזן תאריך ושעה בפורמט YYYY-MM-DDTHH:MM"
-    }
+    },
+    "addNote": "הוסף הערה",
+    "editNote": "ערוך הערה",
+    "deleteNote": "מחק הערה",
+    "deleteNoteConfirm": "ההערה תימחק לצמיתות.",
+    "notePlaceholder": "כתוב הערה…"
   },
   "flows": {
     "title": "תהליכים",
