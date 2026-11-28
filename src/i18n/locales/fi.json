@@ -254,7 +254,12 @@
       "boolean": "Anna true tai false",
       "date": "Anna päivämäärä muodossa VVVV-KK-PP",
       "datetime": "Anna päivämäärä ja kellonaika muodossa VVVV-KK-PPTHH:MM"
-    }
+    },
+    "addNote": "Lisää muistiinpano",
+    "editNote": "Muokkaa muistiinpanoa",
+    "deleteNote": "Poista muistiinpano",
+    "deleteNoteConfirm": "Tämä muistiinpano poistetaan pysyvästi.",
+    "notePlaceholder": "Kirjoita muistiinpano…"
   },
   "flows": {
     "title": "Flow't",

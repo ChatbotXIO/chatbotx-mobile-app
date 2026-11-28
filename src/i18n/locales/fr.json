@@ -254,7 +254,12 @@
       "boolean": "Saisissez true ou false",
       "date": "Saisissez une date au format AAAA-MM-JJ",
       "datetime": "Saisissez une date et une heure au format AAAA-MM-JJTHH:MM"
-    }
+    },
+    "addNote": "Ajouter une note",
+    "editNote": "Modifier la note",
+    "deleteNote": "Supprimer la note",
+    "deleteNoteConfirm": "Cette note sera supprimée définitivement.",
+    "notePlaceholder": "Écrire une note…"
   },
   "flows": {
     "title": "Flux",

@@ -264,7 +264,12 @@
       "boolean": "Nhập true hoặc false",
       "date": "Nhập ngày theo dạng YYYY-MM-DD",
       "datetime": "Nhập ngày giờ theo dạng YYYY-MM-DDTHH:MM"
-    }
+    },
+    "addNote": "Thêm ghi chú",
+    "editNote": "Sửa ghi chú",
+    "deleteNote": "Xoá ghi chú",
+    "deleteNoteConfirm": "Ghi chú này sẽ bị xoá vĩnh viễn.",
+    "notePlaceholder": "Viết ghi chú…"
   },
   "flows": {
     "title": "Kịch bản",

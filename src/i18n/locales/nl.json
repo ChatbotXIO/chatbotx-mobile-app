@@ -264,7 +264,12 @@
       "boolean": "Voer true of false in",
       "date": "Voer een datum in als JJJJ-MM-DD",
       "datetime": "Voer datum en tijd in als JJJJ-MM-DDTHH:MM"
-    }
+    },
+    "addNote": "Notitie toevoegen",
+    "editNote": "Notitie bewerken",
+    "deleteNote": "Notitie verwijderen",
+    "deleteNoteConfirm": "Deze notitie wordt definitief verwijderd.",
+    "notePlaceholder": "Schrijf een notitie…"
   },
   "flows": {
     "title": "Flows",

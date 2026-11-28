@@ -254,7 +254,12 @@
       "boolean": "Gib true oder false ein",
       "date": "Gib ein Datum im Format YYYY-MM-DD ein",
       "datetime": "Gib Datum und Uhrzeit im Format YYYY-MM-DDTHH:MM ein"
-    }
+    },
+    "addNote": "Notiz hinzufügen",
+    "editNote": "Notiz bearbeiten",
+    "deleteNote": "Notiz löschen",
+    "deleteNoteConfirm": "Diese Notiz wird dauerhaft gelöscht.",
+    "notePlaceholder": "Notiz schreiben…"
   },
   "flows": {
     "title": "Flows",

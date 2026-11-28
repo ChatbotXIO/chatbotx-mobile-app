@@ -264,7 +264,12 @@
       "boolean": "Introduza verdadeiro ou falso",
       "date": "Introduza uma data no formato YYYY-MM-DD",
       "datetime": "Introduza a data e a hora no formato YYYY-MM-DDTHH:MM"
-    }
+    },
+    "addNote": "Adicionar nota",
+    "editNote": "Editar nota",
+    "deleteNote": "Eliminar nota",
+    "deleteNoteConfirm": "Esta nota será eliminada permanentemente.",
+    "notePlaceholder": "Escreva uma nota…"
   },
   "flows": {
     "title": "Fluxos",

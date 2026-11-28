@@ -254,7 +254,12 @@
       "boolean": "أدخل true أو false",
       "date": "أدخل تاريخًا بصيغة YYYY-MM-DD",
       "datetime": "أدخل التاريخ والوقت بصيغة YYYY-MM-DDTHH:MM"
-    }
+    },
+    "addNote": "إضافة ملاحظة",
+    "editNote": "تعديل الملاحظة",
+    "deleteNote": "حذف الملاحظة",
+    "deleteNoteConfirm": "سيتم حذف هذه الملاحظة نهائيًا.",
+    "notePlaceholder": "اكتب ملاحظة…"
   },
   "flows": {
     "title": "المسارات",

@@ -254,7 +254,12 @@
       "boolean": "Indtast true eller false",
       "date": "Indtast en dato som ÅÅÅÅ-MM-DD",
       "datetime": "Indtast dato og tid som ÅÅÅÅ-MM-DDTTT:MM"
-    }
+    },
+    "addNote": "Tilføj note",
+    "editNote": "Rediger note",
+    "deleteNote": "Slet note",
+    "deleteNoteConfirm": "Denne note slettes permanent.",
+    "notePlaceholder": "Skriv en note…"
   },
   "flows": {
     "title": "Flows",

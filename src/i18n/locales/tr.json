@@ -264,7 +264,12 @@
       "boolean": "Doğru veya yanlış girin",
       "date": "Tarihi YYYY-MM-DD biçiminde girin",
       "datetime": "Tarih ve saati YYYY-MM-DDTHH:MM biçiminde girin"
-    }
+    },
+    "addNote": "Not ekle",
+    "editNote": "Notu düzenle",
+    "deleteNote": "Notu sil",
+    "deleteNoteConfirm": "Bu not kalıcı olarak silinecek.",
+    "notePlaceholder": "Bir not yazın…"
   },
   "flows": {
     "title": "Akışlar",

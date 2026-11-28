@@ -264,7 +264,12 @@
       "boolean": "Ange sant eller falskt",
       "date": "Ange ett datum som ÅÅÅÅ-MM-DD",
       "datetime": "Ange datum och tid som ÅÅÅÅ-MM-DDTHH:MM"
-    }
+    },
+    "addNote": "Lägg till anteckning",
+    "editNote": "Redigera anteckning",
+    "deleteNote": "Ta bort anteckning",
+    "deleteNoteConfirm": "Anteckningen tas bort permanent.",
+    "notePlaceholder": "Skriv en anteckning…"
   },
   "flows": {
     "title": "Flöden",

@@ -264,7 +264,12 @@
       "boolean": "请输入 true 或 false",
       "date": "请按 YYYY-MM-DD 格式输入日期",
       "datetime": "请按 YYYY-MM-DDTHH:MM 格式输入日期和时间"
-    }
+    },
+    "addNote": "添加备注",
+    "editNote": "编辑备注",
+    "deleteNote": "删除备注",
+    "deleteNoteConfirm": "此备注将被永久删除。",
+    "notePlaceholder": "写下备注…"
   },
   "flows": {
     "title": "流程",

@@ -264,7 +264,12 @@
       "boolean": "Inserisci true o false",
       "date": "Inserisci una data nel formato AAAA-MM-GG",
       "datetime": "Inserisci data e ora nel formato AAAA-MM-GGTHH:MM"
-    }
+    },
+    "addNote": "Aggiungi nota",
+    "editNote": "Modifica nota",
+    "deleteNote": "Elimina nota",
+    "deleteNoteConfirm": "Questa nota verrà eliminata definitivamente.",
+    "notePlaceholder": "Scrivi una nota…"
   },
   "flows": {
     "title": "Flussi",
