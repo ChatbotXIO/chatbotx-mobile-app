@@ -194,7 +194,8 @@
     "botStatusOn": "Bot",
     "botStatusOff": "Bot desligado",
     "windowClosedBanner": "Já se passaram mais de 24 h desde a última mensagem do contato. Você só pode enviar um modelo ou fluxo.",
-    "windowRemaining": "{{time}} restantes"
+    "windowRemaining": "{{time}} restantes",
+    "templateCarousel": "Carrossel"
   },
   "contacts": {
     "title": "Contatos",

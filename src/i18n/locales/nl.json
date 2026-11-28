@@ -194,7 +194,8 @@
     "botStatusOn": "Bot",
     "botStatusOff": "Bot uit",
     "windowClosedBanner": "Het laatste bericht van het contact is meer dan 24 uur geleden. Je kunt alleen een sjabloon of flow verzenden.",
-    "windowRemaining": "Nog {{time}}"
+    "windowRemaining": "Nog {{time}}",
+    "templateCarousel": "Carrousel"
   },
   "contacts": {
     "title": "Contacten",

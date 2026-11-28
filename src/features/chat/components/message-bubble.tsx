@@ -9,6 +9,7 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import type { Message } from '@/features/chat/api/use-messages-infinite';
 import type { GroupPosition } from '@/features/chat/lib/message-groups';
+import { parseTemplate } from '@/features/chat/lib/template-message';
 import {
   DELIVERY_FAILED_ERROR_KIND,
   resolveSendStatus,
@@ -23,6 +24,7 @@ import { AttachmentView } from './attachment-view';
 import { LocationView } from './location-view';
 import { getOptimisticStatus } from './optimistic-message';
 import { RichContentView } from './rich-content-view';
+import { TemplateMessageView } from './template-message-view';
 
 const AVATAR_SIZE = 28;
 
@@ -134,7 +136,13 @@ function MessageBubbleImpl({
       : variant === 'agent'
         ? t('chat.senderAgent')
         : t('chat.senderContact');
-  const bubbleText = isDeleted ? t('chat.messageDeleted') : (message.text ?? '');
+  const template = isDeleted ? null : parseTemplate(message.contentAttributes);
+  // A template's own text is rendered inside the template view; don't also print it as the body.
+  const bubbleText = isDeleted
+    ? t('chat.messageDeleted')
+    : template?.kind === 'button'
+      ? ''
+      : (message.text ?? '');
 
   const accessibilityLabel = t('chat.bubbleA11yLabel', {
     sender: senderLabel,
@@ -212,6 +220,8 @@ function MessageBubbleImpl({
             clientId={message.clientId}
           />
         ) : null}
+
+        {template ? <TemplateMessageView template={template} outbound={outbound} /> : null}
 
         {!isDeleted && message.contentType === 'location' ? (
           <LocationView contentAttributes={message.contentAttributes} outbound={outbound} />

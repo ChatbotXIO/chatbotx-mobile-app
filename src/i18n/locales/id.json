@@ -184,7 +184,8 @@
     "botStatusOn": "Bot",
     "botStatusOff": "Bot nonaktif",
     "windowClosedBanner": "Sudah lebih dari 24 jam sejak pesan terakhir kontak. Anda hanya dapat mengirim templat atau alur.",
-    "windowRemaining": "Sisa {{time}}"
+    "windowRemaining": "Sisa {{time}}",
+    "templateCarousel": "Karusel"
   },
   "contacts": {
     "title": "Kontak",

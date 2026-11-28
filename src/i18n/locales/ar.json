@@ -184,7 +184,8 @@
     "botStatusOn": "الروبوت",
     "botStatusOff": "الروبوت متوقف",
     "windowClosedBanner": "مرّت أكثر من 24 ساعة على آخر رسالة من جهة الاتصال. يمكنك إرسال قالب أو مسار فقط.",
-    "windowRemaining": "متبقي {{time}}"
+    "windowRemaining": "متبقي {{time}}",
+    "templateCarousel": "شريط دوّار"
   },
   "contacts": {
     "title": "جهات الاتصال",

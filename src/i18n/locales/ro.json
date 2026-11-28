@@ -194,7 +194,8 @@
     "botStatusOn": "Bot",
     "botStatusOff": "Bot oprit",
     "windowClosedBanner": "Au trecut peste 24 de ore de la ultimul mesaj al contactului. Poți trimite doar un șablon sau un flux.",
-    "windowRemaining": "Mai sunt {{time}}"
+    "windowRemaining": "Mai sunt {{time}}",
+    "templateCarousel": "Carusel"
   },
   "contacts": {
     "title": "Contacte",

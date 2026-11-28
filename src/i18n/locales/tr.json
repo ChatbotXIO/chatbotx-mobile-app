@@ -194,7 +194,8 @@
     "botStatusOn": "Bot",
     "botStatusOff": "Bot kapalı",
     "windowClosedBanner": "Kişinin son mesajından bu yana 24 saatten fazla geçti. Yalnızca bir şablon veya akış gönderebilirsiniz.",
-    "windowRemaining": "{{time}} kaldı"
+    "windowRemaining": "{{time}} kaldı",
+    "templateCarousel": "Karusel"
   },
   "contacts": {
     "title": "Kişiler",
