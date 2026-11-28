@@ -2,9 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 
-import { isWorkspaceQuery } from '@/api/query-keys';
-import { useConversationFilters } from '@/features/conversations/stores/use-conversation-filters';
-import { useWorkspaceStore } from '@/stores/use-workspace-store';
+import { applyWorkspaceSwitch } from '@/features/workspaces/api/switch-workspace';
 
 interface SwitchWorkspaceOptions {
   /** When true, navigates to the conversations tab after switching (used by an inline switch from
@@ -14,12 +12,9 @@ interface SwitchWorkspaceOptions {
 }
 
 /**
- * Single source of truth for the "switch workspace" flow, replacing the three near-identical
- * blocks that used to live in settings/index.tsx, workspace-blocked-gate.tsx, and
- * workspace-picker.tsx. Steps: drop every cached query for the OLD workspace (so a re-entered
- * workspace never shows stale data from a previous session), reset the conversation filters store
- * (filters are workspace-agnostic UI state but shouldn't leak a stale "assigned to me" filter into
- * a workspace where that user id is meaningless), select the new workspace, then navigate.
+ * Single source of truth for the "switch workspace" flow: applies the state change via
+ * `applyWorkspaceSwitch` (cache cleanup, filter reset, workspace selection — see that helper), then
+ * navigates.
  *
  * `next: null` clears the selection entirely and always routes to the workspace picker (sign-out
  * style / "switch workspace" from a blocked gate). A non-null `next` optionally navigates to the
@@ -30,20 +25,10 @@ interface SwitchWorkspaceOptions {
 export function useSwitchWorkspace() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const currentWorkspaceId = useWorkspaceStore((state) => state.currentWorkspaceId);
-  const setCurrentWorkspaceId = useWorkspaceStore((state) => state.setCurrentWorkspaceId);
-  const resetConversationFilters = useConversationFilters((state) => state.reset);
 
   return useCallback(
     (next: string | null, opts?: SwitchWorkspaceOptions) => {
-      if (currentWorkspaceId) {
-        queryClient.removeQueries({
-          predicate: (query) => isWorkspaceQuery(query.queryKey, currentWorkspaceId),
-        });
-      }
-
-      resetConversationFilters();
-      setCurrentWorkspaceId(next);
+      applyWorkspaceSwitch(queryClient, next);
 
       if (next === null) {
         router.replace('/(app)/workspace-picker');
@@ -54,6 +39,6 @@ export function useSwitchWorkspace() {
         router.replace('/(app)/(tabs)/conversations');
       }
     },
-    [currentWorkspaceId, queryClient, resetConversationFilters, setCurrentWorkspaceId, router],
+    [queryClient, router],
   );
 }

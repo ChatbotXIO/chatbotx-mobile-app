@@ -1,11 +1,15 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useSyncExternalStore } from 'react';
+import type { QueryClient } from '@tanstack/react-query';
+import { useCallback, useSyncExternalStore } from 'react';
 
 import { isUnread } from '@/features/conversations/lib/conversation-status';
+import { conversationListPredicate } from '@/features/conversations/lib/patch-conversation-list-cache';
 import type {
   ConversationListItem,
   ListConversationsResponse,
 } from '@/features/conversations/api/use-conversations-infinite';
+
+const noopUnsubscribe = () => {};
 
 /**
  * Counts unread conversations across every currently CACHED conversations-list page for the given
@@ -19,23 +23,14 @@ import type {
  * yet — this is the best available approximation until one exists.
  * `Badge`'s own count-mode caps display at "99+", so no separate capping is needed here.
  */
-function countUnreadFromCache(
-  queryClient: ReturnType<typeof useQueryClient>,
-  workspaceId: string,
-): number {
+function countUnreadFromCache(queryClient: QueryClient, workspaceId: string): number {
   if (!workspaceId) return 0;
 
   const seen = new Map<string, ConversationListItem>();
 
   queryClient
     .getQueryCache()
-    .findAll({
-      predicate: (query) =>
-        query.queryKey[0] === 'ws' &&
-        query.queryKey[1] === workspaceId &&
-        query.queryKey[2] === 'conversations' &&
-        query.queryKey[3] === 'list',
-    })
+    .findAll({ predicate: conversationListPredicate(workspaceId) })
     .forEach((query) => {
       const data = query.state.data as { pages: ListConversationsResponse[] } | undefined;
       data?.pages.forEach((page) => {
@@ -59,8 +54,39 @@ function countUnreadFromCache(
 export function useInboxUnreadCount(workspaceId: string | null): number {
   const queryClient = useQueryClient();
 
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      if (!workspaceId) return noopUnsubscribe;
+
+      const matches = conversationListPredicate(workspaceId);
+      let scheduled = false;
+      let active = true;
+
+      const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+        // Ignore unrelated queries (e.g. `useWorkspaces`) — their observers are created during
+        // render of other components, and notifying from there triggers React's "Cannot update a
+        // component while rendering a different component" warning.
+        if (!matches(event.query) || scheduled) return;
+        scheduled = true;
+        // Defer + coalesce: observers of the list itself are also constructed mid-render, where a
+        // synchronous store-change would setState on this (different) component. A burst of cache
+        // events collapses into a single notification per tick.
+        queueMicrotask(() => {
+          scheduled = false;
+          if (active) onStoreChange();
+        });
+      });
+
+      return () => {
+        active = false;
+        unsubscribe();
+      };
+    },
+    [queryClient, workspaceId],
+  );
+
   return useSyncExternalStore(
-    (onStoreChange) => queryClient.getQueryCache().subscribe(onStoreChange),
+    subscribe,
     () => countUnreadFromCache(queryClient, workspaceId ?? ''),
     () => 0,
   );

@@ -157,6 +157,55 @@ describe('useInboxUnreadCount', () => {
     await waitFor(() => expect(result.current).toBe(1));
   });
 
+  it('does not re-render for unrelated cache writes', async () => {
+    const queryClient = createTestQueryClient();
+    let renders = 0;
+    await renderHook(
+      () => {
+        renders += 1;
+        return useInboxUnreadCount(WORKSPACE_ID);
+      },
+      { wrapper: wrapper(queryClient) },
+    );
+    const rendersBefore = renders;
+
+    await act(async () => {
+      queryClient.setQueryData(['workspaces'], [{ id: 'x' }]);
+      queryClient.setQueryData(['ws', 'other-ws', 'conversations', 'list', {}], {
+        pages: [{ data: [unreadConversation('z')], nextCursor: null }],
+        pageParams: [undefined],
+      });
+      await Promise.resolve();
+    });
+
+    expect(renders).toBe(rendersBefore);
+  });
+
+  it('coalesces several list writes in one tick into a single update', async () => {
+    const queryClient = createTestQueryClient();
+    let renders = 0;
+    const { result } = await renderHook(
+      () => {
+        renders += 1;
+        return useInboxUnreadCount(WORKSPACE_ID);
+      },
+      { wrapper: wrapper(queryClient) },
+    );
+    const rendersBefore = renders;
+
+    await act(async () => {
+      for (const id of ['a', 'b', 'c']) {
+        queryClient.setQueryData(['ws', WORKSPACE_ID, 'conversations', 'list', { id }], {
+          pages: [{ data: [unreadConversation(id)], nextCursor: null }],
+          pageParams: [undefined],
+        });
+      }
+    });
+
+    await waitFor(() => expect(result.current).toBe(3));
+    expect(renders - rendersBefore).toBe(1);
+  });
+
   it('returns 0 for a null workspaceId', async () => {
     const queryClient = createTestQueryClient();
     const { result } = await renderHook(() => useInboxUnreadCount(null), {
