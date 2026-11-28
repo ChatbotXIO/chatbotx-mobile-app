@@ -195,7 +195,8 @@
     "botStatusOff": "Bot off",
     "windowClosedBanner": "More than 24h since the contact's last message. You can only send a template or flow.",
     "windowRemaining": "{{time}} left",
-    "templateCarousel": "Carousel"
+    "templateCarousel": "Carousel",
+    "resend": "Resend"
   },
   "contacts": {
     "title": "Contacts",

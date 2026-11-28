@@ -185,7 +185,8 @@
     "botStatusOff": "Bot aus",
     "windowClosedBanner": "Seit der letzten Nachricht des Kontakts sind mehr als 24 Std. vergangen. Du kannst nur eine Vorlage oder einen Flow senden.",
     "windowRemaining": "Noch {{time}}",
-    "templateCarousel": "Karussell"
+    "templateCarousel": "Karussell",
+    "resend": "Erneut senden"
   },
   "contacts": {
     "title": "Kontakte",

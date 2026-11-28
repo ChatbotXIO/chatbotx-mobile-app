@@ -185,7 +185,8 @@
     "botStatusOff": "הבוט כבוי",
     "windowClosedBanner": "עברו יותר מ-24 שעות מההודעה האחרונה של איש הקשר. ניתן לשלוח רק תבנית או תהליך.",
     "windowRemaining": "נותרו {{time}}",
-    "templateCarousel": "קרוסלה"
+    "templateCarousel": "קרוסלה",
+    "resend": "שלח שוב"
   },
   "contacts": {
     "title": "אנשי קשר",

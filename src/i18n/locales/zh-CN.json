@@ -195,7 +195,8 @@
     "botStatusOff": "机器人已关闭",
     "windowClosedBanner": "距离联系人上一条消息已超过 24 小时，只能发送模板或流程。",
     "windowRemaining": "剩余 {{time}}",
-    "templateCarousel": "轮播"
+    "templateCarousel": "轮播",
+    "resend": "重新发送"
   },
   "contacts": {
     "title": "联系人",
