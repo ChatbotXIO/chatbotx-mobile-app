@@ -198,7 +198,8 @@
     "windowClosedBannerMeta": "More than 7 days since the contact's last message. You can only send a template or flow.",
     "windowClosedBannerTiktok": "More than 48h since the contact's last message. You can only send a flow.",
     "windowHumanAgent": "Human agent · {{time}} left",
-    "windowClosedError": "The messaging window is closed. Wait for the contact to reply."
+    "windowClosedError": "The messaging window is closed. Wait for the contact to reply.",
+    "templateCarousel": "Carousel"
   },
   "contacts": {
     "title": "Contacts",

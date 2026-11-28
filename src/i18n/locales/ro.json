@@ -198,7 +198,8 @@
     "windowClosedBannerMeta": "Au trecut mai mult de 7 zile de la ultimul mesaj al contactului. Poți trimite doar un șablon sau un flux.",
     "windowClosedBannerTiktok": "Au trecut mai mult de 48 de ore de la ultimul mesaj al contactului. Poți trimite doar un flux.",
     "windowHumanAgent": "Agent uman · mai sunt {{time}}",
-    "windowClosedError": "Fereastra de mesaje este închisă. Așteaptă răspunsul contactului."
+    "windowClosedError": "Fereastra de mesaje este închisă. Așteaptă răspunsul contactului.",
+    "templateCarousel": "Carusel"
   },
   "contacts": {
     "title": "Contacte",

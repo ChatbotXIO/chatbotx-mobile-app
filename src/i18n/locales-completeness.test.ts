@@ -39,6 +39,7 @@ const ALLOWED_SAME_AS_EN = new Set([
   'chat.document',
   'chat.edit',
   'chat.send',
+  'chat.templateCarousel',
   'chat.sendFlow',
   'chat.senderBot',
   'chat.senderContact',
