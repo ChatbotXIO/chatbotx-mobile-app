@@ -24,9 +24,11 @@ import { InfoTab } from '@/features/contacts/info-tab';
 import { NotesTab } from '@/features/contacts/notes-tab';
 import { SequencesTab } from '@/features/contacts/sequences-tab';
 import { TagsTab } from '@/features/contacts/tags-tab';
+import { AppointmentsTab } from '@/features/appointments/components/appointments-tab';
+import { FEATURES } from '@/config/features';
 import { useTheme } from '@/theme/use-theme';
 
-type Tab = 'info' | 'tags' | 'notes' | 'sequences';
+type Tab = 'info' | 'tags' | 'notes' | 'sequences' | 'appointments';
 
 interface ContactPanelProps {
   workspaceId: string | null;
@@ -153,6 +155,9 @@ export function ContactPanel({
               { value: 'tags', label: t('contacts.tabTags') },
               { value: 'notes', label: t('contacts.tabNotes') },
               { value: 'sequences', label: t('contacts.tabSequences') },
+              ...(FEATURES.appointments
+                ? [{ value: 'appointments' as const, label: t('appointments.tab') }]
+                : []),
             ]}
           />
         </View>
@@ -162,6 +167,13 @@ export function ContactPanel({
         ) : null}
         {tab === 'notes' ? <NotesTab contact={contact} workspaceId={workspaceId} /> : null}
         {tab === 'sequences' ? <SequencesTab contact={contact} workspaceId={workspaceId} /> : null}
+        {tab === 'appointments' && FEATURES.appointments ? (
+          <AppointmentsTab
+            workspaceId={workspaceId}
+            contactId={contact.id}
+            conversationId={conversationId}
+          />
+        ) : null}
       </ScrollView>
       {workspaceId ? (
         <>

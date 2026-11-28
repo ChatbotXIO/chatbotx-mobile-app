@@ -9,4 +9,5 @@ export const FEATURES = {
   sendSequence: true,
   blockContact: true,
   deleteContact: true,
+  appointments: true,
 } as const;

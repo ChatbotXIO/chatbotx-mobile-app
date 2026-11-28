@@ -363,5 +363,36 @@
       "emailNotVerified": "請先驗證電子郵件再登入。",
       "accountDeletionPending": "此帳戶已排程刪除。"
     }
+  },
+  "appointments": {
+    "tab": "預約",
+    "bookAppointment": "預約",
+    "linkSent": "預約連結已傳送",
+    "noCalendars": "沒有可用的行事曆",
+    "durationMinutes": "{{minutes}} 分鐘",
+    "inactive": "未啟用",
+    "sendLink": "傳送預約連結",
+    "openLink": "代客預約",
+    "newAppointment": "新增預約",
+    "noConversationNotice": "未連結對話，因此不會通知客戶。",
+    "stepCalendar": "行事曆",
+    "stepTimezone": "時區",
+    "stepDay": "日期",
+    "stepTime": "時間",
+    "calendarTimezone": "行事曆：{{zone}}",
+    "deviceTimezone": "此裝置：{{zone}}",
+    "noSlots": "沒有可用時段",
+    "selectedSlot": "已選擇：{{time}}",
+    "create": "建立預約",
+    "booked": "預約成功",
+    "slotUnavailable": "該時段已無法預約，請選擇其他時段。",
+    "tabUpcoming": "即將到來",
+    "tabPast": "已過去",
+    "empty": "尚無預約",
+    "statusScheduled": "已預約",
+    "statusCancelled": "已取消",
+    "cancel": "取消預約",
+    "cancelConfirm": "取消 {{name}} 的預約？客戶可能會收到通知。",
+    "cancelled": "預約已取消"
   }
 }

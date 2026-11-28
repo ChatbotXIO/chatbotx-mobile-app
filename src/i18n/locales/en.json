@@ -363,5 +363,36 @@
       "emailNotVerified": "Please verify your email before signing in.",
       "accountDeletionPending": "This account is scheduled for deletion."
     }
+  },
+  "appointments": {
+    "tab": "Appointments",
+    "bookAppointment": "Book appointment",
+    "linkSent": "Booking link sent",
+    "noCalendars": "No calendars available",
+    "durationMinutes": "{{minutes}} min",
+    "inactive": "Inactive",
+    "sendLink": "Send booking link",
+    "openLink": "Book on their behalf",
+    "newAppointment": "New appointment",
+    "noConversationNotice": "No conversation is linked, so the customer won't be notified.",
+    "stepCalendar": "Calendar",
+    "stepTimezone": "Timezone",
+    "stepDay": "Day",
+    "stepTime": "Time",
+    "calendarTimezone": "Calendar: {{zone}}",
+    "deviceTimezone": "This device: {{zone}}",
+    "noSlots": "No available times",
+    "selectedSlot": "Selected: {{time}}",
+    "create": "Create appointment",
+    "booked": "Appointment booked",
+    "slotUnavailable": "That time is no longer available. Pick another.",
+    "tabUpcoming": "Upcoming",
+    "tabPast": "Past",
+    "empty": "No appointments",
+    "statusScheduled": "Scheduled",
+    "statusCancelled": "Cancelled",
+    "cancel": "Cancel appointment",
+    "cancelConfirm": "Cancel the appointment on {{name}}? The customer may be notified.",
+    "cancelled": "Appointment cancelled"
   }
 }

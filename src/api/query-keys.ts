@@ -43,6 +43,18 @@ export const queryKeys = {
     teams: {
       list: (workspaceId: string) => ['ws', workspaceId, 'teams', 'list'] as const,
     },
+    appointmentCalendars: {
+      list: (workspaceId: string) => ['ws', workspaceId, 'appointment-calendars', 'list'] as const,
+      detail: (workspaceId: string, calendarId: string) =>
+        ['ws', workspaceId, 'appointment-calendars', 'detail', calendarId] as const,
+      availability: (workspaceId: string, calendarId: string, range: Record<string, unknown>) =>
+        ['ws', workspaceId, 'appointment-calendars', 'availability', calendarId, range] as const,
+    },
+    appointments: {
+      all: (workspaceId: string) => ['ws', workspaceId, 'appointments'] as const,
+      list: (workspaceId: string, filters: Record<string, unknown>) =>
+        ['ws', workspaceId, 'appointments', 'list', filters] as const,
+    },
     savedReplies: {
       list: (workspaceId: string) => ['ws', workspaceId, 'saved-replies', 'list'] as const,
     },

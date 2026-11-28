@@ -363,5 +363,36 @@
       "emailNotVerified": "Verifique o seu e-mail antes de iniciar sessão.",
       "accountDeletionPending": "Esta conta está agendada para eliminação."
     }
+  },
+  "appointments": {
+    "tab": "Marcações",
+    "bookAppointment": "Marcar consulta",
+    "linkSent": "Ligação de marcação enviada",
+    "noCalendars": "Nenhum calendário disponível",
+    "durationMinutes": "{{minutes}} min",
+    "inactive": "Inativo",
+    "sendLink": "Enviar ligação de marcação",
+    "openLink": "Marcar em nome do cliente",
+    "newAppointment": "Nova marcação",
+    "noConversationNotice": "Nenhuma conversa associada, por isso o cliente não será notificado.",
+    "stepCalendar": "Calendário",
+    "stepTimezone": "Fuso horário",
+    "stepDay": "Dia",
+    "stepTime": "Hora",
+    "calendarTimezone": "Calendário: {{zone}}",
+    "deviceTimezone": "Este dispositivo: {{zone}}",
+    "noSlots": "Sem horários disponíveis",
+    "selectedSlot": "Selecionado: {{time}}",
+    "create": "Criar marcação",
+    "booked": "Marcação criada",
+    "slotUnavailable": "Esse horário já não está disponível. Escolha outro.",
+    "tabUpcoming": "Próximas",
+    "tabPast": "Passadas",
+    "empty": "Sem marcações",
+    "statusScheduled": "Agendada",
+    "statusCancelled": "Cancelada",
+    "cancel": "Cancelar marcação",
+    "cancelConfirm": "Cancelar a marcação em {{name}}? O cliente pode ser notificado.",
+    "cancelled": "Marcação cancelada"
   }
 }

@@ -363,5 +363,36 @@
       "emailNotVerified": "Verifique seu e-mail antes de entrar.",
       "accountDeletionPending": "Esta conta está agendada para exclusão."
     }
+  },
+  "appointments": {
+    "tab": "Agendamentos",
+    "bookAppointment": "Agendar horário",
+    "linkSent": "Link de agendamento enviado",
+    "noCalendars": "Nenhuma agenda disponível",
+    "durationMinutes": "{{minutes}} min",
+    "inactive": "Inativa",
+    "sendLink": "Enviar link de agendamento",
+    "openLink": "Agendar pelo cliente",
+    "newAppointment": "Novo agendamento",
+    "noConversationNotice": "Nenhuma conversa vinculada, então o cliente não será notificado.",
+    "stepCalendar": "Agenda",
+    "stepTimezone": "Fuso horário",
+    "stepDay": "Dia",
+    "stepTime": "Horário",
+    "calendarTimezone": "Agenda: {{zone}}",
+    "deviceTimezone": "Este dispositivo: {{zone}}",
+    "noSlots": "Nenhum horário disponível",
+    "selectedSlot": "Selecionado: {{time}}",
+    "create": "Criar agendamento",
+    "booked": "Agendamento criado",
+    "slotUnavailable": "Esse horário não está mais disponível. Escolha outro.",
+    "tabUpcoming": "Próximos",
+    "tabPast": "Passados",
+    "empty": "Nenhum agendamento",
+    "statusScheduled": "Agendado",
+    "statusCancelled": "Cancelado",
+    "cancel": "Cancelar agendamento",
+    "cancelConfirm": "Cancelar o agendamento em {{name}}? O cliente pode ser notificado.",
+    "cancelled": "Agendamento cancelado"
   }
 }

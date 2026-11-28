@@ -363,5 +363,36 @@
       "emailNotVerified": "サインインする前にメールアドレスを確認してください。",
       "accountDeletionPending": "このアカウントは削除が予約されています。"
     }
+  },
+  "appointments": {
+    "tab": "予約",
+    "bookAppointment": "予約する",
+    "linkSent": "予約リンクを送信しました",
+    "noCalendars": "利用可能なカレンダーがありません",
+    "durationMinutes": "{{minutes}}分",
+    "inactive": "無効",
+    "sendLink": "予約リンクを送信",
+    "openLink": "顧客に代わって予約",
+    "newAppointment": "新しい予約",
+    "noConversationNotice": "会話が紐付いていないため、顧客には通知されません。",
+    "stepCalendar": "カレンダー",
+    "stepTimezone": "タイムゾーン",
+    "stepDay": "日付",
+    "stepTime": "時刻",
+    "calendarTimezone": "カレンダー：{{zone}}",
+    "deviceTimezone": "この端末：{{zone}}",
+    "noSlots": "空き時間がありません",
+    "selectedSlot": "選択中：{{time}}",
+    "create": "予約を作成",
+    "booked": "予約しました",
+    "slotUnavailable": "その時間は予約できなくなりました。別の時間を選んでください。",
+    "tabUpcoming": "今後",
+    "tabPast": "過去",
+    "empty": "予約はありません",
+    "statusScheduled": "予約済み",
+    "statusCancelled": "キャンセル済み",
+    "cancel": "予約をキャンセル",
+    "cancelConfirm": "{{name}}の予約をキャンセルしますか？顧客に通知される場合があります。",
+    "cancelled": "予約をキャンセルしました"
   }
 }

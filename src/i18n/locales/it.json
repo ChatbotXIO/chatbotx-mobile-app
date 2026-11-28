@@ -363,5 +363,36 @@
       "emailNotVerified": "Verifica la tua e-mail prima di accedere.",
       "accountDeletionPending": "L'eliminazione di questo account è programmata."
     }
+  },
+  "appointments": {
+    "tab": "Appuntamenti",
+    "bookAppointment": "Prenota appuntamento",
+    "linkSent": "Link di prenotazione inviato",
+    "noCalendars": "Nessun calendario disponibile",
+    "durationMinutes": "{{minutes}} min",
+    "inactive": "Inattivo",
+    "sendLink": "Invia link di prenotazione",
+    "openLink": "Prenota per conto del cliente",
+    "newAppointment": "Nuovo appuntamento",
+    "noConversationNotice": "Nessuna conversazione collegata: il cliente non verrà avvisato.",
+    "stepCalendar": "Calendario",
+    "stepTimezone": "Fuso orario",
+    "stepDay": "Giorno",
+    "stepTime": "Ora",
+    "calendarTimezone": "Calendario: {{zone}}",
+    "deviceTimezone": "Questo dispositivo: {{zone}}",
+    "noSlots": "Nessun orario disponibile",
+    "selectedSlot": "Selezionato: {{time}}",
+    "create": "Crea appuntamento",
+    "booked": "Appuntamento prenotato",
+    "slotUnavailable": "Quell'orario non è più disponibile. Scegline un altro.",
+    "tabUpcoming": "In arrivo",
+    "tabPast": "Passati",
+    "empty": "Nessun appuntamento",
+    "statusScheduled": "Programmato",
+    "statusCancelled": "Annullato",
+    "cancel": "Annulla appuntamento",
+    "cancelConfirm": "Annullare l'appuntamento su {{name}}? Il cliente potrebbe essere avvisato.",
+    "cancelled": "Appuntamento annullato"
   }
 }

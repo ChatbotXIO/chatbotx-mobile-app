@@ -363,5 +363,36 @@
       "emailNotVerified": "Vui lòng xác minh email trước khi đăng nhập.",
       "accountDeletionPending": "Tài khoản này đã được lên lịch xóa."
     }
+  },
+  "appointments": {
+    "tab": "Lịch hẹn",
+    "bookAppointment": "Đặt lịch hẹn",
+    "linkSent": "Đã gửi liên kết đặt lịch",
+    "noCalendars": "Không có lịch nào",
+    "durationMinutes": "{{minutes}} phút",
+    "inactive": "Không hoạt động",
+    "sendLink": "Gửi liên kết đặt lịch",
+    "openLink": "Đặt lịch hộ khách",
+    "newAppointment": "Lịch hẹn mới",
+    "noConversationNotice": "Chưa có cuộc trò chuyện liên kết, nên khách sẽ không được thông báo.",
+    "stepCalendar": "Lịch",
+    "stepTimezone": "Múi giờ",
+    "stepDay": "Ngày",
+    "stepTime": "Giờ",
+    "calendarTimezone": "Lịch: {{zone}}",
+    "deviceTimezone": "Thiết bị này: {{zone}}",
+    "noSlots": "Không có giờ trống",
+    "selectedSlot": "Đã chọn: {{time}}",
+    "create": "Tạo lịch hẹn",
+    "booked": "Đã đặt lịch hẹn",
+    "slotUnavailable": "Giờ này không còn trống. Hãy chọn giờ khác.",
+    "tabUpcoming": "Sắp tới",
+    "tabPast": "Đã qua",
+    "empty": "Chưa có lịch hẹn",
+    "statusScheduled": "Đã lên lịch",
+    "statusCancelled": "Đã huỷ",
+    "cancel": "Huỷ lịch hẹn",
+    "cancelConfirm": "Huỷ lịch hẹn ở {{name}}? Khách có thể được thông báo.",
+    "cancelled": "Đã huỷ lịch hẹn"
   }
 }

@@ -363,5 +363,36 @@
       "emailNotVerified": "Verifieer je e-mailadres voordat je inlogt.",
       "accountDeletionPending": "Dit account is gepland voor verwijdering."
     }
+  },
+  "appointments": {
+    "tab": "Afspraken",
+    "bookAppointment": "Afspraak boeken",
+    "linkSent": "Boekingslink verzonden",
+    "noCalendars": "Geen agenda's beschikbaar",
+    "durationMinutes": "{{minutes}} min.",
+    "inactive": "Inactief",
+    "sendLink": "Boekingslink verzenden",
+    "openLink": "Boeken namens klant",
+    "newAppointment": "Nieuwe afspraak",
+    "noConversationNotice": "Geen gesprek gekoppeld, dus de klant wordt niet op de hoogte gebracht.",
+    "stepCalendar": "Agenda",
+    "stepTimezone": "Tijdzone",
+    "stepDay": "Dag",
+    "stepTime": "Tijd",
+    "calendarTimezone": "Agenda: {{zone}}",
+    "deviceTimezone": "Dit apparaat: {{zone}}",
+    "noSlots": "Geen beschikbare tijden",
+    "selectedSlot": "Geselecteerd: {{time}}",
+    "create": "Afspraak maken",
+    "booked": "Afspraak geboekt",
+    "slotUnavailable": "Dat tijdstip is niet meer beschikbaar. Kies een ander.",
+    "tabUpcoming": "Aankomend",
+    "tabPast": "Verleden",
+    "empty": "Geen afspraken",
+    "statusScheduled": "Gepland",
+    "statusCancelled": "Geannuleerd",
+    "cancel": "Afspraak annuleren",
+    "cancelConfirm": "Afspraak bij {{name}} annuleren? De klant wordt mogelijk op de hoogte gebracht.",
+    "cancelled": "Afspraak geannuleerd"
   }
 }
