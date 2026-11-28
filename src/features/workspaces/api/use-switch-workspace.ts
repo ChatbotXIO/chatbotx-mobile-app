@@ -12,12 +12,9 @@ interface SwitchWorkspaceOptions {
 }
 
 /**
- * Single source of truth for the "switch workspace" flow, replacing the three near-identical
- * blocks that used to live in settings/index.tsx, workspace-blocked-gate.tsx, and
- * workspace-picker.tsx. Steps: drop every cached query for the OLD workspace (so a re-entered
- * workspace never shows stale data from a previous session), reset the conversation filters store
- * (filters are workspace-agnostic UI state but shouldn't leak a stale "assigned to me" filter into
- * a workspace where that user id is meaningless), select the new workspace, then navigate.
+ * Single source of truth for the "switch workspace" flow: applies the state change via
+ * `applyWorkspaceSwitch` (cache cleanup, filter reset, workspace selection — see that helper), then
+ * navigates.
  *
  * `next: null` clears the selection entirely and always routes to the workspace picker (sign-out
  * style / "switch workspace" from a blocked gate). A non-null `next` optionally navigates to the

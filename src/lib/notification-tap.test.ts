@@ -29,7 +29,7 @@ describe('notification tap handling', () => {
   beforeEach(() => {
     mockPush.mockClear();
     queryClient.clear();
-    useAuthStore.setState({ status: 'signed-in' } as never);
+    useAuthStore.setState({ status: 'signed-in' });
     useWorkspaceStore.setState({ currentWorkspaceId: 'ws-a' });
     useConversationFilters.getState().reset();
     queryClient.setQueryData(['ws', 'ws-a', 'conversations', 'list', {}], { pages: [] });
@@ -70,7 +70,7 @@ describe('notification tap handling', () => {
   });
 
   it('does nothing when not signed in', () => {
-    useAuthStore.setState({ status: 'signed-out' } as never);
+    useAuthStore.setState({ status: 'signed-out' });
 
     tap({ workspaceId: 'ws-b', conversationId: 'c1' });
 

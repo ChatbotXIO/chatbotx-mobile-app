@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 
+import { conversationListPredicate } from '@/features/conversations/lib/patch-conversation-list-cache';
 import type {
   ConversationListItem,
   ListConversationsResponse,
@@ -23,11 +24,7 @@ export function findConversationInListCache(
   return queryClient
     .getQueryCache()
     .findAll({
-      predicate: (query) =>
-        query.queryKey[0] === 'ws' &&
-        query.queryKey[1] === workspaceId &&
-        query.queryKey[2] === 'conversations' &&
-        query.queryKey[3] === 'list',
+      predicate: conversationListPredicate(workspaceId),
     })
     .flatMap((query) => {
       const data = query.state.data as { pages: ListConversationsResponse[] } | undefined;
