@@ -196,7 +196,12 @@
     "windowClosedBanner": "Đã hơn 24 giờ kể từ tin nhắn cuối của liên hệ. Bạn chỉ có thể gửi mẫu tin hoặc kịch bản.",
     "windowRemaining": "Còn {{time}}",
     "templateCarousel": "Carousel",
-    "resend": "Gửi lại"
+    "resend": "Gửi lại",
+    "templateSent": "Đã gửi mẫu tin",
+    "whatsappTemplates": "Mẫu tin WhatsApp",
+    "templateUnsupported": "Mẫu này cần các giá trị mà ứng dụng chưa điền được.",
+    "noWhatsappTemplates": "Chưa có mẫu tin được duyệt",
+    "sendWhatsappTemplate": "Gửi mẫu tin WhatsApp"
   },
   "contacts": {
     "title": "Liên hệ",

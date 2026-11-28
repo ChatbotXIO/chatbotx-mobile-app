@@ -8,11 +8,13 @@ import { useTheme } from '@/theme/use-theme';
 
 interface WindowClosedBarProps {
   onSendFlow: () => void;
+  /** Shown only on WhatsApp, the one channel with approved templates that bypass the window. */
+  onSendTemplate?: () => void;
 }
 
 /** Replaces the text input once the 24h customer-service window has closed: explains why and
  * offers the one action the channel still allows (sending a flow/template). */
-export function WindowClosedBar({ onSendFlow }: WindowClosedBarProps) {
+export function WindowClosedBar({ onSendFlow, onSendTemplate }: WindowClosedBarProps) {
   const { t } = useTranslation();
   const { colors, spacing, radius } = useTheme();
 
@@ -34,7 +36,18 @@ export function WindowClosedBar({ onSendFlow }: WindowClosedBarProps) {
           {t('chat.windowClosedBanner')}
         </Text>
       </View>
-      <View style={{ padding: spacing.sm }}>
+      <View style={{ padding: spacing.sm, gap: spacing.xs }}>
+        {onSendTemplate ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={onSendTemplate}
+            style={[styles.action, { backgroundColor: colors.brand, borderRadius: radius.full }]}
+          >
+            <Text variant="bodyStrong" color="onBrand">
+              {t('chat.sendWhatsappTemplate')}
+            </Text>
+          </Pressable>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           onPress={onSendFlow}

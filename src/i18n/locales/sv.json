@@ -196,7 +196,12 @@
     "windowClosedBanner": "Det har gått mer än 24 h sedan kontaktens senaste meddelande. Du kan bara skicka en mall eller ett flöde.",
     "windowRemaining": "{{time}} kvar",
     "templateCarousel": "Karusell",
-    "resend": "Skicka igen"
+    "resend": "Skicka igen",
+    "templateSent": "Mall skickad",
+    "whatsappTemplates": "WhatsApp-mallar",
+    "templateUnsupported": "Den här mallen kräver värden som appen ännu inte kan fylla i.",
+    "noWhatsappTemplates": "Inga godkända mallar",
+    "sendWhatsappTemplate": "Skicka WhatsApp-mall"
   },
   "contacts": {
     "title": "Kontakter",

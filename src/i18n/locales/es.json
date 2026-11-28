@@ -186,7 +186,12 @@
     "windowClosedBanner": "Han pasado más de 24 h desde el último mensaje del contacto. Solo puedes enviar una plantilla o un flujo.",
     "windowRemaining": "Quedan {{time}}",
     "templateCarousel": "Carrusel",
-    "resend": "Reenviar"
+    "resend": "Reenviar",
+    "templateSent": "Plantilla enviada",
+    "whatsappTemplates": "Plantillas de WhatsApp",
+    "templateUnsupported": "Esta plantilla necesita valores que la app aún no puede completar.",
+    "noWhatsappTemplates": "No hay plantillas aprobadas",
+    "sendWhatsappTemplate": "Enviar plantilla de WhatsApp"
   },
   "contacts": {
     "title": "Contactos",

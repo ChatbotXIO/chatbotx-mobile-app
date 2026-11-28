@@ -186,7 +186,12 @@
     "windowClosedBanner": "Plus de 24 h se sont écoulées depuis le dernier message du contact. Vous ne pouvez envoyer qu'un modèle ou un flux.",
     "windowRemaining": "{{time}} restant",
     "templateCarousel": "Carrousel",
-    "resend": "Renvoyer"
+    "resend": "Renvoyer",
+    "templateSent": "Modèle envoyé",
+    "whatsappTemplates": "Modèles WhatsApp",
+    "templateUnsupported": "Ce modèle nécessite des valeurs que l'app ne peut pas encore remplir.",
+    "noWhatsappTemplates": "Aucun modèle approuvé",
+    "sendWhatsappTemplate": "Envoyer un modèle WhatsApp"
   },
   "contacts": {
     "title": "Contacts",
