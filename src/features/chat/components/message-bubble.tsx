@@ -11,6 +11,7 @@ import type { Message } from '@/features/chat/api/use-messages-infinite';
 import type { GroupPosition } from '@/features/chat/lib/message-groups';
 import {
   DELIVERY_FAILED_ERROR_KIND,
+  isWindowClosedSendError,
   resolveSendStatus,
   type SendStatus,
 } from '@/features/chat/lib/send-status';
@@ -57,6 +58,9 @@ function formatTime(date: string): string {
 }
 
 function failedLabel(status: Extract<SendStatus, { status: 'failed' }>, t: TFunction): string {
+  if (!status.retryable && isWindowClosedSendError(status.errorText)) {
+    return t('chat.windowClosedError');
+  }
   if (!status.retryable) return t('chat.failedToSendReason', { reason: status.errorText });
   if (status.errorKind === DELIVERY_FAILED_ERROR_KIND) return t('chat.deliveryFailedTapRetry');
   return describeApiErrorKind(status.errorKind, t) ?? t('chat.failedToSendTapRetry');

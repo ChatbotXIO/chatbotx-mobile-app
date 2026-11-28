@@ -288,6 +288,29 @@ describe('useRealtimeHandlers', () => {
     expect(setSpy).toHaveBeenCalledTimes(20 + 5);
   });
 
+  it('invalidates the conversation detail on an incoming contact message only', async () => {
+    const queryClient = new QueryClient();
+    const invalidateSpy = jest.spyOn(queryClient, 'invalidateQueries');
+    const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
+    const detailKey = queryKeys.ws.conversations.detail(WORKSPACE_ID, 'conv-a');
+
+    result.current([
+      {
+        eventType: RealtimeEventType.messageCreated,
+        data: { id: 'out', conversationId: 'conv-a', senderType: 'user', attachments: [] },
+      },
+    ]);
+    expect(invalidateSpy).not.toHaveBeenCalledWith({ queryKey: detailKey });
+
+    result.current([
+      {
+        eventType: RealtimeEventType.messageCreated,
+        data: { id: 'in', conversationId: 'conv-a', senderType: 'contact', attachments: [] },
+      },
+    ]);
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: detailKey });
+  });
+
   it('refetches instead of patching when a frame exceeds the burst threshold', async () => {
     const queryClient = new QueryClient();
     const listKey = queryKeys.ws.conversations.list(WORKSPACE_ID, {});

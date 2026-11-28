@@ -95,6 +95,16 @@ function patchObservedConversationLists(
   return patched;
 }
 
+function refreshConversationDetail(
+  queryClient: QueryClient,
+  workspaceId: string,
+  conversationId: string,
+): void {
+  void queryClient.invalidateQueries({
+    queryKey: queryKeys.ws.conversations.detail(workspaceId, conversationId),
+  });
+}
+
 /** Applies a run of consecutive `messageCreated` events with one cache write per messages cache
  * and one per conversations-list cache, rather than one per event. */
 function applyMessagesCreatedBatch(
@@ -113,6 +123,13 @@ function applyMessagesCreatedBatch(
     else byConversation.set(incoming.conversationId, [event]);
   }
   if (incomingList.length === 0) return;
+
+  // A contact message reopens/extends the server-computed messaging window; refetch the detail
+  // so the composer unlocks. Only active observers (the open chat) actually refetch.
+  incomingList.forEach((message) => {
+    if (message.senderType === 'contact')
+      refreshConversationDetail(queryClient, workspaceId, message.conversationId);
+  });
 
   byConversation.forEach((group, conversationId) => {
     queryClient.setQueryData<InfiniteMessagesData>(
@@ -288,6 +305,9 @@ export function useRealtimeHandlers(queryClient: QueryClient, workspaceId: strin
       if (events.length > BURST_REFETCH_THRESHOLD) {
         void queryClient.resetQueries({ queryKey: conversationsListKey(workspaceId) });
         void queryClient.invalidateQueries({ queryKey: ['ws', workspaceId, 'messages'] });
+        void queryClient.invalidateQueries({
+          queryKey: ['ws', workspaceId, 'conversations', 'detail'],
+        });
         return;
       }
 

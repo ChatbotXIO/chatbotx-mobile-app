@@ -194,7 +194,12 @@
     "botStatusOn": "Bot",
     "botStatusOff": "Bot kapalı",
     "windowClosedBanner": "Kişinin son mesajından bu yana 24 saatten fazla geçti. Yalnızca bir şablon veya akış gönderebilirsiniz.",
-    "windowRemaining": "{{time}} kaldı"
+    "windowRemaining": "{{time}} kaldı",
+    "windowClosedBannerWhatsapp": "Kişinin son mesajından bu yana 24 saatten fazla geçti. Yalnızca şablon veya akış gönderebilirsiniz.",
+    "windowClosedBannerMeta": "Kişinin son mesajından bu yana 7 günden fazla geçti. Yalnızca şablon veya akış gönderebilirsiniz.",
+    "windowClosedBannerTiktok": "Kişinin son mesajından bu yana 48 saatten fazla geçti. Yalnızca akış gönderebilirsiniz.",
+    "windowHumanAgent": "İnsan temsilci · {{time}} kaldı",
+    "windowClosedError": "Mesajlaşma penceresi kapandı. Kişinin yanıt vermesini bekleyin."
   },
   "contacts": {
     "title": "Kişiler",

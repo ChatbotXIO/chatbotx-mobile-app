@@ -194,7 +194,12 @@
     "botStatusOn": "Bot",
     "botStatusOff": "Bot oprit",
     "windowClosedBanner": "Au trecut peste 24 de ore de la ultimul mesaj al contactului. Poți trimite doar un șablon sau un flux.",
-    "windowRemaining": "Mai sunt {{time}}"
+    "windowRemaining": "Mai sunt {{time}}",
+    "windowClosedBannerWhatsapp": "Au trecut mai mult de 24 de ore de la ultimul mesaj al contactului. Poți trimite doar un șablon sau un flux.",
+    "windowClosedBannerMeta": "Au trecut mai mult de 7 zile de la ultimul mesaj al contactului. Poți trimite doar un șablon sau un flux.",
+    "windowClosedBannerTiktok": "Au trecut mai mult de 48 de ore de la ultimul mesaj al contactului. Poți trimite doar un flux.",
+    "windowHumanAgent": "Agent uman · mai sunt {{time}}",
+    "windowClosedError": "Fereastra de mesaje este închisă. Așteaptă răspunsul contactului."
   },
   "contacts": {
     "title": "Contacte",

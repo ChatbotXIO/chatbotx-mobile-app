@@ -26,11 +26,11 @@ describe('device-tokens', () => {
   });
 
   it('caches the token only after a successful register', async () => {
-    jest.mocked(apiClient.PUT).mockResolvedValueOnce({ error: { message: 'x' } } as never);
+    (apiClient.PUT as jest.Mock).mockResolvedValueOnce({ error: { message: 'x' } } as never);
     await expect(registerDeviceToken('t1')).rejects.toBeDefined();
     expect(SecureStore.setItemAsync).not.toHaveBeenCalled();
 
-    jest.mocked(apiClient.PUT).mockResolvedValueOnce(ok);
+    (apiClient.PUT as jest.Mock).mockResolvedValueOnce(ok);
     await registerDeviceToken('t1');
     expect(SecureStore.setItemAsync).toHaveBeenCalledWith(LAST_REGISTERED_TOKEN_KEY, 't1');
   });
@@ -43,7 +43,7 @@ describe('device-tokens', () => {
 
   it('strict mode throws and keeps the cache on failure', async () => {
     jest.mocked(SecureStore.getItemAsync).mockResolvedValue('t1');
-    jest.mocked(apiClient.DELETE).mockResolvedValue({ error: { message: 'x' } } as never);
+    (apiClient.DELETE as jest.Mock).mockResolvedValue({ error: { message: 'x' } } as never);
     await expect(unregisterCachedDeviceToken()).rejects.toBeDefined();
     expect(SecureStore.deleteItemAsync).not.toHaveBeenCalled();
   });
@@ -51,7 +51,7 @@ describe('device-tokens', () => {
   it('best-effort mode swallows errors and clears the cache', async () => {
     jest.mocked(SecureStore.getItemAsync).mockResolvedValue('t1');
     jest.mocked(SecureStore.deleteItemAsync).mockResolvedValue(undefined);
-    jest.mocked(apiClient.DELETE).mockResolvedValue({ error: { message: 'x' } } as never);
+    (apiClient.DELETE as jest.Mock).mockResolvedValue({ error: { message: 'x' } } as never);
     await expect(unregisterCachedDeviceToken({ bestEffort: true })).resolves.toBeUndefined();
     expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith(LAST_REGISTERED_TOKEN_KEY);
   });

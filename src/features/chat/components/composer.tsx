@@ -247,6 +247,8 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
       const normalized = normalizeApiError(error);
       if (normalized.kind === 'workspaceBlocked') {
         setQuotaBlocked(normalized);
+      } else if (normalized.kind === 'messagingWindowClosed') {
+        toast({ message: t('chat.windowClosedError'), tone: 'danger' });
       } else {
         toast({ message: t('chat.flowSendFailed'), tone: 'danger' });
       }
@@ -283,7 +285,7 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
         </View>
       ) : null}
 
-      {isEditing || isReplying || messagingWindow.status === 'closed' ? null : (
+      {isEditing || isReplying || messagingWindow.kind === 'closed' ? null : (
         <SavedReplySuggestions
           workspaceId={workspaceId}
           draft={draft}
@@ -329,8 +331,8 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
         </View>
       ) : null}
 
-      {messagingWindow.status === 'closed' ? (
-        <WindowClosedBar onSendFlow={handleOpenFlowPicker} />
+      {messagingWindow.kind === 'closed' ? (
+        <WindowClosedBar channel={messagingWindow.channel} onSendFlow={handleOpenFlowPicker} />
       ) : (
         <View
           style={[

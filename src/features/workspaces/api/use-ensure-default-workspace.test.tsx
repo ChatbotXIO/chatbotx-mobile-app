@@ -77,7 +77,7 @@ describe('useEnsureDefaultWorkspace', () => {
   });
 
   it('throws ApiError on an error response', async () => {
-    jest.mocked(apiClient.POST).mockResolvedValue({
+    (apiClient.POST as jest.Mock).mockResolvedValue({
       data: undefined,
       error: { code: 'systemError', status: 400, message: 'boom', defined: true },
     } as never);

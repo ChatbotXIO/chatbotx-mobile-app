@@ -36,6 +36,12 @@ describe('normalizeApiError', () => {
     ).toBe('imagesNotSupportedOnChannel');
   });
 
+  it('returns messagingWindowClosed for the 409 early refusal', () => {
+    expect(normalizeApiError(new ApiError({ code: 'messagingWindowClosed', status: 409 }))).toEqual(
+      { kind: 'messagingWindowClosed' },
+    );
+  });
+
   it('returns mustChangePassword for FORBIDDEN with the change-password message', () => {
     const error = new ApiError({ code: 'FORBIDDEN', message: 'Password change required' });
     expect(normalizeApiError(error)).toEqual({ kind: 'mustChangePassword' });

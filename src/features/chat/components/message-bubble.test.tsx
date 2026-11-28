@@ -63,6 +63,22 @@ describe('MessageBubble', () => {
     expect(screen.getByText('Hello there')).toBeTruthy();
   });
 
+  it('shows friendly copy for a worker window-closed sendError', async () => {
+    await render(
+      <MessageBubble
+        message={fakeMessage({ sendError: 'whatsapp_messaging_window_closed' })}
+        position="single"
+        showMeta
+        messagesById={new Map()}
+        onLongPress={NO_OP}
+        onRetry={NO_OP}
+      />,
+    );
+
+    expect(screen.queryByText(/whatsapp_messaging_window_closed/)).toBeNull();
+    expect(screen.getByText(/messaging window is closed/i)).toBeTruthy();
+  });
+
   it('renders a deleted-message placeholder instead of the original text', async () => {
     await render(
       <MessageBubble

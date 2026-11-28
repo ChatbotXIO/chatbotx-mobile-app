@@ -194,7 +194,12 @@
     "botStatusOn": "機器人",
     "botStatusOff": "機器人已關閉",
     "windowClosedBanner": "距離聯絡人上一則訊息已超過 24 小時，只能傳送範本或流程。",
-    "windowRemaining": "剩餘 {{time}}"
+    "windowRemaining": "剩餘 {{time}}",
+    "windowClosedBannerWhatsapp": "距離聯絡人最後一則訊息已超過 24 小時，只能傳送範本或流程。",
+    "windowClosedBannerMeta": "距離聯絡人最後一則訊息已超過 7 天，只能傳送範本或流程。",
+    "windowClosedBannerTiktok": "距離聯絡人最後一則訊息已超過 48 小時，只能傳送流程。",
+    "windowHumanAgent": "真人客服 · 剩餘 {{time}}",
+    "windowClosedError": "訊息視窗已關閉，請等待聯絡人回覆。"
   },
   "contacts": {
     "title": "聯絡人",

@@ -184,7 +184,12 @@
     "botStatusOn": "Bot",
     "botStatusOff": "Bot aus",
     "windowClosedBanner": "Seit der letzten Nachricht des Kontakts sind mehr als 24 Std. vergangen. Du kannst nur eine Vorlage oder einen Flow senden.",
-    "windowRemaining": "Noch {{time}}"
+    "windowRemaining": "Noch {{time}}",
+    "windowClosedBannerWhatsapp": "Seit der letzten Nachricht des Kontakts sind mehr als 24 Stunden vergangen. Du kannst nur eine Vorlage oder einen Flow senden.",
+    "windowClosedBannerMeta": "Seit der letzten Nachricht des Kontakts sind mehr als 7 Tage vergangen. Du kannst nur eine Vorlage oder einen Flow senden.",
+    "windowClosedBannerTiktok": "Seit der letzten Nachricht des Kontakts sind mehr als 48 Stunden vergangen. Du kannst nur einen Flow senden.",
+    "windowHumanAgent": "Menschlicher Agent · noch {{time}}",
+    "windowClosedError": "Das Nachrichtenfenster ist geschlossen. Warte auf die Antwort des Kontakts."
   },
   "contacts": {
     "title": "Kontakte",

@@ -194,7 +194,12 @@
     "botStatusOn": "Bot",
     "botStatusOff": "Bot desligado",
     "windowClosedBanner": "Passaram mais de 24 h desde a última mensagem do contacto. Só pode enviar um modelo ou um fluxo.",
-    "windowRemaining": "Faltam {{time}}"
+    "windowRemaining": "Faltam {{time}}",
+    "windowClosedBannerWhatsapp": "Passaram mais de 24 h desde a última mensagem do contacto. Só pode enviar um modelo ou fluxo.",
+    "windowClosedBannerMeta": "Passaram mais de 7 dias desde a última mensagem do contacto. Só pode enviar um modelo ou fluxo.",
+    "windowClosedBannerTiktok": "Passaram mais de 48 h desde a última mensagem do contacto. Só pode enviar um fluxo.",
+    "windowHumanAgent": "Agente humano · restam {{time}}",
+    "windowClosedError": "A janela de mensagens está fechada. Aguarde pela resposta do contacto."
   },
   "contacts": {
     "title": "Contactos",

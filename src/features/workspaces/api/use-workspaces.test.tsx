@@ -25,7 +25,7 @@ describe('useWorkspaces', () => {
   });
 
   it('lists current membership workspaces from the member-scoped endpoint', async () => {
-    jest.mocked(apiClient.GET).mockResolvedValue({
+    (apiClient.GET as jest.Mock).mockResolvedValue({
       data: {
         workspaces: [{ id: 'workspace-1', name: 'Support', logo: null, brandColor: '#123456' }],
       },
