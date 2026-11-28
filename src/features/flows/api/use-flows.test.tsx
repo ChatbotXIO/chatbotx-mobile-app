@@ -21,7 +21,7 @@ describe('useFlows', () => {
   });
 
   it('asks the server for active inbox-enabled flows on every page', async () => {
-    jest.mocked(apiClient.GET).mockResolvedValue({
+    (apiClient.GET as jest.Mock).mockResolvedValue({
       data: { data: [], pageCount: 1 },
       error: undefined,
     } as never);

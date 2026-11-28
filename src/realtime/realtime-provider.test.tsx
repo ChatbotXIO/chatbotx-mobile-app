@@ -55,7 +55,7 @@ describe('RealtimeProvider', () => {
   });
 
   it('mints a gateway URL with its replay cursor through the member-scoped connect-token endpoint', async () => {
-    jest.mocked(apiClient.GET).mockResolvedValue({
+    (apiClient.GET as jest.Mock).mockResolvedValue({
       data: { socketUrl: 'wss://realtime.example.test/connect', token: 'connect-token' },
       error: undefined,
     } as never);
@@ -86,7 +86,7 @@ describe('RealtimeProvider', () => {
   });
 
   it('stops reconnecting when connect-token minting fails permanently', async () => {
-    jest.mocked(apiClient.GET).mockResolvedValue({
+    (apiClient.GET as jest.Mock).mockResolvedValue({
       data: undefined,
       error: { message: 'Membership revoked', status: 403 },
     } as never);
@@ -113,7 +113,7 @@ describe('RealtimeProvider', () => {
   });
 
   it('turns a rate-limited connect-token into a retry-after error that honors the header', async () => {
-    jest.mocked(apiClient.GET).mockResolvedValue({
+    (apiClient.GET as jest.Mock).mockResolvedValue({
       data: undefined,
       error: { message: 'Too many requests', status: 429 },
       response: new Response(null, { status: 429, headers: { 'retry-after': '5' } }),

@@ -53,7 +53,7 @@ describe('device-token mutations', () => {
       status: 'granted',
       token: 'ExponentPushToken[1]',
     });
-    jest.mocked(apiClient.PUT).mockResolvedValue({ data: undefined, error: undefined } as never);
+    (apiClient.PUT as jest.Mock).mockResolvedValue({ data: undefined, error: undefined } as never);
     const queryClient = createTestQueryClient();
 
     const { result, unmount } = await renderHook(() => useRegisterDeviceToken(), {
@@ -94,7 +94,10 @@ describe('device-token mutations', () => {
 
   it('unregisters the cached token through the member-scoped endpoint', async () => {
     jest.mocked(SecureStore.getItemAsync).mockResolvedValue('ExponentPushToken[1]');
-    jest.mocked(apiClient.DELETE).mockResolvedValue({ data: undefined, error: undefined } as never);
+    (apiClient.DELETE as jest.Mock).mockResolvedValue({
+      data: undefined,
+      error: undefined,
+    } as never);
     const queryClient = createTestQueryClient();
 
     const { result, unmount } = await renderHook(() => useUnregisterDeviceToken(), {
@@ -123,8 +126,11 @@ describe('usePushTokenRotation', () => {
       rotationListener = cb;
       return { remove };
     }) as never);
-    jest.mocked(apiClient.PUT).mockResolvedValue({ data: undefined, error: undefined } as never);
-    jest.mocked(apiClient.DELETE).mockResolvedValue({ data: undefined, error: undefined } as never);
+    (apiClient.PUT as jest.Mock).mockResolvedValue({ data: undefined, error: undefined } as never);
+    (apiClient.DELETE as jest.Mock).mockResolvedValue({
+      data: undefined,
+      error: undefined,
+    } as never);
   });
 
   afterEach(() => {

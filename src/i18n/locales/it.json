@@ -194,7 +194,11 @@
     "botStatusOn": "Bot",
     "botStatusOff": "Bot disattivato",
     "windowClosedBanner": "Sono passate più di 24 ore dall'ultimo messaggio del contatto. Puoi inviare solo un modello o un flusso.",
-    "windowRemaining": "{{time}} rimasti"
+    "windowRemaining": "{{time}} rimasti",
+    "windowClosedBannerMeta": "Sono passati più di 7 giorni dall'ultimo messaggio del contatto. Puoi inviare solo un modello o un flusso.",
+    "windowClosedBannerTiktok": "Sono passate più di 48 ore dall'ultimo messaggio del contatto. Puoi inviare solo un flusso.",
+    "windowHumanAgent": "Operatore umano · {{time}} rimasti",
+    "windowClosedError": "La finestra di messaggistica è chiusa. Attendi la risposta del contatto."
   },
   "contacts": {
     "title": "Contatti",

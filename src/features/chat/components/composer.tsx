@@ -12,7 +12,6 @@ import { IconButton } from '@/components/ui/icon-button';
 import { Text } from '@/components/ui/text';
 import { useToast } from '@/components/ui/toast';
 import { normalizeApiError } from '@/api/errors';
-import { FEATURES } from '@/config/features';
 import { useConversationDetail } from '@/features/conversations/api/use-conversation-detail';
 import { useMessagingWindow } from '@/features/chat/api/use-messaging-window';
 import type { FlowListItem } from '@/features/flows/api/use-flows';
@@ -73,16 +72,8 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
   const flowPickerRef = useRef<BottomSheetModal>(null);
   const sequencePickerRef = useRef<BottomSheetModal>(null);
 
-  // `FEATURES.sendSequence` is off until the backend route ships (see src/config/features.ts) —
-  // fetching the conversation detail here just to resolve `contactId` would be wasted work while
-  // the entry is hidden, so this only fires the query once the flag is on. `useConversationDetail`
-  // itself already no-ops via `enabled` when either id is missing.
-  const { data: conversationForSequence } = useConversationDetail(
-    FEATURES.sendSequence ? workspaceId : null,
-    FEATURES.sendSequence ? conversationId : null,
-  );
-
   // Same query key as the chat header's, so this is a cache hit rather than a second request.
+  // Also supplies `contactId` for the send-sequence entry and the messaging window.
   const { data: conversation } = useConversationDetail(workspaceId, conversationId);
   const messagingWindow = useMessagingWindow(conversation);
 
@@ -247,6 +238,8 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
       const normalized = normalizeApiError(error);
       if (normalized.kind === 'workspaceBlocked') {
         setQuotaBlocked(normalized);
+      } else if (normalized.kind === 'messagingWindowClosed') {
+        toast({ message: t('chat.windowClosedError'), tone: 'danger' });
       } else {
         toast({ message: t('chat.flowSendFailed'), tone: 'danger' });
       }
@@ -283,7 +276,7 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
         </View>
       ) : null}
 
-      {isEditing || isReplying || messagingWindow.status === 'closed' ? null : (
+      {isEditing || isReplying || messagingWindow.kind === 'closed' ? null : (
         <SavedReplySuggestions
           workspaceId={workspaceId}
           draft={draft}
@@ -329,8 +322,8 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
         </View>
       ) : null}
 
-      {messagingWindow.status === 'closed' ? (
-        <WindowClosedBar onSendFlow={handleOpenFlowPicker} />
+      {messagingWindow.kind === 'closed' ? (
+        <WindowClosedBar channel={messagingWindow.channel} onSendFlow={handleOpenFlowPicker} />
       ) : (
         <View
           style={[
@@ -431,7 +424,7 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
         // FEATURES.sendSequence-off "Coming soon" state, so this stays wired even while the flag
         // is off — flipping the flag in src/config/features.ts is the only thing left to do once
         // the backend route ships.
-        onSendSequence={conversationForSequence?.contactId ? handleOpenSendSequence : undefined}
+        onSendSequence={conversation?.contactId ? handleOpenSendSequence : undefined}
       />
 
       <FlowPickerSheet
@@ -450,11 +443,11 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
         }}
       />
 
-      {conversationForSequence?.contactId ? (
+      {conversation?.contactId ? (
         <SequencePickerSheet
           sheetRef={sequencePickerRef}
           workspaceId={workspaceId}
-          contactId={conversationForSequence.contactId}
+          contactId={conversation.contactId}
         />
       ) : null}
     </View>

@@ -194,7 +194,11 @@
     "botStatusOn": "ボット",
     "botStatusOff": "ボットオフ",
     "windowClosedBanner": "連絡先の最後のメッセージから24時間以上経過しています。テンプレートまたはフローのみ送信できます。",
-    "windowRemaining": "残り{{time}}"
+    "windowRemaining": "残り{{time}}",
+    "windowClosedBannerMeta": "連絡先の最後のメッセージから7日以上経過しました。テンプレートまたはフローのみ送信できます。",
+    "windowClosedBannerTiktok": "連絡先の最後のメッセージから48時間以上経過しました。フローのみ送信できます。",
+    "windowHumanAgent": "有人対応 · 残り{{time}}",
+    "windowClosedError": "メッセージ送信可能な期間が終了しました。連絡先からの返信をお待ちください。"
   },
   "contacts": {
     "title": "連絡先",

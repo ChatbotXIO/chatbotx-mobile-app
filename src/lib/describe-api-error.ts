@@ -40,6 +40,8 @@ export function describeApiError(error: unknown, t: TFunction): string {
       return t('errors.invalidRequest');
     case 'imagesNotSupportedOnChannel':
       return t('errors.imagesNotSupported');
+    case 'messagingWindowClosed':
+      return t('chat.windowClosedError');
     case 'unknown':
       return isNetworkError(error) ? t('errors.network') : t('errors.unknown');
     case 'invalidCursor':

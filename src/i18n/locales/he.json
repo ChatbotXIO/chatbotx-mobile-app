@@ -184,7 +184,11 @@
     "botStatusOn": "בוט",
     "botStatusOff": "הבוט כבוי",
     "windowClosedBanner": "עברו יותר מ-24 שעות מההודעה האחרונה של איש הקשר. ניתן לשלוח רק תבנית או תהליך.",
-    "windowRemaining": "נותרו {{time}}"
+    "windowRemaining": "נותרו {{time}}",
+    "windowClosedBannerMeta": "עברו יותר מ-7 ימים מההודעה האחרונה של איש הקשר. ניתן לשלוח רק תבנית או זרימה.",
+    "windowClosedBannerTiktok": "עברו יותר מ-48 שעות מההודעה האחרונה של איש הקשר. ניתן לשלוח רק זרימה.",
+    "windowHumanAgent": "נציג אנושי · נותרו {{time}}",
+    "windowClosedError": "חלון ההודעות סגור. המתן לתגובת איש הקשר."
   },
   "contacts": {
     "title": "אנשי קשר",

@@ -241,6 +241,35 @@ describe('useSendMessage', () => {
     expect(useChatStore.getState().draftsByConversation['conv-1']).toBe('hello');
   });
 
+  it('marks the row failed and invalidates the detail on a 409 messagingWindowClosed', async () => {
+    mockedPost.mockResolvedValue({
+      data: undefined,
+      error: { code: 'messagingWindowClosed', status: 409, message: 'closed' },
+    });
+    const queryClient = createTestQueryClient();
+    const queryKey = queryKeys.ws.messages.list('ws-1', 'conv-1');
+    queryClient.setQueryData(queryKey, messagesData());
+    const invalidateSpy = jest.spyOn(queryClient, 'invalidateQueries');
+
+    const { result } = await renderHook(() => useSendMessage('ws-1', 'conv-1'), {
+      wrapper: wrapper(queryClient),
+    });
+
+    act(() => {
+      result.current.mutate({ workspaceId: 'ws-1', conversationId: 'conv-1', text: 'hello' });
+    });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    const data = queryClient.getQueryData<{
+      pages: { data: { __optimisticStatus?: string; __optimisticError?: string }[] }[];
+    }>(queryKey);
+    expect(data?.pages[0]?.data[0]?.__optimisticStatus).toBe('failed');
+    expect(data?.pages[0]?.data[0]?.__optimisticError).toBe('messagingWindowClosed');
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: queryKeys.ws.conversations.detail('ws-1', 'conv-1'),
+    });
+  });
+
   it('keeps a failed bubble (does not remove it) on a non-terminal error', async () => {
     mockedPost.mockResolvedValue({
       data: undefined,

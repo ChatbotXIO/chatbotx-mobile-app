@@ -1,6 +1,10 @@
 import type { Message } from '@/features/chat/api/use-messages-infinite';
 
-import { DELIVERY_FAILED_ERROR_KIND, resolveSendStatus } from './send-status';
+import {
+  DELIVERY_FAILED_ERROR_KIND,
+  isWindowClosedSendError,
+  resolveSendStatus,
+} from './send-status';
 
 function message(overrides: Record<string, unknown> = {}): Message {
   return {
@@ -46,5 +50,30 @@ describe('resolveSendStatus', () => {
       retryable: false,
       errorText: 'Outside of allowed window',
     });
+  });
+});
+
+describe('isWindowClosedSendError', () => {
+  it.each([
+    'whatsapp_messaging_window_closed',
+    'tiktok_messaging_window_closed',
+    'messenger_human_agent_window_expired',
+    'messagingWindowClosed',
+  ])('matches %s', (code) => {
+    expect(isWindowClosedSendError(code)).toBe(true);
+  });
+
+  it('ignores other errors', () => {
+    expect(isWindowClosedSendError('rate_limited')).toBe(false);
+    expect(isWindowClosedSendError(null)).toBe(false);
+  });
+
+  it('makes an optimistic window-closed failure non-retryable', () => {
+    expect(
+      resolveSendStatus(
+        message({ __optimisticStatus: 'failed', __optimisticError: 'messagingWindowClosed' }),
+        false,
+      ),
+    ).toEqual({ status: 'failed', retryable: false, errorText: 'messagingWindowClosed' });
   });
 });

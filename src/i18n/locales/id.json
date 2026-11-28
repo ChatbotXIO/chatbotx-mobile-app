@@ -184,7 +184,11 @@
     "botStatusOn": "Bot",
     "botStatusOff": "Bot nonaktif",
     "windowClosedBanner": "Sudah lebih dari 24 jam sejak pesan terakhir kontak. Anda hanya dapat mengirim templat atau alur.",
-    "windowRemaining": "Sisa {{time}}"
+    "windowRemaining": "Sisa {{time}}",
+    "windowClosedBannerMeta": "Sudah lebih dari 7 hari sejak pesan terakhir kontak. Anda hanya dapat mengirim templat atau alur.",
+    "windowClosedBannerTiktok": "Sudah lebih dari 48 jam sejak pesan terakhir kontak. Anda hanya dapat mengirim alur.",
+    "windowHumanAgent": "Agen manusia · sisa {{time}}",
+    "windowClosedError": "Jendela pesan sudah ditutup. Tunggu kontak membalas."
   },
   "contacts": {
     "title": "Kontak",

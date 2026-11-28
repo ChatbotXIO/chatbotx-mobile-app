@@ -25,6 +25,7 @@ export type NormalizedApiError =
   | { kind: 'invalidCursor' }
   | { kind: 'workspaceSelectionRequired' }
   | { kind: 'imagesNotSupportedOnChannel'; message: string }
+  | { kind: 'messagingWindowClosed' }
   | { kind: 'unknown'; message: string };
 
 const MUST_CHANGE_PASSWORD_MESSAGE = 'Password change required';
@@ -110,6 +111,9 @@ export function normalizeApiError(error: unknown): NormalizedApiError {
       kind: 'imagesNotSupportedOnChannel',
       message: body.message ?? 'Images are not supported on this channel',
     };
+  }
+  if (body.code === 'messagingWindowClosed') {
+    return { kind: 'messagingWindowClosed' };
   }
   if (body.code === 'invalidRequestData' || body.code === 'validation' || body.status === 422) {
     return { kind: 'invalidRequestData', message: body.message ?? 'Invalid request' };

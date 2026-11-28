@@ -301,6 +301,13 @@ export function useSendMessage(workspaceId: string, conversationId: string) {
         return;
       }
 
+      if (normalized.kind === 'messagingWindowClosed') {
+        // The server's window verdict changed under us: refetch so the composer locks now.
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.ws.conversations.detail(workspaceId, conversationId),
+        });
+      }
+
       if (context.skippedOptimistic) return;
 
       queryClient.setQueryData<MessagesInfiniteData>(queryKey, (old) => {

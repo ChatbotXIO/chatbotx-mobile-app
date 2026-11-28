@@ -184,7 +184,11 @@
     "botStatusOn": "Botti",
     "botStatusOff": "Botti pois",
     "windowClosedBanner": "Yhteystiedon viimeisestä viestistä on yli 24 tuntia. Voit lähettää vain mallipohjan tai flow'n.",
-    "windowRemaining": "{{time}} jäljellä"
+    "windowRemaining": "{{time}} jäljellä",
+    "windowClosedBannerMeta": "Yhteyshenkilön viimeisestä viestistä on yli 7 päivää. Voit lähettää vain mallin tai kulun.",
+    "windowClosedBannerTiktok": "Yhteyshenkilön viimeisestä viestistä on yli 48 tuntia. Voit lähettää vain kulun.",
+    "windowHumanAgent": "Ihmisagentti · {{time}} jäljellä",
+    "windowClosedError": "Viestiikkuna on suljettu. Odota, että yhteyshenkilö vastaa."
   },
   "contacts": {
     "title": "Yhteystiedot",

@@ -7,12 +7,25 @@ import { withAlpha } from '@/theme/color-utils';
 import { useTheme } from '@/theme/use-theme';
 
 interface WindowClosedBarProps {
+  channel: string | null;
   onSendFlow: () => void;
 }
 
-/** Replaces the text input once the 24h customer-service window has closed: explains why and
+function bannerKey(channel: string | null): string {
+  switch (channel) {
+    case 'messenger':
+    case 'instagram':
+      return 'chat.windowClosedBannerMeta';
+    case 'tiktok':
+      return 'chat.windowClosedBannerTiktok';
+    default:
+      return 'chat.windowClosedBanner';
+  }
+}
+
+/** Replaces the text input once the channel's customer-service window has closed: explains why and
  * offers the one action the channel still allows (sending a flow/template). */
-export function WindowClosedBar({ onSendFlow }: WindowClosedBarProps) {
+export function WindowClosedBar({ channel, onSendFlow }: WindowClosedBarProps) {
   const { t } = useTranslation();
   const { colors, spacing, radius } = useTheme();
 
@@ -31,7 +44,7 @@ export function WindowClosedBar({ onSendFlow }: WindowClosedBarProps) {
       >
         <Icon name="clock" size={18} color={colors.warning} />
         <Text variant="caption" style={styles.bannerText}>
-          {t('chat.windowClosedBanner')}
+          {t(bannerKey(channel))}
         </Text>
       </View>
       <View style={{ padding: spacing.sm }}>

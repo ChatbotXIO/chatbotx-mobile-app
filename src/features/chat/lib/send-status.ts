@@ -1,8 +1,24 @@
+import type { NormalizedApiError } from '@/api/errors';
 import type { Message } from '@/features/chat/api/use-messages-infinite';
 import { getOptimisticStatus } from '@/features/chat/components/optimistic-message';
 
 /** Error kind stored on a send the channel rejected for good (the server removed the message). */
 export const DELIVERY_FAILED_ERROR_KIND = 'deliveryFailed';
+
+/** Error kind of a send the server refused up front because the messaging window is closed. */
+export const MESSAGING_WINDOW_CLOSED_ERROR_KIND =
+  'messagingWindowClosed' satisfies NormalizedApiError['kind'];
+
+const WINDOW_CLOSED_SEND_ERROR = /_messaging_window_closed$|_window_expired$/;
+
+/** True for the worker's `sendError` codes (e.g. `whatsapp_messaging_window_closed`,
+ * `messenger_human_agent_window_expired`) and for the local early-refusal kind. */
+export function isWindowClosedSendError(error: string | null | undefined): boolean {
+  return (
+    !!error &&
+    (error === MESSAGING_WINDOW_CLOSED_ERROR_KIND || WINDOW_CLOSED_SEND_ERROR.test(error))
+  );
+}
 
 export type SendStatus =
   | { status: 'sending' }
@@ -23,6 +39,10 @@ export function resolveSendStatus(message: Message, isAwaitingDelivery: boolean)
   const optimistic = getOptimisticStatus(message);
   if (optimistic?.status === 'pending') return { status: 'sending' };
   if (optimistic?.status === 'failed') {
+    // Retrying can't succeed until the contact writes again, so the row is not retryable.
+    if (optimistic.errorKind === MESSAGING_WINDOW_CLOSED_ERROR_KIND) {
+      return { status: 'failed', retryable: false, errorText: optimistic.errorKind };
+    }
     return { status: 'failed', retryable: true, errorKind: optimistic.errorKind };
   }
   if (message.sendError) {

@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { router } from 'expo-router';
+import type { TFunction } from 'i18next';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -18,7 +19,7 @@ import { isBotActive } from '@/features/conversations/lib/conversation-status';
 import { findConversationInListCache } from '@/features/conversations/lib/find-conversation-in-cache';
 import type { FlowListItem } from '@/features/flows/api/use-flows';
 import { useMessagingWindow } from '@/features/chat/api/use-messaging-window';
-import { formatRemaining } from '@/features/chat/lib/messaging-window';
+import { formatRemaining, type MessagingWindow } from '@/features/chat/lib/messaging-window';
 import { useSendMessage } from '@/features/chat/api/use-send-message';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
 import { useConnectionStatusLabel } from '@/realtime/use-connection-status-label';
@@ -33,6 +34,16 @@ interface ChatHeaderProps {
   workspaceId: string;
   conversationId: string;
   onBack: () => void;
+}
+
+function describeWindowLabel(window: MessagingWindow, t: TFunction): string | null {
+  if (window.kind === 'closing') {
+    return t('chat.windowRemaining', { time: formatRemaining(window.remainingMs) });
+  }
+  if (window.kind === 'humanAgent') {
+    return t('chat.windowHumanAgent', { time: formatRemaining(window.remainingMs) });
+  }
+  return null;
 }
 
 /** Resolves conversation identity via `useConversationDetail`, seeded with a synchronous
@@ -55,6 +66,7 @@ export function ChatHeader({ workspaceId, conversationId, onBack }: ChatHeaderPr
   });
 
   const messagingWindow = useMessagingWindow(conversation);
+  const windowLabel = describeWindowLabel(messagingWindow, t);
   const enableBot = useEnableBot(workspaceId);
   const disableBot = useDisableBot(workspaceId);
   const sendMessage = useSendMessage(workspaceId, conversationId);
@@ -89,7 +101,14 @@ export function ChatHeader({ workspaceId, conversationId, onBack }: ChatHeaderPr
     } catch (error) {
       const normalized = normalizeApiError(error);
       if (normalized.kind !== 'workspaceBlocked') {
-        toast({ message: t('chat.flowSendFailed'), tone: 'danger' });
+        toast({
+          message: t(
+            normalized.kind === 'messagingWindowClosed'
+              ? 'chat.windowClosedError'
+              : 'chat.flowSendFailed',
+          ),
+          tone: 'danger',
+        });
       }
     }
   }
@@ -150,14 +169,16 @@ export function ChatHeader({ workspaceId, conversationId, onBack }: ChatHeaderPr
             >
               {connectionStatusLabel}
             </Text>
-          ) : subtitleParts.length > 0 || messagingWindow.status === 'closing' ? (
+          ) : subtitleParts.length > 0 || windowLabel ? (
             <Text variant="caption" color="secondary" numberOfLines={1}>
               {subtitleParts.join(' · ')}
-              {messagingWindow.status === 'closing' ? (
-                <Text variant="caption" color="warning" style={{ fontWeight: '600' }}>
-                  {`${subtitleParts.length > 0 ? ' · ' : ''}${t('chat.windowRemaining', {
-                    time: formatRemaining(messagingWindow.remainingMs),
-                  })}`}
+              {windowLabel ? (
+                <Text
+                  variant="caption"
+                  color={messagingWindow.kind === 'closing' ? 'warning' : 'secondary'}
+                  style={{ fontWeight: '600' }}
+                >
+                  {`${subtitleParts.length > 0 ? ' · ' : ''}${windowLabel}`}
                 </Text>
               ) : null}
             </Text>
