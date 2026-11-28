@@ -363,5 +363,36 @@
       "emailNotVerified": "Giriş yapmadan önce lütfen e-postanızı doğrulayın.",
       "accountDeletionPending": "Bu hesabın silinmesi planlandı."
     }
+  },
+  "appointments": {
+    "tab": "Randevular",
+    "bookAppointment": "Randevu al",
+    "linkSent": "Randevu bağlantısı gönderildi",
+    "noCalendars": "Kullanılabilir takvim yok",
+    "durationMinutes": "{{minutes}} dk",
+    "inactive": "Pasif",
+    "sendLink": "Randevu bağlantısı gönder",
+    "openLink": "Müşteri adına randevu al",
+    "newAppointment": "Yeni randevu",
+    "noConversationNotice": "Bağlı konuşma yok, bu yüzden müşteriye bildirilmeyecek.",
+    "stepCalendar": "Takvim",
+    "stepTimezone": "Saat dilimi",
+    "stepDay": "Gün",
+    "stepTime": "Saat",
+    "calendarTimezone": "Takvim: {{zone}}",
+    "deviceTimezone": "Bu cihaz: {{zone}}",
+    "noSlots": "Uygun saat yok",
+    "selectedSlot": "Seçilen: {{time}}",
+    "create": "Randevu oluştur",
+    "booked": "Randevu alındı",
+    "slotUnavailable": "Bu saat artık uygun değil. Başka bir saat seçin.",
+    "tabUpcoming": "Yaklaşan",
+    "tabPast": "Geçmiş",
+    "empty": "Randevu yok",
+    "statusScheduled": "Planlandı",
+    "statusCancelled": "İptal edildi",
+    "cancel": "Randevuyu iptal et",
+    "cancelConfirm": "{{name}} takvimindeki randevu iptal edilsin mi? Müşteriye bildirilebilir.",
+    "cancelled": "Randevu iptal edildi"
   }
 }

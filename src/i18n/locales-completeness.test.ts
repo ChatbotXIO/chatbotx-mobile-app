@@ -29,6 +29,9 @@ function placeholders(value: string): string[] {
  * technical loanwords and placeholder-only strings. Anything else identical to `en` is an
  * untranslated string. */
 const ALLOWED_SAME_AS_EN = new Set([
+  'appointments.calendarTimezone',
+  'appointments.durationMinutes',
+  'appointments.stepCalendar',
   'auth.email',
   'auth.emailPlaceholder',
   'auth.password',

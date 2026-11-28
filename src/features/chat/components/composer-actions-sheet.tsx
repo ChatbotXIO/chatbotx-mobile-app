@@ -17,20 +17,31 @@ interface ComposerActionsSheetProps {
   /** Omitted entirely (not just disabled) when the sequences feature isn't available yet — see
    * the TODO in composer.tsx for why this is optional rather than always-present-but-gated. */
   onSendSequence?: () => void;
+  /** Omitted when the appointments feature is off or the channel can't render button templates. */
+  onBookAppointment?: () => void;
 }
 
 /** "[+]" composer action sheet: camera, photo library (multi-select), document, send flow, send
  * sequence (feature-gated — see composer.tsx), saved replies. */
 export const ComposerActionsSheet = forwardRef<BottomSheetModal, ComposerActionsSheetProps>(
   function ComposerActionsSheet(
-    { onClose, onCamera, onPhotoLibrary, onDocument, onSendFlow, onSavedReplies, onSendSequence },
+    {
+      onClose,
+      onCamera,
+      onPhotoLibrary,
+      onDocument,
+      onSendFlow,
+      onSavedReplies,
+      onSendSequence,
+      onBookAppointment,
+    },
     ref,
   ) {
     const { t } = useTranslation();
     const { colors } = useTheme();
 
     return (
-      <SheetModal ref={ref} snapPoints={['50%']}>
+      <SheetModal ref={ref} snapPoints={['60%']}>
         <SheetHeader title={t('chat.attach')} onClose={onClose} />
         <ListItem
           title={t('chat.camera')}
@@ -57,6 +68,13 @@ export const ComposerActionsSheet = forwardRef<BottomSheetModal, ComposerActions
             title={t('chat.sendSequence')}
             leading={<Icon name="layers-2" size={22} color={colors.textSecondary} />}
             onPress={onSendSequence}
+          />
+        ) : null}
+        {onBookAppointment ? (
+          <ListItem
+            title={t('appointments.bookAppointment')}
+            leading={<Icon name="clock" size={22} color={colors.textSecondary} />}
+            onPress={onBookAppointment}
           />
         ) : null}
         <ListItem

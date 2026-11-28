@@ -363,5 +363,36 @@
       "emailNotVerified": "请先验证邮箱再登录。",
       "accountDeletionPending": "此账户已安排删除。"
     }
+  },
+  "appointments": {
+    "tab": "预约",
+    "bookAppointment": "预约",
+    "linkSent": "预约链接已发送",
+    "noCalendars": "没有可用的日历",
+    "durationMinutes": "{{minutes}} 分钟",
+    "inactive": "未启用",
+    "sendLink": "发送预约链接",
+    "openLink": "代客预约",
+    "newAppointment": "新建预约",
+    "noConversationNotice": "未关联会话，因此不会通知客户。",
+    "stepCalendar": "日历",
+    "stepTimezone": "时区",
+    "stepDay": "日期",
+    "stepTime": "时间",
+    "calendarTimezone": "日历：{{zone}}",
+    "deviceTimezone": "本设备：{{zone}}",
+    "noSlots": "没有可用时间",
+    "selectedSlot": "已选择：{{time}}",
+    "create": "创建预约",
+    "booked": "预约成功",
+    "slotUnavailable": "该时间已不可用，请选择其他时间。",
+    "tabUpcoming": "即将到来",
+    "tabPast": "已过去",
+    "empty": "暂无预约",
+    "statusScheduled": "已预约",
+    "statusCancelled": "已取消",
+    "cancel": "取消预约",
+    "cancelConfirm": "取消 {{name}} 的预约？客户可能会收到通知。",
+    "cancelled": "预约已取消"
   }
 }

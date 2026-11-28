@@ -366,5 +366,36 @@
       "emailNotVerified": "Verifică-ți adresa de e-mail înainte de a te conecta.",
       "accountDeletionPending": "Acest cont este programat pentru ștergere."
     }
+  },
+  "appointments": {
+    "tab": "Programări",
+    "bookAppointment": "Programează",
+    "linkSent": "Link de programare trimis",
+    "noCalendars": "Niciun calendar disponibil",
+    "durationMinutes": "{{minutes}} min",
+    "inactive": "Inactiv",
+    "sendLink": "Trimite linkul de programare",
+    "openLink": "Programează în numele clientului",
+    "newAppointment": "Programare nouă",
+    "noConversationNotice": "Nicio conversație asociată, deci clientul nu va fi notificat.",
+    "stepCalendar": "Calendar",
+    "stepTimezone": "Fus orar",
+    "stepDay": "Zi",
+    "stepTime": "Oră",
+    "calendarTimezone": "Calendar: {{zone}}",
+    "deviceTimezone": "Acest dispozitiv: {{zone}}",
+    "noSlots": "Nicio oră disponibilă",
+    "selectedSlot": "Selectat: {{time}}",
+    "create": "Creează programarea",
+    "booked": "Programare creată",
+    "slotUnavailable": "Ora nu mai este disponibilă. Alege alta.",
+    "tabUpcoming": "Viitoare",
+    "tabPast": "Trecute",
+    "empty": "Nicio programare",
+    "statusScheduled": "Programată",
+    "statusCancelled": "Anulată",
+    "cancel": "Anulează programarea",
+    "cancelConfirm": "Anulezi programarea din {{name}}? Clientul poate fi notificat.",
+    "cancelled": "Programare anulată"
   }
 }

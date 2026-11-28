@@ -28,6 +28,8 @@ import {
   pickFromLibrary,
 } from '@/features/chat/lib/pick-attachments';
 import { useChatStore } from '@/features/chat/stores/use-chat-store';
+import { AppointmentCalendarPickerSheet } from '@/features/appointments/components/appointment-calendar-picker-sheet';
+import { channelSupportsButtons } from '@/features/appointments/lib/supports-buttons';
 import { WhatsappTemplateSheet } from '@/features/whatsapp-templates/components/whatsapp-template-sheet';
 import { SequencePickerSheet } from '@/features/sequences/components/sequence-picker-sheet';
 import { triggerHaptic } from '@/lib/haptics';
@@ -73,6 +75,7 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
   const savedRepliesRef = useRef<BottomSheetModal>(null);
   const flowPickerRef = useRef<BottomSheetModal>(null);
   const sequencePickerRef = useRef<BottomSheetModal>(null);
+  const appointmentPickerRef = useRef<BottomSheetModal>(null);
   const whatsappTemplateRef = useRef<BottomSheetModal>(null);
 
   // `FEATURES.sendSequence` is off until the backend route ships (see src/config/features.ts) —
@@ -232,6 +235,12 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
     Keyboard.dismiss();
     actionsSheetRef.current?.dismiss();
     flowPickerRef.current?.present();
+  }
+
+  function handleOpenAppointmentPicker() {
+    Keyboard.dismiss();
+    actionsSheetRef.current?.dismiss();
+    appointmentPickerRef.current?.present();
   }
 
   const whatsappInbox = conversation?.contactInboxes?.find((inbox) => inbox.channel === 'whatsapp');
@@ -444,6 +453,12 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
         // is off — flipping the flag in src/config/features.ts is the only thing left to do once
         // the backend route ships.
         onSendSequence={conversationForSequence?.contactId ? handleOpenSendSequence : undefined}
+        onBookAppointment={
+          FEATURES.appointments &&
+          channelSupportsButtons(conversation?.contactInboxes?.[0]?.channel)
+            ? handleOpenAppointmentPicker
+            : undefined
+        }
       />
 
       <FlowPickerSheet
@@ -468,6 +483,14 @@ export function Composer({ workspaceId, conversationId, style }: ComposerProps) 
           workspaceId={workspaceId}
           conversationId={conversationId}
           inboxId={whatsappInbox.inboxId}
+        />
+      ) : null}
+
+      {FEATURES.appointments ? (
+        <AppointmentCalendarPickerSheet
+          sheetRef={appointmentPickerRef}
+          workspaceId={workspaceId}
+          conversationId={conversationId}
         />
       ) : null}
 

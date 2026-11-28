@@ -363,5 +363,36 @@
       "emailNotVerified": "Verifiera din e-postadress innan du loggar in.",
       "accountDeletionPending": "Det här kontot är schemalagt för radering."
     }
+  },
+  "appointments": {
+    "tab": "Bokningar",
+    "bookAppointment": "Boka tid",
+    "linkSent": "Bokningslänk skickad",
+    "noCalendars": "Inga kalendrar tillgängliga",
+    "durationMinutes": "{{minutes}} min",
+    "inactive": "Inaktiv",
+    "sendLink": "Skicka bokningslänk",
+    "openLink": "Boka åt kunden",
+    "newAppointment": "Ny bokning",
+    "noConversationNotice": "Ingen konversation är kopplad, så kunden meddelas inte.",
+    "stepCalendar": "Kalender",
+    "stepTimezone": "Tidszon",
+    "stepDay": "Dag",
+    "stepTime": "Tid",
+    "calendarTimezone": "Kalender: {{zone}}",
+    "deviceTimezone": "Den här enheten: {{zone}}",
+    "noSlots": "Inga lediga tider",
+    "selectedSlot": "Vald: {{time}}",
+    "create": "Skapa bokning",
+    "booked": "Bokning skapad",
+    "slotUnavailable": "Den tiden är inte längre ledig. Välj en annan.",
+    "tabUpcoming": "Kommande",
+    "tabPast": "Tidigare",
+    "empty": "Inga bokningar",
+    "statusScheduled": "Schemalagd",
+    "statusCancelled": "Avbokad",
+    "cancel": "Avboka",
+    "cancelConfirm": "Avboka bokningen hos {{name}}? Kunden kan få ett meddelande.",
+    "cancelled": "Bokning avbokad"
   }
 }
