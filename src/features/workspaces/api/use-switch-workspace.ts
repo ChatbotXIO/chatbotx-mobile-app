@@ -2,9 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 
-import { isWorkspaceQuery } from '@/api/query-keys';
-import { useConversationFilters } from '@/features/conversations/stores/use-conversation-filters';
-import { useWorkspaceStore } from '@/stores/use-workspace-store';
+import { applyWorkspaceSwitch } from '@/features/workspaces/api/switch-workspace';
 
 interface SwitchWorkspaceOptions {
   /** When true, navigates to the conversations tab after switching (used by an inline switch from
@@ -30,20 +28,10 @@ interface SwitchWorkspaceOptions {
 export function useSwitchWorkspace() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const currentWorkspaceId = useWorkspaceStore((state) => state.currentWorkspaceId);
-  const setCurrentWorkspaceId = useWorkspaceStore((state) => state.setCurrentWorkspaceId);
-  const resetConversationFilters = useConversationFilters((state) => state.reset);
 
   return useCallback(
     (next: string | null, opts?: SwitchWorkspaceOptions) => {
-      if (currentWorkspaceId) {
-        queryClient.removeQueries({
-          predicate: (query) => isWorkspaceQuery(query.queryKey, currentWorkspaceId),
-        });
-      }
-
-      resetConversationFilters();
-      setCurrentWorkspaceId(next);
+      applyWorkspaceSwitch(queryClient, next);
 
       if (next === null) {
         router.replace('/(app)/workspace-picker');
@@ -54,6 +42,6 @@ export function useSwitchWorkspace() {
         router.replace('/(app)/(tabs)/conversations');
       }
     },
-    [currentWorkspaceId, queryClient, resetConversationFilters, setCurrentWorkspaceId, router],
+    [queryClient, router],
   );
 }

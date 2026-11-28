@@ -1,8 +1,9 @@
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 
+import { applyWorkspaceSwitch } from '@/features/workspaces/api/switch-workspace';
+import { queryClient } from '@/lib/query-client';
 import { useAuthStore } from '@/stores/use-auth-store';
-import { useWorkspaceStore } from '@/stores/use-workspace-store';
 
 /**
  * Data payload the backend attaches to a push notification (the worker sends
@@ -18,9 +19,7 @@ interface NotificationTapData {
 function navigateToNotification(data: NotificationTapData): void {
   if (!data.conversationId) return;
 
-  if (data.workspaceId && data.workspaceId !== useWorkspaceStore.getState().currentWorkspaceId) {
-    useWorkspaceStore.getState().setCurrentWorkspaceId(data.workspaceId);
-  }
+  if (data.workspaceId) applyWorkspaceSwitch(queryClient, data.workspaceId);
 
   router.push({
     pathname: '/(app)/conversations/[conversationId]',

@@ -19,6 +19,15 @@ import type {
  * yet — this is the best available approximation until one exists.
  * `Badge`'s own count-mode caps display at "99+", so no separate capping is needed here.
  */
+function isConversationListKey(queryKey: readonly unknown[], workspaceId: string | null): boolean {
+  return (
+    queryKey[0] === 'ws' &&
+    queryKey[1] === workspaceId &&
+    queryKey[2] === 'conversations' &&
+    queryKey[3] === 'list'
+  );
+}
+
 function countUnreadFromCache(
   queryClient: ReturnType<typeof useQueryClient>,
   workspaceId: string,
@@ -30,11 +39,7 @@ function countUnreadFromCache(
   queryClient
     .getQueryCache()
     .findAll({
-      predicate: (query) =>
-        query.queryKey[0] === 'ws' &&
-        query.queryKey[1] === workspaceId &&
-        query.queryKey[2] === 'conversations' &&
-        query.queryKey[3] === 'list',
+      predicate: (query) => isConversationListKey(query.queryKey, workspaceId),
     })
     .forEach((query) => {
       const data = query.state.data as { pages: ListConversationsResponse[] } | undefined;
@@ -60,7 +65,16 @@ export function useInboxUnreadCount(workspaceId: string | null): number {
   const queryClient = useQueryClient();
 
   return useSyncExternalStore(
-    (onStoreChange) => queryClient.getQueryCache().subscribe(onStoreChange),
+    (onStoreChange) =>
+      queryClient.getQueryCache().subscribe((event) => {
+        // Ignore unrelated queries (e.g. `useWorkspaces`) — their observers are created during
+        // render of other components, and notifying from there triggers React's "Cannot update a
+        // component while rendering a different component" warning.
+        if (!isConversationListKey(event.query.queryKey, workspaceId)) return;
+        // Defer: observers of the list itself are also constructed mid-render, where a
+        // synchronous store-change would setState on this (different) component.
+        queueMicrotask(onStoreChange);
+      }),
     () => countUnreadFromCache(queryClient, workspaceId ?? ''),
     () => 0,
   );
