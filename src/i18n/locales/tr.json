@@ -195,7 +195,6 @@
     "botStatusOff": "Bot kapalı",
     "windowClosedBanner": "Kişinin son mesajından bu yana 24 saatten fazla geçti. Yalnızca bir şablon veya akış gönderebilirsiniz.",
     "windowRemaining": "{{time}} kaldı",
-    "windowClosedBannerWhatsapp": "Kişinin son mesajından bu yana 24 saatten fazla geçti. Yalnızca şablon veya akış gönderebilirsiniz.",
     "windowClosedBannerMeta": "Kişinin son mesajından bu yana 7 günden fazla geçti. Yalnızca şablon veya akış gönderebilirsiniz.",
     "windowClosedBannerTiktok": "Kişinin son mesajından bu yana 48 saatten fazla geçti. Yalnızca akış gönderebilirsiniz.",
     "windowHumanAgent": "İnsan temsilci · {{time}} kaldı",

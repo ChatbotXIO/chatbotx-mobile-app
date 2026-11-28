@@ -195,7 +195,6 @@
     "botStatusOff": "Bot tắt",
     "windowClosedBanner": "Đã hơn 24 giờ kể từ tin nhắn cuối của liên hệ. Bạn chỉ có thể gửi mẫu tin hoặc kịch bản.",
     "windowRemaining": "Còn {{time}}",
-    "windowClosedBannerWhatsapp": "Đã hơn 24 giờ kể từ tin nhắn cuối của liên hệ. Bạn chỉ có thể gửi mẫu tin hoặc kịch bản.",
     "windowClosedBannerMeta": "Đã hơn 7 ngày kể từ tin nhắn cuối của liên hệ. Bạn chỉ có thể gửi mẫu tin hoặc kịch bản.",
     "windowClosedBannerTiktok": "Đã hơn 48 giờ kể từ tin nhắn cuối của liên hệ. Bạn chỉ có thể gửi kịch bản.",
     "windowHumanAgent": "Nhân viên · còn {{time}}",

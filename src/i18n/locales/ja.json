@@ -195,7 +195,6 @@
     "botStatusOff": "ボットオフ",
     "windowClosedBanner": "連絡先の最後のメッセージから24時間以上経過しています。テンプレートまたはフローのみ送信できます。",
     "windowRemaining": "残り{{time}}",
-    "windowClosedBannerWhatsapp": "連絡先の最後のメッセージから24時間以上経過しました。テンプレートまたはフローのみ送信できます。",
     "windowClosedBannerMeta": "連絡先の最後のメッセージから7日以上経過しました。テンプレートまたはフローのみ送信できます。",
     "windowClosedBannerTiktok": "連絡先の最後のメッセージから48時間以上経過しました。フローのみ送信できます。",
     "windowHumanAgent": "有人対応 · 残り{{time}}",

@@ -36,12 +36,6 @@ interface ChatHeaderProps {
   onBack: () => void;
 }
 
-/** Resolves conversation identity via `useConversationDetail`, seeded with a synchronous
- * `findConversationInListCache` placeholder — this is what fixes the "Conversation" fallback bug
- * on a deep link straight into a conversation: the header now always has SOME data to render,
- * either from the list cache the user navigated from, or (once it resolves) the dedicated detail
- * fetch, rather than only ever reading the list cache and falling back to a hardcoded string when
- * it's empty (e.g. cold deep link with no list query cached yet). */
 function describeWindowLabel(window: MessagingWindow, t: TFunction): string | null {
   if (window.kind === 'closing') {
     return t('chat.windowRemaining', { time: formatRemaining(window.remainingMs) });
@@ -52,6 +46,12 @@ function describeWindowLabel(window: MessagingWindow, t: TFunction): string | nu
   return null;
 }
 
+/** Resolves conversation identity via `useConversationDetail`, seeded with a synchronous
+ * `findConversationInListCache` placeholder — this is what fixes the "Conversation" fallback bug
+ * on a deep link straight into a conversation: the header now always has SOME data to render,
+ * either from the list cache the user navigated from, or (once it resolves) the dedicated detail
+ * fetch, rather than only ever reading the list cache and falling back to a hardcoded string when
+ * it's empty (e.g. cold deep link with no list query cached yet). */
 export function ChatHeader({ workspaceId, conversationId, onBack }: ChatHeaderProps) {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();

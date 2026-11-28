@@ -185,7 +185,6 @@
     "botStatusOff": "Bot desactivado",
     "windowClosedBanner": "Han pasado más de 24 h desde el último mensaje del contacto. Solo puedes enviar una plantilla o un flujo.",
     "windowRemaining": "Quedan {{time}}",
-    "windowClosedBannerWhatsapp": "Han pasado más de 24 h desde el último mensaje del contacto. Solo puedes enviar una plantilla o un flujo.",
     "windowClosedBannerMeta": "Han pasado más de 7 días desde el último mensaje del contacto. Solo puedes enviar una plantilla o un flujo.",
     "windowClosedBannerTiktok": "Han pasado más de 48 h desde el último mensaje del contacto. Solo puedes enviar un flujo.",
     "windowHumanAgent": "Agente humano · quedan {{time}}",

@@ -126,10 +126,12 @@ function applyMessagesCreatedBatch(
 
   // A contact message reopens/extends the server-computed messaging window; refetch the detail
   // so the composer unlocks. Only active observers (the open chat) actually refetch.
-  incomingList.forEach((message) => {
-    if (message.senderType === 'contact')
-      refreshConversationDetail(queryClient, workspaceId, message.conversationId);
-  });
+  const contactConversationIds = new Set(
+    incomingList.filter((m) => m.senderType === 'contact').map((m) => m.conversationId),
+  );
+  contactConversationIds.forEach((conversationId) =>
+    refreshConversationDetail(queryClient, workspaceId, conversationId),
+  );
 
   byConversation.forEach((group, conversationId) => {
     queryClient.setQueryData<InfiniteMessagesData>(

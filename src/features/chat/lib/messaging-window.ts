@@ -1,13 +1,13 @@
+import type { ConversationListItem } from '@/features/conversations/api/use-conversations-infinite';
+
 /** Server-owned messaging window (`contactInboxes[].messagingWindow`). The server decides, per
  * channel, when free-form replies stop being allowed; the app only compares the absolute
  * timestamps it hands back against the local clock. */
-export interface ServerMessagingWindow {
-  state: 'open' | 'humanAgent' | 'closed' | 'unlimited' | 'notApplicable' | 'unknown';
-  changesAt: string | null;
-  closesAt: string | null;
-}
+export type ServerMessagingWindow = NonNullable<
+  ConversationListItem['contactInboxes']
+>[number]['messagingWindow'];
 
-export const MESSAGING_WINDOW_WARN_MS = 2 * 60 * 60 * 1000;
+const MESSAGING_WINDOW_WARN_MS = 2 * 60 * 60 * 1000;
 
 export type MessagingWindow =
   | { kind: 'free' }
@@ -39,22 +39,6 @@ export function deriveMessagingWindow(
   if (remainingMs <= 0) return closed;
   if (remainingMs <= MESSAGING_WINDOW_WARN_MS) return { kind: 'closing', remainingMs };
   return server.state === 'humanAgent' ? { kind: 'humanAgent', remainingMs } : { kind: 'free' };
-}
-
-/** Next absolute moment (ms epoch) at which `deriveMessagingWindow` can change its answer, or
- * null when nothing is scheduled. Used to arm a single timer instead of polling. */
-export function nextMessagingWindowBoundary(
-  server: ServerMessagingWindow | null | undefined,
-  now: number = Date.now(),
-): number | null {
-  if (!server || (server.state !== 'open' && server.state !== 'humanAgent')) return null;
-  const closesAt = parseTime(server.closesAt);
-  const candidates = [
-    parseTime(server.changesAt),
-    closesAt === null ? null : closesAt - MESSAGING_WINDOW_WARN_MS,
-    closesAt,
-  ].filter((time): time is number => time !== null && time > now);
-  return candidates.length === 0 ? null : Math.min(...candidates);
 }
 
 const MINUTE_MS = 60_000;

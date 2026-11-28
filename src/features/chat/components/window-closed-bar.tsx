@@ -11,12 +11,8 @@ interface WindowClosedBarProps {
   onSendFlow: () => void;
 }
 
-/** Replaces the text input once the channel's customer-service window has closed: explains why and
- * offers the one action the channel still allows (sending a flow/template). */
 function bannerKey(channel: string | null): string {
   switch (channel) {
-    case 'whatsapp':
-      return 'chat.windowClosedBannerWhatsapp';
     case 'messenger':
     case 'instagram':
       return 'chat.windowClosedBannerMeta';
@@ -27,6 +23,8 @@ function bannerKey(channel: string | null): string {
   }
 }
 
+/** Replaces the text input once the channel's customer-service window has closed: explains why and
+ * offers the one action the channel still allows (sending a flow/template). */
 export function WindowClosedBar({ channel, onSendFlow }: WindowClosedBarProps) {
   const { t } = useTranslation();
   const { colors, spacing, radius } = useTheme();

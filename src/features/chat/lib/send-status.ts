@@ -1,3 +1,4 @@
+import type { NormalizedApiError } from '@/api/errors';
 import type { Message } from '@/features/chat/api/use-messages-infinite';
 import { getOptimisticStatus } from '@/features/chat/components/optimistic-message';
 
@@ -5,7 +6,8 @@ import { getOptimisticStatus } from '@/features/chat/components/optimistic-messa
 export const DELIVERY_FAILED_ERROR_KIND = 'deliveryFailed';
 
 /** Error kind of a send the server refused up front because the messaging window is closed. */
-export const MESSAGING_WINDOW_CLOSED_ERROR_KIND = 'messagingWindowClosed';
+export const MESSAGING_WINDOW_CLOSED_ERROR_KIND =
+  'messagingWindowClosed' satisfies NormalizedApiError['kind'];
 
 const WINDOW_CLOSED_SEND_ERROR = /_messaging_window_closed$|_window_expired$/;
 

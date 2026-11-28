@@ -195,7 +195,6 @@
     "botStatusOff": "Bot uit",
     "windowClosedBanner": "Het laatste bericht van het contact is meer dan 24 uur geleden. Je kunt alleen een sjabloon of flow verzenden.",
     "windowRemaining": "Nog {{time}}",
-    "windowClosedBannerWhatsapp": "Er is meer dan 24 uur verstreken sinds het laatste bericht van het contact. Je kunt alleen een sjabloon of flow versturen.",
     "windowClosedBannerMeta": "Er zijn meer dan 7 dagen verstreken sinds het laatste bericht van het contact. Je kunt alleen een sjabloon of flow versturen.",
     "windowClosedBannerTiktok": "Er is meer dan 48 uur verstreken sinds het laatste bericht van het contact. Je kunt alleen een flow versturen.",
     "windowHumanAgent": "Menselijke medewerker · nog {{time}}",

@@ -1,7 +1,6 @@
 import {
   deriveMessagingWindow,
   formatRemaining,
-  nextMessagingWindowBoundary,
   type ServerMessagingWindow,
 } from './messaging-window';
 
@@ -62,19 +61,6 @@ describe('deriveMessagingWindow', () => {
       kind: 'closed',
       channel: 'instagram',
     });
-  });
-});
-
-describe('nextMessagingWindowBoundary', () => {
-  it('picks the earliest future boundary', () => {
-    expect(nextMessagingWindowBoundary(win('open', at(10), at(24)), NOW)).toBe(NOW + 10 * HOUR);
-    expect(nextMessagingWindowBoundary(win('open', at(23), at(24)), NOW)).toBe(NOW + 22 * HOUR);
-  });
-
-  it('is null when nothing is scheduled', () => {
-    expect(nextMessagingWindowBoundary(win('unlimited'), NOW)).toBeNull();
-    expect(nextMessagingWindowBoundary(win('closed', null, at(-1)), NOW)).toBeNull();
-    expect(nextMessagingWindowBoundary(undefined, NOW)).toBeNull();
   });
 });
 

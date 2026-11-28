@@ -185,7 +185,6 @@
     "botStatusOff": "Bot nonaktif",
     "windowClosedBanner": "Sudah lebih dari 24 jam sejak pesan terakhir kontak. Anda hanya dapat mengirim templat atau alur.",
     "windowRemaining": "Sisa {{time}}",
-    "windowClosedBannerWhatsapp": "Sudah lebih dari 24 jam sejak pesan terakhir kontak. Anda hanya dapat mengirim templat atau alur.",
     "windowClosedBannerMeta": "Sudah lebih dari 7 hari sejak pesan terakhir kontak. Anda hanya dapat mengirim templat atau alur.",
     "windowClosedBannerTiktok": "Sudah lebih dari 48 jam sejak pesan terakhir kontak. Anda hanya dapat mengirim alur.",
     "windowHumanAgent": "Agen manusia · sisa {{time}}",

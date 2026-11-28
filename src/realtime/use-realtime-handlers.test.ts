@@ -311,6 +311,25 @@ describe('useRealtimeHandlers', () => {
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: detailKey });
   });
 
+  it('invalidates the conversation detail once for several contact messages in one batch', async () => {
+    const queryClient = new QueryClient();
+    const invalidateSpy = jest.spyOn(queryClient, 'invalidateQueries');
+    const { result } = await renderHook(() => useRealtimeHandlers(queryClient, WORKSPACE_ID));
+    const detailKey = queryKeys.ws.conversations.detail(WORKSPACE_ID, 'conv-a');
+
+    result.current(
+      ['m1', 'm2'].map((id) => ({
+        eventType: RealtimeEventType.messageCreated,
+        data: { id, conversationId: 'conv-a', senderType: 'contact', attachments: [] },
+      })),
+    );
+
+    const detailCalls = invalidateSpy.mock.calls.filter(
+      ([filters]) => JSON.stringify(filters?.queryKey) === JSON.stringify(detailKey),
+    );
+    expect(detailCalls).toHaveLength(1);
+  });
+
   it('refetches instead of patching when a frame exceeds the burst threshold', async () => {
     const queryClient = new QueryClient();
     const listKey = queryKeys.ws.conversations.list(WORKSPACE_ID, {});

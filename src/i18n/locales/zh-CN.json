@@ -195,7 +195,6 @@
     "botStatusOff": "机器人已关闭",
     "windowClosedBanner": "距离联系人上一条消息已超过 24 小时，只能发送模板或流程。",
     "windowRemaining": "剩余 {{time}}",
-    "windowClosedBannerWhatsapp": "距离联系人最后一条消息已超过 24 小时，只能发送模板或流程。",
     "windowClosedBannerMeta": "距离联系人最后一条消息已超过 7 天，只能发送模板或流程。",
     "windowClosedBannerTiktok": "距离联系人最后一条消息已超过 48 小时，只能发送流程。",
     "windowHumanAgent": "人工客服 · 剩余 {{time}}",

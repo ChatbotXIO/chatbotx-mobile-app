@@ -64,8 +64,6 @@ export function describeApiErrorKind(kind: string | undefined, t: TFunction): st
       return t('errors.invalidRequest');
     case 'imagesNotSupportedOnChannel':
       return t('errors.imagesNotSupported');
-    case 'messagingWindowClosed':
-      return t('chat.windowClosedError');
     case 'workspaceBlocked':
       return t('errors.workspaceBlocked');
     case 'network':
